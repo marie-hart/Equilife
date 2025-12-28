@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: horse_care_postgres
+    environment:
+      POSTGRES_DB: horse_care_db
+      POSTGRES_USER: horse_user
+      POSTGRES_PASSWORD: horse_password
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U horse_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: horse_care_redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  sqitch:
+    image: sqitch/sqitch:latest
+    container_name: horse_care_sqitch
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGUSER: horse_user
+      PGPASSWORD: horse_password
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: horse_care_db
+    volumes:
+      - ./migrations:/migrations
+    working_dir: /migrations
+    entrypoint: ["sqitch"]
+    command: ["deploy", "db:pg://horse_user:horse_password@postgres:5432/horse_care_db"]
+
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    container_name: horse_care_backend
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: horse_care_db
+      DB_USER: horse_user
+      DB_PASSWORD: horse_password
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PORT: 3000
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
