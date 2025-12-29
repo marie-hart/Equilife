@@ -5,7 +5,8 @@ import { CreateEventDto, UpdateEventDto } from '../types';
 export class EventController {
   async getAll(req: Request, res: Response): Promise<void> {
     try {
-      const events = await eventRepository.findAll();
+      const horseId = req.query.horseId as string | undefined;
+      const events = await eventRepository.findAll(horseId);
       res.json(events);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -86,7 +87,8 @@ export class EventController {
 
   async getUpcomingReminders(req: Request, res: Response): Promise<void> {
     try {
-      const events = await eventRepository.getUpcomingReminders();
+      const horseId = req.query.horseId as string | undefined;
+      const events = await eventRepository.getUpcomingReminders(horseId);
       res.json(events);
     } catch (error) {
       console.error('Error fetching upcoming reminders:', error);

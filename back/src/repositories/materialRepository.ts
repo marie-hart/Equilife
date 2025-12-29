@@ -3,14 +3,26 @@ import { Material, CreateMaterialDto, UpdateMaterialDto } from '../types';
 import { calculateNextPurchaseDate } from '../utils/dateUtils';
 
 export class MaterialRepository {
-  async findAll(includeInactive: boolean = false): Promise<Material[]> {
-    let query = 'SELECT * FROM materials';
+  async findAll(includeInactive: boolean = false, horseId?: string): Promise<Material[]> {
+    const conditions: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
     if (!includeInactive) {
-      query += ' WHERE is_active = true';
+      conditions.push('is_active = true');
+    }
+    if (horseId) {
+      conditions.push(`horse_id = $${paramIndex++}`);
+      values.push(horseId);
+    }
+
+    let query = 'SELECT * FROM materials';
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
     }
     query += ' ORDER BY last_purchase_date DESC NULLS LAST';
     
-    const result = await pool.query(query);
+    const result = await pool.query(query, values);
     return result.rows.map(this.mapRowToMaterial);
   }
 
@@ -25,14 +37,15 @@ export class MaterialRepository {
   async create(data: CreateMaterialDto): Promise<Material> {
     const result = await pool.query(
       `INSERT INTO materials (
-        name, description, last_purchase_date,
+        name, description, last_purchase_date, horse_id,
         purchase_interval_months, purchase_interval_years, estimated_cost
-      ) VALUES ($1, $2, $3, $4, $5, $6)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *`,
       [
         data.name,
         data.description || null,
         data.last_purchase_date || null,
+        data.horse_id || null,
         data.purchase_interval_months || null,
         data.purchase_interval_years || null,
         data.estimated_cost || null,
@@ -48,16 +61,18 @@ export class MaterialRepository {
         name = COALESCE($1, name),
         description = COALESCE($2, description),
         last_purchase_date = COALESCE($3, last_purchase_date),
-        purchase_interval_months = COALESCE($4, purchase_interval_months),
-        purchase_interval_years = COALESCE($5, purchase_interval_years),
-        estimated_cost = COALESCE($6, estimated_cost),
-        is_active = COALESCE($7, is_active)
-      WHERE id = $8
+        horse_id = COALESCE($4, horse_id),
+        purchase_interval_months = COALESCE($5, purchase_interval_months),
+        purchase_interval_years = COALESCE($6, purchase_interval_years),
+        estimated_cost = COALESCE($7, estimated_cost),
+        is_active = COALESCE($8, is_active)
+      WHERE id = $9
       RETURNING *`,
       [
         data.name || null,
         data.description !== undefined ? data.description : null,
         data.last_purchase_date || null,
+        data.horse_id || null,
         data.purchase_interval_months !== undefined ? data.purchase_interval_months : null,
         data.purchase_interval_years !== undefined ? data.purchase_interval_years : null,
         data.estimated_cost !== undefined ? data.estimated_cost : null,
@@ -82,11 +97,20 @@ export class MaterialRepository {
     return result.rowCount !== null && result.rowCount > 0;
   }
 
-  async getDueForPurchase(): Promise<Material[]> {
+  async getDueForPurchase(horseId?: string): Promise<Material[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const result = await pool.query(
+    const result = horseId
+      ? await pool.query(
+          `SELECT * FROM materials 
+           WHERE is_active = true 
+           AND last_purchase_date IS NOT NULL
+           AND (purchase_interval_months IS NOT NULL OR purchase_interval_years IS NOT NULL)
+           AND horse_id = $1`,
+          [horseId]
+        )
+      : await pool.query(
       `SELECT * FROM materials 
        WHERE is_active = true 
        AND last_purchase_date IS NOT NULL
@@ -134,6 +158,7 @@ export class MaterialRepository {
       purchase_interval_months: row.purchase_interval_months,
       purchase_interval_years: row.purchase_interval_years,
       estimated_cost: row.estimated_cost ? parseFloat(row.estimated_cost) : undefined,
+      horse_id: row.horse_id || undefined,
       is_active: row.is_active,
       created_at: new Date(row.created_at),
       updated_at: new Date(row.updated_at),

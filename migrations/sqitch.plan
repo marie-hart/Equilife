@@ -4,3 +4,5 @@
 
 init 2024-01-01T00:00:00Z Initial schema <init@sqitch.org>
 
+horses_table 2026-01-17T15:03:51Z mariehdek <mariehdek@yahoo.fr> # Add horses table with profile information and photo upload
+horse_links 2026-01-17T15:43:51Z mariehdek <mariehdek@yahoo.fr> # Add horse_id to events and materials

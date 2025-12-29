@@ -5,18 +5,21 @@ import cacheService from "../services/cacheService";
 import { CacheKeys } from "../services/cacheKeys";
 
 export class EventRepository {
-  async findAll(): Promise<Event[]> {
+  async findAll(horseId?: string): Promise<Event[]> {
     // Vérifier le cache
-    const cacheKey = CacheKeys.eventsListKey();
+    const cacheKey = CacheKeys.eventsListKey(horseId);
     const cached = await cacheService.get<Event[]>(cacheKey);
     if (cached) {
       return cached;
     }
 
     // Récupérer depuis la base de données
-    const result = await pool.query(
-      "SELECT * FROM events ORDER BY event_date DESC"
-    );
+    const result = horseId
+      ? await pool.query(
+          "SELECT * FROM events WHERE horse_id = $1 ORDER BY event_date DESC",
+          [horseId]
+        )
+      : await pool.query("SELECT * FROM events ORDER BY event_date DESC");
     const events = result.rows.map(this.mapRowToEvent);
 
     // Mettre en cache (TTL de 5 minutes)
@@ -63,14 +66,15 @@ export class EventRepository {
 
     const result = await pool.query(
       `INSERT INTO events (
-        name, description, event_date, reminder_enabled,
+        name, description, event_date, horse_id, reminder_enabled,
         reminder_interval_months, reminder_interval_years, next_reminder_date
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *`,
       [
         data.name,
         data.description || null,
         data.event_date,
+        data.horse_id || null,
         data.reminder_enabled || false,
         data.reminder_interval_months || null,
         data.reminder_interval_years || null,
@@ -132,16 +136,18 @@ export class EventRepository {
         name = COALESCE($1, name),
         description = COALESCE($2, description),
         event_date = COALESCE($3, event_date),
-        reminder_enabled = COALESCE($4, reminder_enabled),
-        reminder_interval_months = COALESCE($5, reminder_interval_months),
-        reminder_interval_years = COALESCE($6, reminder_interval_years),
-        next_reminder_date = $7
-      WHERE id = $8
+        horse_id = COALESCE($4, horse_id),
+        reminder_enabled = COALESCE($5, reminder_enabled),
+        reminder_interval_months = COALESCE($6, reminder_interval_months),
+        reminder_interval_years = COALESCE($7, reminder_interval_years),
+        next_reminder_date = $8
+      WHERE id = $9
       RETURNING *`,
       [
         data.name || null,
         data.description !== undefined ? data.description : null,
         data.event_date || null,
+        data.horse_id || null,
         data.reminder_enabled !== undefined ? data.reminder_enabled : null,
         data.reminder_interval_months !== undefined
           ? data.reminder_interval_months
@@ -171,9 +177,9 @@ export class EventRepository {
     return result.rowCount !== null && result.rowCount > 0;
   }
 
-  async getUpcomingReminders(): Promise<Event[]> {
+  async getUpcomingReminders(horseId?: string): Promise<Event[]> {
     // Vérifier le cache
-    const cacheKey = CacheKeys.eventsRemindersKey();
+    const cacheKey = CacheKeys.eventsRemindersKey(horseId);
     const cached = await cacheService.get<Event[]>(cacheKey);
     if (cached) {
       return cached;
@@ -183,14 +189,24 @@ export class EventRepository {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const result = await pool.query(
-      `SELECT * FROM events
-       WHERE reminder_enabled = true
-       AND next_reminder_date IS NOT NULL
-       AND next_reminder_date <= $1
-       ORDER BY next_reminder_date ASC`,
-      [today]
-    );
+    const result = horseId
+      ? await pool.query(
+          `SELECT * FROM events
+           WHERE reminder_enabled = true
+           AND next_reminder_date IS NOT NULL
+           AND next_reminder_date <= $1
+           AND horse_id = $2
+           ORDER BY next_reminder_date ASC`,
+          [today, horseId]
+        )
+      : await pool.query(
+          `SELECT * FROM events
+           WHERE reminder_enabled = true
+           AND next_reminder_date IS NOT NULL
+           AND next_reminder_date <= $1
+           ORDER BY next_reminder_date ASC`,
+          [today]
+        );
 
     const events = result.rows.map(this.mapRowToEvent);
 
@@ -215,6 +231,7 @@ export class EventRepository {
       name: row.name,
       description: row.description,
       event_date: new Date(row.event_date),
+      horse_id: row.horse_id || undefined,
       reminder_enabled: row.reminder_enabled,
       reminder_interval_months: row.reminder_interval_months,
       reminder_interval_years: row.reminder_interval_years,

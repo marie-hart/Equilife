@@ -4,6 +4,7 @@ export interface Event {
   name: string;
   description?: string;
   event_date: Date;
+  horse_id?: string;
   reminder_enabled: boolean;
   reminder_interval_months?: number;
   reminder_interval_years?: number;
@@ -17,6 +18,7 @@ export interface CreateEventDto {
   name: string;
   description?: string;
   event_date: string; // Format: YYYY-MM-DD
+  horse_id?: string;
   reminder_enabled?: boolean;
   reminder_interval_months?: number;
   reminder_interval_years?: number;
@@ -26,6 +28,7 @@ export interface UpdateEventDto {
   name?: string;
   description?: string;
   event_date?: string;
+  horse_id?: string;
   reminder_enabled?: boolean;
   reminder_interval_months?: number;
   reminder_interval_years?: number;
@@ -40,6 +43,7 @@ export interface Material {
   purchase_interval_months?: number;
   purchase_interval_years?: number;
   estimated_cost?: number;
+  horse_id?: string;
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
@@ -52,6 +56,7 @@ export interface CreateMaterialDto {
   purchase_interval_months?: number;
   purchase_interval_years?: number;
   estimated_cost?: number;
+  horse_id?: string;
 }
 
 export interface UpdateMaterialDto {
@@ -61,6 +66,33 @@ export interface UpdateMaterialDto {
   purchase_interval_months?: number;
   purchase_interval_years?: number;
   estimated_cost?: number;
+  horse_id?: string;
   is_active?: boolean;
 }
 
+// Types pour les chevaux
+export interface Horse {
+  id: string;
+  name: string;
+  breed?: string;
+  birth_date?: Date;
+  age?: number; // Calculé automatiquement depuis birth_date
+  additional_info?: string;
+  photo_path?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CreateHorseDto {
+  name: string;
+  breed?: string;
+  birth_date?: string; // Format: YYYY-MM-DD
+  additional_info?: string;
+}
+
+export interface UpdateHorseDto {
+  name?: string;
+  breed?: string;
+  birth_date?: string;
+  additional_info?: string;
+}

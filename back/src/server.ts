@@ -1,20 +1,25 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import eventRoutes from "./routes/eventRoutes";
 import materialRoutes from "./routes/materialRoutes";
+import horseRoutes from "./routes/horseRoutes";
 import pool from "./config/database";
 import redis from "./config/redis";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Servir les fichiers statiques (photos uploadées)
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Root route - API information
 app.get("/", (req: Request, res: Response) => {
@@ -42,6 +47,16 @@ app.get("/", (req: Request, res: Response) => {
         delete: "DELETE /api/materials/:id",
         markAsPurchased: "POST /api/materials/:id/purchase",
       },
+      horses: {
+        base: "/api/horses",
+        list: "GET /api/horses",
+        first: "GET /api/horses/first",
+        getById: "GET /api/horses/:id",
+        create: "POST /api/horses",
+        update: "PUT /api/horses/:id",
+        uploadPhoto: "POST /api/horses/:id/photo",
+        delete: "DELETE /api/horses/:id",
+      },
     },
   });
 });
@@ -64,6 +79,7 @@ app.get("/health", async (req: Request, res: Response) => {
 // Routes
 app.use("/api/events", eventRoutes);
 app.use("/api/materials", materialRoutes);
+app.use("/api/horses", horseRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

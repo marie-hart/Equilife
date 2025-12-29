@@ -7,12 +7,12 @@ export class CacheKeys {
     return `event:${id}`;
   }
 
-  static eventsListKey(): string {
-    return "events:list";
+  static eventsListKey(horseId?: string): string {
+    return horseId ? `events:list:${horseId}` : "events:list";
   }
 
-  static eventsRemindersKey(): string {
-    return "events:reminders";
+  static eventsRemindersKey(horseId?: string): string {
+    return horseId ? `events:reminders:${horseId}` : "events:reminders";
   }
 
   // Matériels
@@ -20,11 +20,22 @@ export class CacheKeys {
     return `material:${id}`;
   }
 
-  static materialsListKey(includeInactive: boolean = false): string {
-    return `materials:list:${includeInactive}`;
+  static materialsListKey(includeInactive: boolean = false, horseId?: string): string {
+    return horseId
+      ? `materials:list:${includeInactive}:${horseId}`
+      : `materials:list:${includeInactive}`;
   }
 
-  static materialsDueKey(): string {
-    return "materials:due";
+  static materialsDueKey(horseId?: string): string {
+    return horseId ? `materials:due:${horseId}` : "materials:due";
+  }
+
+  // Chevaux
+  static horsesListKey(): string {
+    return "horses:list";
+  }
+
+  static horseKey(id: string): string {
+    return `horse:${id}`;
   }
 }

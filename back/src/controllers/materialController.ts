@@ -6,7 +6,8 @@ export class MaterialController {
   async getAll(req: Request, res: Response): Promise<void> {
     try {
       const includeInactive = req.query.includeInactive === 'true';
-      const materials = await materialRepository.findAll(includeInactive);
+      const horseId = req.query.horseId as string | undefined;
+      const materials = await materialRepository.findAll(includeInactive, horseId);
       res.json(materials);
     } catch (error) {
       console.error('Error fetching materials:', error);
@@ -87,7 +88,8 @@ export class MaterialController {
 
   async getDueForPurchase(req: Request, res: Response): Promise<void> {
     try {
-      const materials = await materialRepository.getDueForPurchase();
+      const horseId = req.query.horseId as string | undefined;
+      const materials = await materialRepository.getDueForPurchase(horseId);
       res.json(materials);
     } catch (error) {
       console.error('Error fetching materials due for purchase:', error);
