@@ -16,6 +16,36 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Root route - API information
+app.get("/", (req: Request, res: Response) => {
+  res.json({
+    message: "Horse Care App API",
+    version: "1.0.0",
+    endpoints: {
+      health: "/health",
+      events: {
+        base: "/api/events",
+        list: "GET /api/events",
+        reminders: "GET /api/events/reminders",
+        getById: "GET /api/events/:id",
+        create: "POST /api/events",
+        update: "PUT /api/events/:id",
+        delete: "DELETE /api/events/:id",
+      },
+      materials: {
+        base: "/api/materials",
+        list: "GET /api/materials",
+        dueForPurchase: "GET /api/materials/due-for-purchase",
+        getById: "GET /api/materials/:id",
+        create: "POST /api/materials",
+        update: "PUT /api/materials/:id",
+        delete: "DELETE /api/materials/:id",
+        markAsPurchased: "POST /api/materials/:id/purchase",
+      },
+    },
+  });
+});
+
 // Health check
 app.get("/health", async (req: Request, res: Response) => {
   try {
@@ -50,7 +80,7 @@ app.use(
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 export default app;

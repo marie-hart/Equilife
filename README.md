@@ -66,7 +66,7 @@ Cela démarre :
 
 ```bash
 cd back
-npm install
+yarn install
 ```
 
 2. Démarrer PostgreSQL (via Docker) :
@@ -112,7 +112,7 @@ cd migrations
 
 ```bash
 cd back
-npm run dev
+yarn dev
 ```
 
 ## Migrations avec Sqitch
