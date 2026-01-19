@@ -1,7 +1,10 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Dashboard from "@/views/Dashboard.vue";
-import Timeline from "@/views/Timeline.vue";
-import Agenda from "@/views/Agenda.vue";
+import Health from "@/views/Health.vue";
+import Activities from "@/views/Activities.vue";
+import Documents from "@/views/Documents.vue";
+import Reminders from "@/views/Reminders.vue";
+import ReminderCreate from "@/views/ReminderCreate.vue";
 import Horses from "@/views/Horses.vue";
 import HorseForm from "@/views/HorseForm.vue";
 
@@ -14,14 +17,14 @@ const router = createRouter({
       component: Dashboard,
     },
     {
-      path: "/timeline",
-      name: "Timeline",
-      component: Timeline,
+      path: "/reminders",
+      name: "Reminders",
+      component: Reminders,
     },
     {
-      path: "/agenda",
-      name: "Agenda",
-      component: Agenda,
+      path: "/reminders/new",
+      name: "ReminderCreate",
+      component: ReminderCreate,
     },
     {
       path: "/horses",
@@ -47,6 +50,21 @@ const router = createRouter({
       path: "/horses/:id/dashboard",
       name: "HorseDashboardView",
       component: Dashboard,
+    },
+    {
+      path: "/horses/:id/health",
+      name: "HorseHealth",
+      component: Health,
+    },
+    {
+      path: "/horses/:id/activities",
+      name: "HorseActivities",
+      component: Activities,
+    },
+    {
+      path: "/horses/:id/documents",
+      name: "HorseDocuments",
+      component: Documents,
     },
   ],
 });

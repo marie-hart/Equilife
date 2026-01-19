@@ -85,7 +85,7 @@ export class EventRepository {
     const event = this.mapRowToEvent(result.rows[0]);
 
     // Invalider le cache
-    await this.invalidateCache(event.id);
+    await this.invalidateCache(event.id, event.horse_id);
 
     return event;
   }
@@ -167,17 +167,22 @@ export class EventRepository {
     const event = this.mapRowToEvent(result.rows[0]);
 
     // Invalider le cache
-    await this.invalidateCache(id);
+    await this.invalidateCache(id, event.horse_id);
 
     return event;
   }
 
   async delete(id: string): Promise<boolean> {
+    const existing = await this.findById(id);
     const result = await pool.query("DELETE FROM events WHERE id = $1", [id]);
-    return result.rowCount !== null && result.rowCount > 0;
+    const deleted = result.rowCount !== null && result.rowCount > 0;
+    if (deleted) {
+      await this.invalidateCache(id, existing?.horse_id);
+    }
+    return deleted;
   }
 
-  async getUpcomingReminders(horseId?: string): Promise<Event[]> {
+  async getReminders(horseId?: string): Promise<Event[]> {
     // Vérifier le cache
     const cacheKey = CacheKeys.eventsRemindersKey(horseId);
     const cached = await cacheService.get<Event[]>(cacheKey);
@@ -186,26 +191,18 @@ export class EventRepository {
     }
 
     // Récupérer depuis la base de données
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     const result = horseId
       ? await pool.query(
           `SELECT * FROM events
            WHERE reminder_enabled = true
-           AND next_reminder_date IS NOT NULL
-           AND next_reminder_date <= $1
-           AND horse_id = $2
-           ORDER BY next_reminder_date ASC`,
-          [today, horseId]
+           AND horse_id = $1
+           ORDER BY event_date ASC`,
+          [horseId]
         )
       : await pool.query(
           `SELECT * FROM events
            WHERE reminder_enabled = true
-           AND next_reminder_date IS NOT NULL
-           AND next_reminder_date <= $1
-           ORDER BY next_reminder_date ASC`,
-          [today]
+           ORDER BY event_date ASC`
         );
 
     const events = result.rows.map(this.mapRowToEvent);
@@ -219,10 +216,14 @@ export class EventRepository {
   /**
    * Invalide le cache pour un événement
    */
-  private async invalidateCache(eventId: string): Promise<void> {
+  private async invalidateCache(eventId: string, horseId?: string): Promise<void> {
     await cacheService.delete(CacheKeys.eventKey(eventId));
     await cacheService.delete(CacheKeys.eventsListKey());
     await cacheService.delete(CacheKeys.eventsRemindersKey());
+    if (horseId) {
+      await cacheService.delete(CacheKeys.eventsListKey(horseId));
+      await cacheService.delete(CacheKeys.eventsRemindersKey(horseId));
+    }
   }
 
   private mapRowToEvent(row: any): Event {

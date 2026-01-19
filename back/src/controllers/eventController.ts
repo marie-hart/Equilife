@@ -85,14 +85,14 @@ export class EventController {
     }
   }
 
-  async getUpcomingReminders(req: Request, res: Response): Promise<void> {
+  async getReminders(req: Request, res: Response): Promise<void> {
     try {
       const horseId = req.query.horseId as string | undefined;
-      const events = await eventRepository.getUpcomingReminders(horseId);
+      const events = await eventRepository.getReminders(horseId);
       res.json(events);
     } catch (error) {
-      console.error('Error fetching upcoming reminders:', error);
-      res.status(500).json({ error: 'Failed to fetch upcoming reminders' });
+      console.error('Error fetching reminders:', error);
+      res.status(500).json({ error: 'Failed to fetch reminders' });
     }
   }
 }

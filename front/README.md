@@ -24,6 +24,12 @@ yarn dev
 
 Le serveur de développement démarre sur `http://localhost:5173`
 
+### Configuration API
+
+Par défaut, les requêtes partent vers `/api` (proxy Vite).
+Vous pouvez surcharger l'URL via la variable `VITE_API_BASE_URL`
+ex: `VITE_API_BASE_URL=http://localhost:3000/api`.
+
 ## Build
 
 ```bash

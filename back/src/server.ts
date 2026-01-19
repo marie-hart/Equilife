@@ -2,11 +2,13 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
+import swaggerUi from "swagger-ui-express";
 import eventRoutes from "./routes/eventRoutes";
 import materialRoutes from "./routes/materialRoutes";
 import horseRoutes from "./routes/horseRoutes";
 import pool from "./config/database";
 import redis from "./config/redis";
+import { swaggerSpec } from "./docs/swagger";
 
 dotenv.config();
 
@@ -17,6 +19,9 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Swagger docs
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Servir les fichiers statiques (photos uploadées)
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));

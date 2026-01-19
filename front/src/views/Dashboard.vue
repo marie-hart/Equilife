@@ -1,74 +1,96 @@
 <template>
   <div class="dashboard">
     <main class="main-content">
+      <div class="dashboard-actions">
+        <div class="d-flex justify-end">
+          <v-btn
+            variant="elevated"
+            prepend-icon="mdi-plus"
+            size="small"
+            class="document-btn"
+          >
+            Document
+          </v-btn>
+        </div>
+      </div>
       <div class="dashboard-grid">
-        <!-- Soins du jour -->
-        <SectionCard title="Soins du jour" icon="list-check" :showAdd="true">
-            <v-list v-if="dailyCares.length > 0" density="compact">
-              <v-list-item v-for="care in dailyCares" :key="care.id">
-                <v-list-item-title class="care-name">{{ care.name }}</v-list-item-title>
-                <template #append>
-                  <span class="care-time">{{ care.time }}</span>
-                </template>
-              </v-list-item>
-            </v-list>
-            <p v-else class="empty-state">Aucun soin prévu aujourd'hui</p>
+        <!-- Rappels à venir / en retard -->
+        <SectionCard title="Rappels" icon="alarm-clock" :showAdd="true" @add="goToReminderCreate">
+          <div class="d-flex flex-column gap-4">
+            <div>
+              <div class="d-flex align-center justify-space-between mb-1">
+                <span class="text-subtitle-2 text-grey-darken-1">En retard</span>
+                <v-chip size="x-small" color="error" variant="flat">
+                  {{ remindersOverdue.length }}
+                </v-chip>
+              </div>
+              <v-list v-if="remindersOverdue.length" density="compact">
+                <v-list-item v-for="reminder in remindersOverdue.slice(0, 3)" :key="reminder.id">
+                  <v-list-item-title>{{ reminder.name }}</v-list-item-title>
+                  <template #append>
+                    <span class="text-caption text-grey-darken-1">
+                      {{ formatDate(reminder.event_date) }}
+                    </span>
+                  </template>
+                </v-list-item>
+              </v-list>
+              <p v-else class="empty-state">Aucun rappel en retard</p>
+            </div>
+
+            <div>
+              <div class="d-flex align-center justify-space-between mb-1">
+                <span class="text-subtitle-2 text-grey-darken-1">À venir</span>
+                <v-chip size="x-small" color="primary" variant="flat">
+                  {{ remindersUpcoming.length }}
+                </v-chip>
+              </div>
+              <v-list v-if="remindersUpcoming.length" density="compact">
+                <v-list-item v-for="reminder in remindersUpcoming.slice(0, 3)" :key="reminder.id">
+                  <v-list-item-title>{{ reminder.name }}</v-list-item-title>
+                  <template #append>
+                    <span class="text-caption text-grey-darken-1">
+                      {{ formatDate(reminder.event_date) }}
+                    </span>
+                  </template>
+                </v-list-item>
+              </v-list>
+              <p v-else class="empty-state">Aucun rappel à venir</p>
+            </div>
+          </div>
         </SectionCard>
 
-        <!-- Tâches -->
-        <SectionCard title="Tâches" icon="list-check" :showAdd="true">
-            <v-list v-if="tasks.length > 0" density="compact">
-              <v-list-item v-for="task in tasks" :key="task.id">
-                <v-checkbox
-                  v-model="task.completed"
-                  :label="task.name"
-                  color="primary"
-                  density="comfortable"
-                  hide-details
-                />
-              </v-list-item>
-            </v-list>
-            <p v-else class="empty-state">Aucune tâche</p>
-        </SectionCard>
-
-        <!-- Aliments -->
-        <SectionCard title="Aliments" icon="bowl-food" :showAdd="true">
-            <v-list v-if="foods.length > 0" density="compact">
-              <v-list-item v-for="food in foods" :key="food.id">
-                <v-list-item-title class="food-name">{{ food.name }}</v-list-item-title>
-                <template #append>
-                  <span class="food-quantity">{{ food.quantity }}</span>
-                </template>
-              </v-list-item>
-            </v-list>
-            <p v-else class="empty-state">Aucun aliment enregistré</p>
-        </SectionCard>
-
-        <!-- Rendez-vous -->
-        <SectionCard title="Rendez-vous" icon="calendar-days">
-            <v-list v-if="appointments.length > 0" density="compact">
-              <v-list-item v-for="appointment in appointments" :key="appointment.id">
-                <v-list-item-subtitle class="appointment-date">
-                  {{ formatDate(appointment.date) }}
-                </v-list-item-subtitle>
-                <v-list-item-title class="appointment-title">{{ appointment.title }}</v-list-item-title>
-                <v-list-item-subtitle class="appointment-type">{{ appointment.type }}</v-list-item-subtitle>
-              </v-list-item>
-            </v-list>
-            <p v-else class="empty-state">Aucun rendez-vous</p>
-        </SectionCard>
-
-         <!-- Timeline -->
-      <SectionCard title="Timeline" icon="timeline">
-          <v-list v-if="timelineEvents.length > 0" density="compact" class="timeline-list">
-            <v-list-item v-for="event in timelineEvents" :key="event.id" class="timeline-item">
-              <div class="timeline-date">{{ formatDate(event.date) }}</div>
-              <div class="timeline-title">{{ event.title }}</div>
-              <div class="timeline-description">{{ event.description }}</div>
+        <!-- Soin du jour -->
+        <SectionCard title="Soin" icon="house-chimney-medical" :showAdd="true">
+          <v-list v-if="todayCares.length" density="compact">
+            <v-list-item v-for="care in todayCares" :key="care.id">
+              <v-list-item-title>{{ care.name }}</v-list-item-title>
+              <template #append>
+                <span class="text-caption text-grey-darken-1">
+                  {{ formatDate(care.event_date) }}
+                </span>
+              </template>
             </v-list-item>
           </v-list>
-          <p v-else class="empty-state">Aucun événement récent</p>
-      </SectionCard>
+          <p v-else-if="nextCare" class="text-body-2 text-grey-darken-1 mb-0">
+            Prochain soin le {{ formatDate(nextCare.event_date) }} — {{ nextCare.name }}
+          </p>
+          <p v-else class="empty-state">Aucun soin prévu</p>
+        </SectionCard>
+
+        <!-- Activité du jour -->
+        <SectionCard title="Activité" icon="heart-pulse" :showAdd="true">
+          <v-list v-if="todayActivities.length" density="compact">
+            <v-list-item v-for="activity in todayActivities" :key="activity.id">
+              <v-list-item-title>{{ activity.name }}</v-list-item-title>
+              <template #append>
+                <span class="text-caption text-grey-darken-1">
+                  {{ formatDate(activity.event_date) }}
+                </span>
+              </template>
+            </v-list-item>
+          </v-list>
+          <p v-else class="empty-state">Aucune activité aujourd'hui</p>
+        </SectionCard>
       </div>
     </main>
   </div>
@@ -76,19 +98,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { eventsApi } from '../api/events'
-import { materialsApi } from '../api/materials'
-import type { Event, Material, Care, Task, Food, Appointment, TimelineEvent } from '../types'
+import type { Event } from '../types'
 import { useTheme } from 'vuetify'
 import { SectionCard } from '../components'
 
-const dailyCares = ref<Care[]>([])
-const tasks = ref<Task[]>([])
-const foods = ref<Food[]>([])
-const appointments = ref<Appointment[]>([])
-const timelineEvents = ref<TimelineEvent[]>([])
+const reminders = ref<Event[]>([])
+const events = ref<Event[]>([])
 const route = useRoute()
+const router = useRouter()
 
 const routeHorseId = computed(() => route.params.id as string | undefined)
 const theme = useTheme()
@@ -100,93 +119,68 @@ const formatDate = (dateString: string): string => {
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-const getEventType = (name: string): TimelineEvent['type'] => {
-  const lowerName = name.toLowerCase()
-  if (lowerName.includes('veto') || lowerName.includes('vét') || lowerName.includes('vet')) {
-    return 'vet'
-  }
-  if (lowerName.includes('ferr') || lowerName.includes('maréchal') || lowerName.includes('farrier')) {
-    return 'farrier'
-  }
-  if (lowerName.includes('dent')) {
-    return 'dentistry'
-  }
-  if (lowerName.includes('bless') || lowerName.includes('injur')) {
-    return 'injury'
-  }
-  return 'vet'
+const startOfDay = (date: Date): Date => {
+  const normalized = new Date(date)
+  normalized.setHours(0, 0, 0, 0)
+  return normalized
 }
 
-const getEventTypeLabel = (type: TimelineEvent['type']): string => {
-  switch (type) {
-    case 'farrier':
-      return 'Ferrure'
-    case 'dentistry':
-      return 'Dentisterie'
-    case 'injury':
-      return 'Blessure'
-    default:
-      return 'Vétérinaire'
-  }
+const isSameDay = (dateString: string, baseDate: Date): boolean => {
+  const date = new Date(dateString)
+  return date.toDateString() === baseDate.toDateString()
 }
 
-const mapEventsToTimeline = (events: Event[]): TimelineEvent[] =>
-  events.map((event) => ({
-    id: event.id,
-    title: event.name,
-    description: event.description || 'Aucune description',
-    date: event.event_date,
-    type: getEventType(event.name),
-  }))
+const sortByDateAsc = (items: Event[]): Event[] =>
+  [...items].sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime())
 
-const mapEventsToAppointments = (events: Event[]): Appointment[] =>
-  events.map((event) => ({
-    id: event.id,
-    title: event.name,
-    type: getEventTypeLabel(getEventType(event.name)),
-    date: event.event_date,
-  }))
+const remindersOverdue = computed(() => {
+  const today = startOfDay(new Date())
+  return sortByDateAsc(reminders.value.filter((reminder) => new Date(reminder.event_date) < today))
+})
 
-const mapEventsToCares = (events: Event[]): Care[] =>
-  events.map((event) => ({
-    id: event.id,
-    name: event.name,
-    time: formatDate(event.event_date),
-  }))
+const remindersUpcoming = computed(() => {
+  const today = startOfDay(new Date())
+  return sortByDateAsc(reminders.value.filter((reminder) => new Date(reminder.event_date) >= today))
+})
 
-const mapMaterialsToFoods = (materials: Material[]): Food[] =>
-  materials.map((material) => ({
-    id: material.id,
-    name: material.name,
-    quantity: material.estimated_cost ? `${material.estimated_cost}€` : '—',
-  }))
+const todayCares = computed(() => {
+  const today = startOfDay(new Date())
+  return sortByDateAsc(reminders.value.filter((reminder) => isSameDay(reminder.event_date, today)))
+})
 
-const mapMaterialsToTasks = (materials: Material[]): Task[] =>
-  materials.map((material) => ({
-    id: material.id,
-    name: `Acheter ${material.name}`,
-    completed: false,
-  }))
+const nextCare = computed(() => {
+  if (todayCares.value.length) {
+    return null
+  }
+  const today = startOfDay(new Date())
+  const upcoming = reminders.value.filter((reminder) => new Date(reminder.event_date) > today)
+  return sortByDateAsc(upcoming)[0] ?? null
+})
+
+const todayActivities = computed(() => {
+  const today = startOfDay(new Date())
+  return sortByDateAsc(events.value.filter((event) => isSameDay(event.event_date, today)))
+})
 
 
 const loadDashboard = async () => {
   try {
     const horseId = routeHorseId.value
-    const [events, reminders, materials, dueMaterials] = await Promise.all([
+    const [eventsResponse, remindersResponse] = await Promise.all([
       eventsApi.getAll(horseId),
       eventsApi.getReminders(horseId),
-      materialsApi.getAll(true, horseId),
-      materialsApi.getDueForPurchase(horseId),
     ])
 
-    dailyCares.value = mapEventsToCares(reminders)
-    tasks.value = mapMaterialsToTasks(dueMaterials)
-    foods.value = mapMaterialsToFoods(materials)
-    appointments.value = mapEventsToAppointments(events)
-    timelineEvents.value = mapEventsToTimeline(events)
+    events.value = eventsResponse
+    reminders.value = remindersResponse
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   }
+}
+
+const goToReminderCreate = () => {
+  const horseId = routeHorseId.value
+  router.push(horseId ? { path: '/reminders/new', query: { horseId } } : '/reminders/new')
 }
 
 onMounted(async () => {
@@ -201,3 +195,26 @@ watch(
 )
 </script>
 
+<style scoped>
+.main-content {
+  padding: 1rem;
+}
+
+.dashboard-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.document-btn {
+  background-color: rgb(var(--v-theme-on-surface));
+  color: rgb(var(--v-theme-surface));
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+</style>

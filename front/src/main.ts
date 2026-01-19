@@ -2,8 +2,14 @@ import { createApp } from "vue";
 import { createVuetify } from "vuetify";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
+  faClock,
+  faHeartPulse,
+  faHouseChimneyMedical,
+  faBell,
   faCirclePlus,
   faCalendarDays,
+  faEllipsis,
+  faFileLines,
   faTimeline,
   faListCheck,
   faBowlFood,
@@ -13,14 +19,21 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import "@mdi/font/css/materialdesignicons.css";
 import "./styles/Global.css"; 
 import "vuetify/styles";
 import App from "./App.vue";
 import router from "./router";
 
 library.add(
+  faClock,
+  faHeartPulse,
+  faHouseChimneyMedical,
+  faBell,
   faCirclePlus,
   faCalendarDays,
+  faEllipsis,
+  faFileLines,
   faTimeline,
   faListCheck,
   faBowlFood,
