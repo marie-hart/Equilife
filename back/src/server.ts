@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, RequestHandler } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
@@ -6,9 +6,13 @@ import swaggerUi from "swagger-ui-express";
 import eventRoutes from "./routes/eventRoutes";
 import materialRoutes from "./routes/materialRoutes";
 import horseRoutes from "./routes/horseRoutes";
+import documentRoutes from "./routes/documentRoutes";
+import rationRoutes from "./routes/rationRoutes";
+import pushRoutes from "./routes/pushRoutes";
 import pool from "./config/database";
 import redis from "./config/redis";
 import { swaggerSpec } from "./docs/swagger";
+import { initPushService, startReminderPushScheduler } from "./services/pushService";
 
 dotenv.config();
 
@@ -21,7 +25,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Swagger docs
-app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+const swaggerServe = swaggerUi.serve as unknown as RequestHandler[];
+const swaggerSetup = swaggerUi.setup(swaggerSpec) as unknown as RequestHandler;
+app.use("/api/docs", ...swaggerServe, swaggerSetup);
 
 // Servir les fichiers statiques (photos uploadées)
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
@@ -62,6 +68,20 @@ app.get("/", (req: Request, res: Response) => {
         uploadPhoto: "POST /api/horses/:id/photo",
         delete: "DELETE /api/horses/:id",
       },
+      documents: {
+        base: "/api/documents",
+        list: "GET /api/documents",
+        create: "POST /api/documents",
+        delete: "DELETE /api/documents/:id",
+      },
+      rations: {
+        base: "/api/rations",
+        list: "GET /api/rations",
+        create: "POST /api/rations",
+        getById: "GET /api/rations/:id",
+        update: "PUT /api/rations/:id",
+        delete: "DELETE /api/rations/:id",
+      },
     },
   });
 });
@@ -85,6 +105,9 @@ app.get("/health", async (req: Request, res: Response) => {
 app.use("/api/events", eventRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/horses", horseRoutes);
+app.use("/api/documents", documentRoutes);
+app.use("/api/rations", rationRoutes);
+app.use("/api/push", pushRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -102,6 +125,10 @@ app.use(
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+void initPushService().then((enabled) => {
+  if (enabled) startReminderPushScheduler();
 });
 
 export default app;

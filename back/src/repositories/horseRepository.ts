@@ -15,9 +15,14 @@ export class HorseRepository {
       `SELECT 
         id, 
         name, 
+        nickname,
+        sex,
         breed, 
+        coat,
         birth_date, 
         calculate_age(birth_date) as age,
+        stable_location,
+        feed,
         additional_info, 
         photo_path, 
         created_at, 
@@ -42,9 +47,14 @@ export class HorseRepository {
       `SELECT 
         id, 
         name, 
+        nickname,
+        sex,
         breed, 
+        coat,
         birth_date, 
         calculate_age(birth_date) as age,
+        stable_location,
+        feed,
         additional_info, 
         photo_path, 
         created_at, 
@@ -68,9 +78,14 @@ export class HorseRepository {
       `SELECT 
         id, 
         name, 
+        nickname,
+        sex,
         breed, 
+        coat,
         birth_date, 
         calculate_age(birth_date) as age,
+        stable_location,
+        feed,
         additional_info, 
         photo_path, 
         created_at, 
@@ -91,23 +106,48 @@ export class HorseRepository {
     const birthDate = data.birth_date ? new Date(data.birth_date) : null;
 
     const result = await pool.query(
-      `INSERT INTO horses (name, breed, birth_date, additional_info) 
-       VALUES ($1, $2, $3, $4) 
+      `INSERT INTO horses (
+        name,
+        nickname,
+        sex,
+        breed,
+        coat,
+        birth_date,
+        stable_location,
+        feed,
+        additional_info
+      ) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
        RETURNING 
          id, 
          name, 
+         nickname,
+         sex,
          breed, 
+         coat,
          birth_date, 
          calculate_age(birth_date) as age,
+         stable_location,
+         feed,
          additional_info, 
          photo_path, 
          created_at, 
          updated_at`,
-      [data.name, data.breed || null, birthDate, data.additional_info || null]
+      [
+        data.name,
+        data.nickname || null,
+        data.sex || null,
+        data.breed || null,
+        data.coat || null,
+        birthDate,
+        data.stable_location || null,
+        data.feed || null,
+        data.additional_info || null,
+      ]
     );
 
     const horse = this.mapRowToHorse(result.rows[0]);
-    this.invalidateCache();
+    this.invalidateCache(horse.id);
     return horse;
   }
 
@@ -120,13 +160,33 @@ export class HorseRepository {
       fields.push(`name = $${paramIndex++}`);
       values.push(data.name);
     }
+    if (data.nickname !== undefined) {
+      fields.push(`nickname = $${paramIndex++}`);
+      values.push(data.nickname || null);
+    }
+    if (data.sex !== undefined) {
+      fields.push(`sex = $${paramIndex++}`);
+      values.push(data.sex || null);
+    }
     if (data.breed !== undefined) {
       fields.push(`breed = $${paramIndex++}`);
       values.push(data.breed || null);
     }
+    if (data.coat !== undefined) {
+      fields.push(`coat = $${paramIndex++}`);
+      values.push(data.coat || null);
+    }
     if (data.birth_date !== undefined) {
       fields.push(`birth_date = $${paramIndex++}`);
       values.push(data.birth_date ? new Date(data.birth_date) : null);
+    }
+    if (data.stable_location !== undefined) {
+      fields.push(`stable_location = $${paramIndex++}`);
+      values.push(data.stable_location || null);
+    }
+    if (data.feed !== undefined) {
+      fields.push(`feed = $${paramIndex++}`);
+      values.push(data.feed || null);
     }
     if (data.additional_info !== undefined) {
       fields.push(`additional_info = $${paramIndex++}`);
@@ -145,9 +205,14 @@ export class HorseRepository {
        RETURNING 
          id, 
          name, 
+         nickname,
+         sex,
          breed, 
+         coat,
          birth_date, 
          calculate_age(birth_date) as age,
+         stable_location,
+         feed,
          additional_info, 
          photo_path, 
          created_at, 
@@ -160,7 +225,7 @@ export class HorseRepository {
     }
 
     const horse = this.mapRowToHorse(result.rows[0]);
-    this.invalidateCache();
+    this.invalidateCache(id);
     return horse;
   }
 
@@ -172,9 +237,14 @@ export class HorseRepository {
        RETURNING 
          id, 
          name, 
+         nickname,
+         sex,
          breed, 
+         coat,
          birth_date, 
          calculate_age(birth_date) as age,
+         stable_location,
+         feed,
          additional_info, 
          photo_path, 
          created_at, 
@@ -187,28 +257,35 @@ export class HorseRepository {
     }
 
     const horse = this.mapRowToHorse(result.rows[0]);
-    this.invalidateCache();
+    this.invalidateCache(id);
     return horse;
   }
 
   async delete(id: string): Promise<boolean> {
     const result = await pool.query("DELETE FROM horses WHERE id = $1", [id]);
-    this.invalidateCache();
+    this.invalidateCache(id);
     return result.rowCount !== null && result.rowCount > 0;
   }
 
-  private invalidateCache(): void {
+  private invalidateCache(horseId?: string): void {
     cacheService.delete(CacheKeys.horsesListKey());
-    // Invalider aussi les caches spécifiques si nécessaire
+    if (horseId) {
+      cacheService.delete(CacheKeys.horseKey(horseId));
+    }
   }
 
   private mapRowToHorse(row: any): Horse {
     return {
       id: row.id,
       name: row.name,
+      nickname: row.nickname || undefined,
+      sex: row.sex || undefined,
       breed: row.breed || undefined,
+      coat: row.coat || undefined,
       birth_date: row.birth_date ? new Date(row.birth_date) : undefined,
       age: row.age !== null ? parseInt(row.age) : undefined,
+      stable_location: row.stable_location || undefined,
+      feed: row.feed || undefined,
       additional_info: row.additional_info || undefined,
       photo_path: row.photo_path || undefined,
       created_at: new Date(row.created_at),

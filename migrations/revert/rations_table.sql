@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS ration_items;
+DROP TABLE IF EXISTS rations;

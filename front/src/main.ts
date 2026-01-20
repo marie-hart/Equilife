@@ -13,6 +13,7 @@ import {
   faTimeline,
   faListCheck,
   faBowlFood,
+  faBoxOpen,
   faHorse,
   faHouse,
   faPen,
@@ -24,6 +25,7 @@ import "./styles/Global.css";
 import "vuetify/styles";
 import App from "./App.vue";
 import router from "./router";
+import { UI_BREAKPOINTS, VUETIFY_THRESHOLDS } from "./ui/breakpoints";
 
 library.add(
   faClock,
@@ -37,13 +39,30 @@ library.add(
   faTimeline,
   faListCheck,
   faBowlFood,
+  faBoxOpen,
   faHorse,
   faHouse,
   faPen,
   faTrash
 );
 
-const vuetify = createVuetify();
+const vuetify = createVuetify({
+  display: {
+    thresholds: VUETIFY_THRESHOLDS,
+    mobileBreakpoint: UI_BREAKPOINTS.tabletMin,
+  },
+  theme: {
+    defaultTheme: "light",
+    themes: {
+      light: {
+        colors: {
+          primary: "#1E63B0",
+          background: "#D3D3D3"
+        },
+      },
+    },
+  },
+});
 
 createApp(App)
   .component("font-awesome-icon", FontAwesomeIcon)

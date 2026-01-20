@@ -16,6 +16,8 @@ export const swaggerSpec = {
     { name: "Events", description: "Événements et rappels" },
     { name: "Materials", description: "Matériel" },
     { name: "Horses", description: "Chevaux" },
+    { name: "Documents", description: "Documents" },
+    { name: "Rations", description: "Rations" },
   ],
   components: {
     schemas: {
@@ -27,7 +29,23 @@ export const swaggerSpec = {
           description: { type: "string", nullable: true },
           event_date: { type: "string", format: "date" },
           horse_id: { type: "string", format: "uuid", nullable: true },
+          product_id: { type: "string", format: "uuid", nullable: true },
+          is_care: { type: "boolean", nullable: true },
+          reminder_type: {
+            type: "string",
+            nullable: true,
+            enum: ["soin", "activité", "alimentation", "autres"],
+          },
+          activity_type: { type: "string", nullable: true },
+          activity_duration_minutes: { type: "integer", nullable: true },
+          activity_intensity: {
+            type: "string",
+            nullable: true,
+            enum: ["legere", "normale", "soutenue"],
+          },
+          activity_comment: { type: "string", nullable: true },
           reminder_enabled: { type: "boolean" },
+          reminder_interval_days: { type: "integer", nullable: true },
           reminder_interval_months: { type: "integer", nullable: true },
           reminder_interval_years: { type: "integer", nullable: true },
           last_reminder_date: { type: "string", format: "date", nullable: true },
@@ -44,7 +62,23 @@ export const swaggerSpec = {
           description: { type: "string", nullable: true },
           event_date: { type: "string", format: "date" },
           horse_id: { type: "string", format: "uuid", nullable: true },
+          product_id: { type: "string", format: "uuid", nullable: true },
+          is_care: { type: "boolean", nullable: true },
+          reminder_type: {
+            type: "string",
+            nullable: true,
+            enum: ["soin", "activité", "alimentation", "autres"],
+          },
+          activity_type: { type: "string", nullable: true },
+          activity_duration_minutes: { type: "integer", nullable: true },
+          activity_intensity: {
+            type: "string",
+            nullable: true,
+            enum: ["legere", "normale", "soutenue"],
+          },
+          activity_comment: { type: "string", nullable: true },
           reminder_enabled: { type: "boolean" },
+          reminder_interval_days: { type: "integer", nullable: true },
           reminder_interval_months: { type: "integer", nullable: true },
           reminder_interval_years: { type: "integer", nullable: true },
         },
@@ -56,7 +90,23 @@ export const swaggerSpec = {
           description: { type: "string", nullable: true },
           event_date: { type: "string", format: "date" },
           horse_id: { type: "string", format: "uuid", nullable: true },
+          product_id: { type: "string", format: "uuid", nullable: true },
+          is_care: { type: "boolean", nullable: true },
+          reminder_type: {
+            type: "string",
+            nullable: true,
+            enum: ["soin", "activité", "alimentation", "autres"],
+          },
+          activity_type: { type: "string", nullable: true },
+          activity_duration_minutes: { type: "integer", nullable: true },
+          activity_intensity: {
+            type: "string",
+            nullable: true,
+            enum: ["legere", "normale", "soutenue"],
+          },
+          activity_comment: { type: "string", nullable: true },
           reminder_enabled: { type: "boolean" },
+          reminder_interval_days: { type: "integer", nullable: true },
           reminder_interval_months: { type: "integer", nullable: true },
           reminder_interval_years: { type: "integer", nullable: true },
         },
@@ -67,11 +117,16 @@ export const swaggerSpec = {
           id: { type: "string", format: "uuid" },
           name: { type: "string" },
           description: { type: "string", nullable: true },
+          category: { type: "string", nullable: true },
+          brand: { type: "string", nullable: true },
+          note: { type: "string", nullable: true },
           last_purchase_date: { type: "string", format: "date", nullable: true },
           purchase_interval_months: { type: "integer", nullable: true },
           purchase_interval_years: { type: "integer", nullable: true },
           estimated_cost: { type: "number", nullable: true },
           horse_id: { type: "string", format: "uuid", nullable: true },
+          used_for_horses: { type: "array", items: { type: "string" } },
+          needs_repurchase: { type: "boolean" },
           is_active: { type: "boolean" },
           created_at: { type: "string", format: "date-time" },
           updated_at: { type: "string", format: "date-time" },
@@ -83,11 +138,16 @@ export const swaggerSpec = {
         properties: {
           name: { type: "string" },
           description: { type: "string", nullable: true },
+          category: { type: "string", nullable: true },
+          brand: { type: "string", nullable: true },
+          note: { type: "string", nullable: true },
           last_purchase_date: { type: "string", format: "date", nullable: true },
           purchase_interval_months: { type: "integer", nullable: true },
           purchase_interval_years: { type: "integer", nullable: true },
           estimated_cost: { type: "number", nullable: true },
           horse_id: { type: "string", format: "uuid", nullable: true },
+          used_for_horses: { type: "array", items: { type: "string" } },
+          needs_repurchase: { type: "boolean" },
         },
       },
       UpdateMaterialDto: {
@@ -95,11 +155,16 @@ export const swaggerSpec = {
         properties: {
           name: { type: "string" },
           description: { type: "string", nullable: true },
+          category: { type: "string", nullable: true },
+          brand: { type: "string", nullable: true },
+          note: { type: "string", nullable: true },
           last_purchase_date: { type: "string", format: "date", nullable: true },
           purchase_interval_months: { type: "integer", nullable: true },
           purchase_interval_years: { type: "integer", nullable: true },
           estimated_cost: { type: "number", nullable: true },
           horse_id: { type: "string", format: "uuid", nullable: true },
+          used_for_horses: { type: "array", items: { type: "string" } },
+          needs_repurchase: { type: "boolean" },
           is_active: { type: "boolean" },
         },
       },
@@ -108,11 +173,80 @@ export const swaggerSpec = {
         properties: {
           id: { type: "string", format: "uuid" },
           name: { type: "string" },
+          nickname: { type: "string", nullable: true },
+          sex: {
+            type: "string",
+            nullable: true,
+            enum: ["Jument", "Hongre", "Etalon"],
+          },
           breed: { type: "string", nullable: true },
+          coat: { type: "string", nullable: true },
           birth_date: { type: "string", format: "date", nullable: true },
           age: { type: "integer", nullable: true },
+          stable_location: { type: "string", nullable: true },
+          feed: { type: "string", nullable: true },
           additional_info: { type: "string", nullable: true },
           photo_path: { type: "string", nullable: true },
+          created_at: { type: "string", format: "date-time" },
+          updated_at: { type: "string", format: "date-time" },
+        },
+      },
+      Document: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          horse_id: { type: "string", format: "uuid" },
+          title: { type: "string" },
+          document_date: { type: "string", format: "date", nullable: true },
+          tag: {
+            type: "string",
+            nullable: true,
+            enum: [
+              "carte_immatriculation",
+              "certificats",
+              "ordonnances",
+              "factures",
+              "assurance",
+              "autres",
+            ],
+          },
+          file_path: { type: "string" },
+          note: { type: "string", nullable: true },
+          created_at: { type: "string", format: "date-time" },
+          updated_at: { type: "string", format: "date-time" },
+        },
+      },
+      Ration: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          horse_id: { type: "string", format: "uuid" },
+          name: { type: "string" },
+          start_date: { type: "string", format: "date", nullable: true },
+          end_date: { type: "string", format: "date", nullable: true },
+          note: { type: "string", nullable: true },
+          is_active: { type: "boolean" },
+          items: {
+            type: "array",
+            items: { $ref: "#/components/schemas/RationItem" },
+          },
+          created_at: { type: "string", format: "date-time" },
+          updated_at: { type: "string", format: "date-time" },
+        },
+      },
+      RationItem: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          ration_id: { type: "string", format: "uuid" },
+          product_id: { type: "string", format: "uuid", nullable: true },
+          quantity: { type: "string", nullable: true },
+          frequency: { type: "array", items: { type: "string" } },
+          type: {
+            type: "string",
+            nullable: true,
+            enum: ["aliment", "complement", "autre"],
+          },
           created_at: { type: "string", format: "date-time" },
           updated_at: { type: "string", format: "date-time" },
         },
@@ -122,8 +256,17 @@ export const swaggerSpec = {
         required: ["name"],
         properties: {
           name: { type: "string" },
+          nickname: { type: "string", nullable: true },
+          sex: {
+            type: "string",
+            nullable: true,
+            enum: ["Jument", "Hongre", "Etalon"],
+          },
           breed: { type: "string", nullable: true },
+          coat: { type: "string", nullable: true },
           birth_date: { type: "string", format: "date", nullable: true },
+          stable_location: { type: "string", nullable: true },
+          feed: { type: "string", nullable: true },
           additional_info: { type: "string", nullable: true },
         },
       },
@@ -131,8 +274,17 @@ export const swaggerSpec = {
         type: "object",
         properties: {
           name: { type: "string" },
+          nickname: { type: "string", nullable: true },
+          sex: {
+            type: "string",
+            nullable: true,
+            enum: ["Jument", "Hongre", "Etalon"],
+          },
           breed: { type: "string", nullable: true },
+          coat: { type: "string", nullable: true },
           birth_date: { type: "string", format: "date", nullable: true },
+          stable_location: { type: "string", nullable: true },
+          feed: { type: "string", nullable: true },
           additional_info: { type: "string", nullable: true },
         },
       },
@@ -525,6 +677,141 @@ export const swaggerSpec = {
             description: "Cheval mis à jour",
             content: {
               "application/json": { schema: { $ref: "#/components/schemas/Horse" } },
+            },
+          },
+        },
+      },
+    },
+    "/api/documents": {
+      get: {
+        tags: ["Documents"],
+        summary: "Lister les documents",
+        parameters: [
+          {
+            name: "horseId",
+            in: "query",
+            required: false,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Liste des documents",
+            content: {
+              "application/json": {
+                schema: { type: "array", items: { $ref: "#/components/schemas/Document" } },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ["Documents"],
+        summary: "Créer un document",
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  horse_id: { type: "string" },
+                  title: { type: "string" },
+                  document_date: { type: "string", format: "date" },
+                  tag: {
+                    type: "string",
+                    enum: [
+                      "carte_immatriculation",
+                      "certificats",
+                      "ordonnances",
+                      "factures",
+                      "assurance",
+                      "autres",
+                    ],
+                  },
+                  note: { type: "string" },
+                  file: { type: "string", format: "binary" },
+                },
+                required: ["horse_id", "title", "file"],
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: "Document créé",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Document" } },
+            },
+          },
+        },
+      },
+    },
+    "/api/documents/{id}": {
+      delete: {
+        tags: ["Documents"],
+        summary: "Supprimer un document",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          204: { description: "Supprimé" },
+          404: { description: "Non trouvé" },
+        },
+      },
+    },
+    "/api/rations": {
+      get: {
+        tags: ["Rations"],
+        summary: "Lister les rations",
+        parameters: [
+          {
+            name: "horseId",
+            in: "query",
+            required: false,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Liste des rations",
+            content: {
+              "application/json": {
+                schema: { type: "array", items: { $ref: "#/components/schemas/Ration" } },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ["Rations"],
+        summary: "Créer une ration",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["horse_id", "name", "items"],
+                properties: {
+                  horse_id: { type: "string" },
+                  name: { type: "string" },
+                  start_date: { type: "string", format: "date" },
+                  end_date: { type: "string", format: "date" },
+                  note: { type: "string" },
+                  is_active: { type: "boolean" },
+                  items: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/RationItem" },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: "Ration créée",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Ration" } },
             },
           },
         },

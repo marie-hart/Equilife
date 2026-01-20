@@ -8,7 +8,8 @@ const eventRepository_1 = __importDefault(require("../repositories/eventReposito
 class EventController {
     async getAll(req, res) {
         try {
-            const events = await eventRepository_1.default.findAll();
+            const horseId = req.query.horseId;
+            const events = await eventRepository_1.default.findAll(horseId);
             res.json(events);
         }
         catch (error) {
@@ -78,14 +79,15 @@ class EventController {
             res.status(500).json({ error: 'Failed to delete event' });
         }
     }
-    async getUpcomingReminders(req, res) {
+    async getReminders(req, res) {
         try {
-            const events = await eventRepository_1.default.getUpcomingReminders();
+            const horseId = req.query.horseId;
+            const events = await eventRepository_1.default.getReminders(horseId);
             res.json(events);
         }
         catch (error) {
-            console.error('Error fetching upcoming reminders:', error);
-            res.status(500).json({ error: 'Failed to fetch upcoming reminders' });
+            console.error('Error fetching reminders:', error);
+            res.status(500).json({ error: 'Failed to fetch reminders' });
         }
     }
 }

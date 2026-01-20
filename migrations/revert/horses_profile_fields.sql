@@ -1,0 +1,9 @@
+ALTER TABLE horses
+  DROP CONSTRAINT IF EXISTS horses_sex_check;
+
+ALTER TABLE horses
+  DROP COLUMN IF EXISTS nickname,
+  DROP COLUMN IF EXISTS sex,
+  DROP COLUMN IF EXISTS coat,
+  DROP COLUMN IF EXISTS stable_location,
+  DROP COLUMN IF EXISTS feed;

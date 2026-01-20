@@ -3,6 +3,14 @@ import materialRepository from '../repositories/materialRepository';
 import { CreateMaterialDto, UpdateMaterialDto } from '../types';
 
 export class MaterialController {
+  private resolveDbErrorMessage(error: unknown): string | null {
+    const code = (error as { code?: string }).code;
+    if (code === '42703') {
+      return 'Migration manquante: colonne materials.horse_id.'
+    }
+    return null
+  }
+
   async getAll(req: Request, res: Response): Promise<void> {
     try {
       const includeInactive = req.query.includeInactive === 'true';
@@ -35,6 +43,9 @@ export class MaterialController {
   async create(req: Request, res: Response): Promise<void> {
     try {
       const data: CreateMaterialDto = req.body;
+      if (data.name) {
+        data.name = data.name.trim();
+      }
 
       // Validation
       if (!data.name) {
@@ -45,6 +56,15 @@ export class MaterialController {
       const material = await materialRepository.create(data);
       res.status(201).json(material);
     } catch (error) {
+      if ((error as { code?: string }).code === '23505') {
+        res.status(409).json({ error: 'Material already exists' });
+        return;
+      }
+      const dbMessage = this.resolveDbErrorMessage(error);
+      if (dbMessage) {
+        res.status(500).json({ error: dbMessage });
+        return;
+      }
       console.error('Error creating material:', error);
       res.status(500).json({ error: 'Failed to create material' });
     }
@@ -54,6 +74,9 @@ export class MaterialController {
     try {
       const { id } = req.params;
       const data: UpdateMaterialDto = req.body;
+      if (data.name !== undefined) {
+        data.name = data.name.trim();
+      }
 
       const material = await materialRepository.update(id, data);
 
@@ -64,6 +87,15 @@ export class MaterialController {
 
       res.json(material);
     } catch (error) {
+      if ((error as { code?: string }).code === '23505') {
+        res.status(409).json({ error: 'Material already exists' });
+        return;
+      }
+      const dbMessage = this.resolveDbErrorMessage(error);
+      if (dbMessage) {
+        res.status(500).json({ error: dbMessage });
+        return;
+      }
       console.error('Error updating material:', error);
       res.status(500).json({ error: 'Failed to update material' });
     }

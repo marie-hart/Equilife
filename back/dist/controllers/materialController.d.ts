@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 export declare class MaterialController {
+    private resolveDbErrorMessage;
     getAll(req: Request, res: Response): Promise<void>;
     getById(req: Request, res: Response): Promise<void>;
     create(req: Request, res: Response): Promise<void>;

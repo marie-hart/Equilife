@@ -9,21 +9,30 @@ class CacheKeys {
     static eventKey(id) {
         return `event:${id}`;
     }
-    static eventsListKey() {
-        return "events:list";
+    static eventsListKey(horseId) {
+        return horseId ? `events:list:${horseId}` : "events:list";
     }
-    static eventsRemindersKey() {
-        return "events:reminders";
+    static eventsRemindersKey(horseId) {
+        return horseId ? `events:reminders:${horseId}` : "events:reminders";
     }
     // Matériels
     static materialKey(id) {
         return `material:${id}`;
     }
-    static materialsListKey(includeInactive = false) {
-        return `materials:list:${includeInactive}`;
+    static materialsListKey(includeInactive = false, horseId) {
+        return horseId
+            ? `materials:list:${includeInactive}:${horseId}`
+            : `materials:list:${includeInactive}`;
     }
-    static materialsDueKey() {
-        return "materials:due";
+    static materialsDueKey(horseId) {
+        return horseId ? `materials:due:${horseId}` : "materials:due";
+    }
+    // Chevaux
+    static horsesListKey() {
+        return "horses:list";
+    }
+    static horseKey(id) {
+        return `horse:${id}`;
     }
 }
 exports.CacheKeys = CacheKeys;

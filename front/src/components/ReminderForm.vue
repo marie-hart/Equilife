@@ -10,6 +10,17 @@
           variant="outlined"
           :multiple="multiple"
           :chips="multiple"
+          :error-messages="errors?.horseIds ? [errors.horseIds] : undefined"
+        />
+      </v-col>
+      <v-col cols="12" md="4">
+        <v-select
+          v-model="reminderType"
+          :items="reminderTypeOptions"
+          label="Type"
+          density="compact"
+          variant="outlined"
+          :error-messages="errors?.reminderType ? [errors.reminderType] : undefined"
         />
       </v-col>
       <v-col cols="12" md="4">
@@ -17,20 +28,27 @@
           v-model="description"
           label="Description (vaccin, maréchal, médicament...)"
           density="compact"
-          variant="outlined"
+          :error-messages="errors?.description ? [errors.description] : undefined"
         />
       </v-col>
       <v-col cols="12" md="3">
-        <v-text-field
+        <DatePickerField
           v-model="date"
           label="Date"
-          type="date"
-          density="compact"
-          variant="outlined"
+          :error-messages="errors?.date ? [errors.date] : undefined"
         />
       </v-col>
+      <RecurrenceFields
+        v-model="recurrence"
+        :units="recurrenceUnits"
+        :checkbox-md="3"
+        :fields-md="6"
+      />
     </v-row>
-    <div class="d-flex justify-end">
+    <div class="d-flex justify-end ga-2">
+      <v-btn variant="outlined" size="small" type="button" @click="emit('cancel')">
+        Annuler
+      </v-btn>
       <v-btn
         variant="elevated"
         color="primary"
@@ -46,13 +64,20 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { DatePickerField, RecurrenceFields } from './index'
 import type { Horse } from '../types'
 
 type ReminderFormValue = {
   horseIds: string[]
   description: string
   date: string
+  reminderType: 'soin' | 'activité' | 'alimentation' | 'autres'
+  isRecurring: boolean
+  recurrenceInterval: number
+  recurrenceUnit: RecurrenceUnit
 }
+
+type RecurrenceUnit = 'days' | 'months' | 'years'
 
 const props = withDefaults(
   defineProps<{
@@ -62,6 +87,7 @@ const props = withDefaults(
     submitLabel?: string
     showHorseSelect?: boolean
     multiple?: boolean
+    errors?: Record<string, string>
   }>(),
   {
     loading: false,
@@ -74,6 +100,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (event: 'update:modelValue', value: ReminderFormValue): void
   (event: 'submit'): void
+  (event: 'cancel'): void
 }>()
 
 const horseSelectOptions = computed(() =>
@@ -94,6 +121,33 @@ const date = computed({
   get: () => props.modelValue.date,
   set: (value) => emit('update:modelValue', { ...props.modelValue, date: value }),
 })
+
+const reminderType = computed({
+  get: () => props.modelValue.reminderType,
+  set: (value) => emit('update:modelValue', { ...props.modelValue, reminderType: value }),
+})
+
+const recurrence = computed({
+  get: () => ({
+    isRecurring: props.modelValue.isRecurring,
+    recurrenceInterval: props.modelValue.recurrenceInterval,
+    recurrenceUnit: props.modelValue.recurrenceUnit,
+  }),
+  set: (value) => emit('update:modelValue', { ...props.modelValue, ...value }),
+})
+
+const reminderTypeOptions = [
+  { title: 'Soin', value: 'soin' },
+  { title: 'Activité', value: 'activité' },
+  { title: 'Alimentation', value: 'alimentation' },
+  { title: 'Autres', value: 'autres' },
+]
+
+const recurrenceUnits = [
+  { title: 'Jours', value: 'days' },
+  { title: 'Mois', value: 'months' },
+  { title: 'Ans', value: 'years' },
+]
 </script>
 
 <style scoped>

@@ -6,10 +6,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MaterialController = void 0;
 const materialRepository_1 = __importDefault(require("../repositories/materialRepository"));
 class MaterialController {
+    resolveDbErrorMessage(error) {
+        const code = error.code;
+        if (code === '42703') {
+            return 'Migration manquante: colonne materials.horse_id.';
+        }
+        return null;
+    }
     async getAll(req, res) {
         try {
             const includeInactive = req.query.includeInactive === 'true';
-            const materials = await materialRepository_1.default.findAll(includeInactive);
+            const horseId = req.query.horseId;
+            const materials = await materialRepository_1.default.findAll(includeInactive, horseId);
             res.json(materials);
         }
         catch (error) {
@@ -35,6 +43,9 @@ class MaterialController {
     async create(req, res) {
         try {
             const data = req.body;
+            if (data.name) {
+                data.name = data.name.trim();
+            }
             // Validation
             if (!data.name) {
                 res.status(400).json({ error: 'Name is required' });
@@ -44,6 +55,15 @@ class MaterialController {
             res.status(201).json(material);
         }
         catch (error) {
+            if (error.code === '23505') {
+                res.status(409).json({ error: 'Material already exists' });
+                return;
+            }
+            const dbMessage = this.resolveDbErrorMessage(error);
+            if (dbMessage) {
+                res.status(500).json({ error: dbMessage });
+                return;
+            }
             console.error('Error creating material:', error);
             res.status(500).json({ error: 'Failed to create material' });
         }
@@ -52,6 +72,9 @@ class MaterialController {
         try {
             const { id } = req.params;
             const data = req.body;
+            if (data.name !== undefined) {
+                data.name = data.name.trim();
+            }
             const material = await materialRepository_1.default.update(id, data);
             if (!material) {
                 res.status(404).json({ error: 'Material not found' });
@@ -60,6 +83,15 @@ class MaterialController {
             res.json(material);
         }
         catch (error) {
+            if (error.code === '23505') {
+                res.status(409).json({ error: 'Material already exists' });
+                return;
+            }
+            const dbMessage = this.resolveDbErrorMessage(error);
+            if (dbMessage) {
+                res.status(500).json({ error: dbMessage });
+                return;
+            }
             console.error('Error updating material:', error);
             res.status(500).json({ error: 'Failed to update material' });
         }
@@ -81,7 +113,8 @@ class MaterialController {
     }
     async getDueForPurchase(req, res) {
         try {
-            const materials = await materialRepository_1.default.getDueForPurchase();
+            const horseId = req.query.horseId;
+            const materials = await materialRepository_1.default.getDueForPurchase(horseId);
             res.json(materials);
         }
         catch (error) {

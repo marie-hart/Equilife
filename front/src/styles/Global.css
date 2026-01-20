@@ -1,12 +1,13 @@
 * {
-    margin: 0;
+    margin: 20px;
     padding: 0;
     box-sizing: border-box;
   }
   
   :root {
+    --bg-grey: #D3D3D3;
     --bg-light: #F2F2F2;
-    --primary-turquoise: #2AB4C8;
+  --primary-turquoise: #1E63B0;
     --secondary-beige: #D8C7A8;
     --outline-blue: #1a365d;
     --text-dark: #2d3748;

@@ -5,7 +5,7 @@ export declare class EventController {
     create(req: Request, res: Response): Promise<void>;
     update(req: Request, res: Response): Promise<void>;
     delete(req: Request, res: Response): Promise<void>;
-    getUpcomingReminders(req: Request, res: Response): Promise<void>;
+    getReminders(req: Request, res: Response): Promise<void>;
 }
 declare const _default: EventController;
 export default _default;

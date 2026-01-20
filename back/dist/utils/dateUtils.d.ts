@@ -1,7 +1,7 @@
 /**
  * Calcule la prochaine date de rappel basée sur la date de l'événement et l'intervalle
  */
-export declare function calculateNextReminderDate(eventDate: Date, intervalMonths?: number, intervalYears?: number): Date | null;
+export declare function calculateNextReminderDate(eventDate: Date, intervalDays?: number, intervalMonths?: number, intervalYears?: number): Date | null;
 /**
  * Calcule la prochaine date d'achat basée sur la dernière date d'achat et l'intervalle
  */

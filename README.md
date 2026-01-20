@@ -210,5 +210,3 @@ Une documentation Swagger est disponible sur `http://localhost:3000/api/docs`.
 - `is_active` (BOOLEAN) - Matériel actif
 - `created_at` (TIMESTAMP) - Date de création
 - `updated_at` (TIMESTAMP) - Date de mise à jour
-
-Pour tester : lance le front avec VITE_API_BASE_URL=http://localhost:3000/api si tu ne veux pas passer par le proxy Vite.

@@ -3,15 +3,20 @@
  */
 export function calculateNextReminderDate(
   eventDate: Date,
+  intervalDays?: number,
   intervalMonths?: number,
   intervalYears?: number
 ): Date | null {
-  if (!intervalMonths && !intervalYears) {
+  if (!intervalDays && !intervalMonths && !intervalYears) {
     return null;
   }
 
   const nextDate = new Date(eventDate);
-  
+
+  if (intervalDays) {
+    nextDate.setDate(nextDate.getDate() + intervalDays);
+  }
+
   if (intervalYears) {
     nextDate.setFullYear(nextDate.getFullYear() + intervalYears);
   }

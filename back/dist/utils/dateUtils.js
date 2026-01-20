@@ -6,11 +6,14 @@ exports.isDateInPast = isDateInPast;
 /**
  * Calcule la prochaine date de rappel basée sur la date de l'événement et l'intervalle
  */
-function calculateNextReminderDate(eventDate, intervalMonths, intervalYears) {
-    if (!intervalMonths && !intervalYears) {
+function calculateNextReminderDate(eventDate, intervalDays, intervalMonths, intervalYears) {
+    if (!intervalDays && !intervalMonths && !intervalYears) {
         return null;
     }
     const nextDate = new Date(eventDate);
+    if (intervalDays) {
+        nextDate.setDate(nextDate.getDate() + intervalDays);
+    }
     if (intervalYears) {
         nextDate.setFullYear(nextDate.getFullYear() + intervalYears);
     }

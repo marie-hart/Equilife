@@ -55,10 +55,13 @@ export class EventRepository {
 
     if (
       data.reminder_enabled &&
-      (data.reminder_interval_months || data.reminder_interval_years)
+      (data.reminder_interval_days ||
+        data.reminder_interval_months ||
+        data.reminder_interval_years)
     ) {
       nextReminderDate = calculateNextReminderDate(
         eventDate,
+        data.reminder_interval_days,
         data.reminder_interval_months,
         data.reminder_interval_years
       );
@@ -66,16 +69,25 @@ export class EventRepository {
 
     const result = await pool.query(
       `INSERT INTO events (
-        name, description, event_date, horse_id, reminder_enabled,
-        reminder_interval_months, reminder_interval_years, next_reminder_date
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        name, description, event_date, horse_id, product_id, is_care, reminder_type,
+        activity_type, activity_duration_minutes, activity_intensity, activity_comment,
+        reminder_enabled, reminder_interval_days, reminder_interval_months, reminder_interval_years, next_reminder_date
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *`,
       [
         data.name,
         data.description || null,
         data.event_date,
         data.horse_id || null,
+        data.product_id || null,
+        data.is_care || false,
+        data.reminder_type || null,
+        data.activity_type || null,
+        data.activity_duration_minutes || null,
+        data.activity_intensity || null,
+        data.activity_comment || null,
         data.reminder_enabled || false,
+        data.reminder_interval_days || null,
         data.reminder_interval_months || null,
         data.reminder_interval_years || null,
         nextReminderDate || null,
@@ -101,6 +113,7 @@ export class EventRepository {
     if (
       data.reminder_enabled !== undefined ||
       data.event_date ||
+      data.reminder_interval_days !== undefined ||
       data.reminder_interval_months !== undefined ||
       data.reminder_interval_years !== undefined
     ) {
@@ -111,6 +124,10 @@ export class EventRepository {
         data.reminder_enabled !== undefined
           ? data.reminder_enabled
           : existing.reminder_enabled;
+      const intervalDays =
+        data.reminder_interval_days !== undefined
+          ? data.reminder_interval_days
+          : existing.reminder_interval_days || undefined;
       const intervalMonths =
         data.reminder_interval_months !== undefined
           ? data.reminder_interval_months
@@ -120,9 +137,10 @@ export class EventRepository {
           ? data.reminder_interval_years
           : existing.reminder_interval_years || undefined;
 
-      if (reminderEnabled && (intervalMonths || intervalYears)) {
+      if (reminderEnabled && (intervalDays || intervalMonths || intervalYears)) {
         nextReminderDate = calculateNextReminderDate(
           eventDate,
+          intervalDays,
           intervalMonths,
           intervalYears
         );
@@ -137,18 +155,34 @@ export class EventRepository {
         description = COALESCE($2, description),
         event_date = COALESCE($3, event_date),
         horse_id = COALESCE($4, horse_id),
-        reminder_enabled = COALESCE($5, reminder_enabled),
-        reminder_interval_months = COALESCE($6, reminder_interval_months),
-        reminder_interval_years = COALESCE($7, reminder_interval_years),
-        next_reminder_date = $8
-      WHERE id = $9
+        product_id = COALESCE($5, product_id),
+        is_care = COALESCE($6, is_care),
+        reminder_type = COALESCE($7, reminder_type),
+        activity_type = COALESCE($8, activity_type),
+        activity_duration_minutes = COALESCE($9, activity_duration_minutes),
+        activity_intensity = COALESCE($10, activity_intensity),
+        activity_comment = COALESCE($11, activity_comment),
+        reminder_enabled = COALESCE($12, reminder_enabled),
+        reminder_interval_days = COALESCE($13, reminder_interval_days),
+        reminder_interval_months = COALESCE($14, reminder_interval_months),
+        reminder_interval_years = COALESCE($15, reminder_interval_years),
+        next_reminder_date = $16
+      WHERE id = $17
       RETURNING *`,
       [
         data.name || null,
         data.description !== undefined ? data.description : null,
         data.event_date || null,
         data.horse_id || null,
+        data.product_id || null,
+        data.is_care !== undefined ? data.is_care : null,
+        data.reminder_type || null,
+        data.activity_type || null,
+        data.activity_duration_minutes !== undefined ? data.activity_duration_minutes : null,
+        data.activity_intensity || null,
+        data.activity_comment || null,
         data.reminder_enabled !== undefined ? data.reminder_enabled : null,
+        data.reminder_interval_days !== undefined ? data.reminder_interval_days : null,
         data.reminder_interval_months !== undefined
           ? data.reminder_interval_months
           : null,
@@ -233,9 +267,17 @@ export class EventRepository {
       description: row.description,
       event_date: new Date(row.event_date),
       horse_id: row.horse_id || undefined,
+      product_id: row.product_id || undefined,
       reminder_enabled: row.reminder_enabled,
+      reminder_type: row.reminder_type || undefined,
+      activity_type: row.activity_type || undefined,
+      activity_duration_minutes: row.activity_duration_minutes || undefined,
+      activity_intensity: row.activity_intensity || undefined,
+      activity_comment: row.activity_comment || undefined,
+      reminder_interval_days: row.reminder_interval_days,
       reminder_interval_months: row.reminder_interval_months,
       reminder_interval_years: row.reminder_interval_years,
+      is_care: row.is_care,
       last_reminder_date: row.last_reminder_date
         ? new Date(row.last_reminder_date)
         : undefined,

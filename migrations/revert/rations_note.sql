@@ -1,0 +1,2 @@
+ALTER TABLE rations
+  DROP COLUMN IF EXISTS note;

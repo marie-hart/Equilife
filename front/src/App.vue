@@ -12,13 +12,37 @@
 </template>
 
 <script setup lang="ts">
-import { Header } from '@/components'
+import { onMounted } from "vue";
+import { registerSW } from "virtual:pwa-register";
+// @ts-ignore Vue SFC default export is provided by vue-tsc
+import Header from "./components/header/TheHeader.vue";
+import { startReminderNotifications } from "./utils/notifications";
+
+onMounted(() => {
+  registerSW({
+    immediate: true,
+    onNeedRefresh() {
+      // Force reload to ensure the latest app shell is used.
+      window.location.reload();
+    },
+  });
+  startReminderNotifications();
+});
 </script>
 
 <style>
+html,
+body,
+#app,
+.v-application,
+.v-application__wrap,
+.v-main,
+.v-main__wrap {
+  background-color: #f6f7fb !important;
+}
+
 #app {
   min-height: 100vh;
-  background-color: #F2F2F2;
   width: 100%;
   overflow-x: hidden;
   padding-bottom: 70px; /* Espace pour la navigation du bas sur mobile */
