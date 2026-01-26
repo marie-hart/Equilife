@@ -45,7 +45,7 @@ body,
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
-  padding-bottom: 70px; /* Espace pour la navigation du bas sur mobile */
+  padding-bottom: 15px;
 }
 
 /* Optimisation pour le viewport mobile */

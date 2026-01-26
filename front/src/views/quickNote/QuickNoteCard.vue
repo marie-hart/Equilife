@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { SectionCard } from "../../components/index.js";
-import { formatDateLong } from '../../utils/date.js';
+import { formatDateLong } from '../../libs/date.js';
 import { DashboardNote } from '../../types/note.js';
 import { saveNotes, loadNotes } from '../../libs/note';
 

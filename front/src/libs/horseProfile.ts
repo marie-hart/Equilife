@@ -1,12 +1,4 @@
-import { computed } from "vue";
-import { useRoute } from "vue-router";
-
-const route = useRoute();
-
-
 const SELECTED_HORSE_ID_KEY = 'selectedHorseId'
-
-const routeHorseId = computed(() => route.params.id as string | undefined);
 
 export const getStoredHorseId = (): string | null => {
   try {
@@ -17,5 +9,5 @@ export const getStoredHorseId = (): string | null => {
   }
 }
 
-export const getActiveHorseId = () =>
-  routeHorseId.value || getStoredHorseId() || undefined;
+export const getActiveHorseId = (horseId?: string ) =>
+  horseId || getStoredHorseId() || undefined;

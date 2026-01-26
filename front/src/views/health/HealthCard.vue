@@ -5,8 +5,8 @@
             icon="house-chimney-medical"
             :showAdd="true"
             class="clickable-card dashboard-card dashboard-card--primary"
-            @add="goToCareCreate"
-            @click="goToHealth"
+            @add="goToCareCreate()"
+            :to="goToHealth()"
           >
             <v-list
               v-if="todayCares.length"
@@ -63,22 +63,26 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
-import type { Event } from "../../types/index.js";
+import { useRoute } from 'vue-router';
+import type { Event, SelectedKind, ActionButton } from "../../types/index.js";
 import { SectionCard } from "../../components";
 import { ActionButtons } from "../../components"
-import { getActiveHorseId } from "../../utils/horseProfile.js"
-import { sortByDateAsc, startOfDay, formatDateLong, formatDateMobile, isSameDay } from "../../utils/date.js"
-import { getEventActions } from "../../utils/action.js"
+import { getActiveHorseId } from "../../libs/horseProfile.js"
+import { sortByDateAsc, startOfDay, formatDateLong, formatDateMobile, isSameDay } from "../../libs/date.js"
 
-
-const router = useRouter();
+const route = useRoute()
 
 const events = ref<Event[]>([]);
+const selectedKind = ref<SelectedKind>(null);
+const selectedEvent = ref<Event | null>(null);
+const deleteDialogOpen = ref(false);
 
 const careEvents = computed(() =>
   events.value.filter((event) => event.is_care),
 );
+
+const routeHorseId = computed(() => route.params.id as string | undefined);
+const horseId = getActiveHorseId(routeHorseId.value);
 
 const todayCares = computed(() => {
   const today = startOfDay(new Date());
@@ -99,22 +103,57 @@ const nextCare = computed(() => {
 });
 
 const goToCareCreate = () => {
-  const horseId = getActiveHorseId();
   if (horseId) {
-    router.push({ name: "HorseCareCreate", params: { id: horseId } });
-    return;
+    return { name: "HorseCareCreate", params: { id: horseId } };
   }
-  router.push("/horses");
+  return "/horses";
 };
 
 const goToHealth = () => {
-  const horseId = getActiveHorseId();
   if (horseId) {
-    router.push({ name: "HorseHealth", params: { id: horseId } });
-    return;
+    return { name: "HorseHealth", params: { id: horseId } };
   }
-  router.push("/horses");
+  return "/horses";
 };
+
+const openEventDetails = (event: Event) => {
+  return { name: "EventDetails", params: { id: event.id } };
+};
+
+const openEventEdit = (event: Event) => {
+  return { name: "EventEdit", params: { id: event.id } };
+};
+
+const openEventDelete = (event: Event) => {
+  selectedKind.value = "event";
+  selectedEvent.value = event;
+  deleteDialogOpen.value = true;
+};
+
+const getEventActions = (event: Event): ActionButton[] => [
+  {
+    key: "view",
+    title: "Voir",
+    icon: "mdi-eye",
+    disabled: false,
+    to:openEventDetails(event),
+  },
+  {
+    key: "edit",
+    title: "Éditer",
+    icon: "mdi-pencil",
+    disabled: false,
+    to:openEventEdit(event),
+  },
+  {
+    key: "delete",
+    title: "Supprimer",
+    icon: "mdi-trash-can",
+    color: "error",
+    disabled: false,
+    to:openEventDelete(event),
+  },
+];
 </script>
 
 <style scoped>

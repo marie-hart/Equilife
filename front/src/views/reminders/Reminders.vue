@@ -221,10 +221,10 @@ import { useRouter } from 'vue-router'
 import { eventsApi } from '../../api/events'
 import { ActionButtons, DatePickerField } from '../../components'
 import { horsesApi } from '../../api/horses'
-import { getStoredHorseId } from '../../utils/horseProfile'
+import { getStoredHorseId } from '../../libs/horseProfile.js'
 import { validateRequiredFieldsMap } from '../../utils/validation'
 import type { Event, Horse } from '../../types'
-import { isSameDay, startOfDay, formatDateLong, formatDateMobile, fromDateInputValue} from '../../utils/date';
+import { isSameDay, startOfDay, formatDateLong, formatDateMobile, fromDateInputValue} from '../../libs/date.js';
 
 type ReminderAction = {
   key: string

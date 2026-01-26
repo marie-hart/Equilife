@@ -5,49 +5,40 @@
 
         <HealthCard />
 
-        <v-col cols="12" class="d-flex flex-row ga-3">
+        <VRow no-gutters class="mx-n1">
+          <VCol cols="12" sm="6" class="pa-1">
             <v-btn
-              class="w-50 text-white action-bg-training justify-center"
-              height="50"
+              class="action-bg-training text-body-2 font-weight-medium"
+              height="60"
               rounded="lg"
               variant="flat"
-              @click="goToActivities"
+              block
+              :to="getActivitiesRoute()"
             >
-            <template v-slot:prepend>
-              <v-img
-                src="/equestre.png"
-                max-width="42"
-                max-height="42"
-                contain
-              />
-            </template>
+              <template v-slot:prepend>
+                <img src="/equestre.png" alt="" width="42" />
+              </template>
+                Suivi d'Entraînement
+            </v-btn>
+          </VCol>
 
-            <div class="text-body-2 font-weight-medium lh-tight">
-              <div>Suivi</div>
-              <div>d'Entraînement</div>
-            </div>
-          </v-btn>
+          <VCol cols="12" sm="6" class="pa-1">
+            <v-btn
+              class="action-bg-feeding text-body-2 font-weight-medium"
+              height="60"
+              rounded="lg"
+              variant="flat"
+              block
+              :to="goToFeeding()"
+            >
+              <template v-slot:prepend>
+                  <img src="/alimentation.png" alt="" width="30">
+              </template>
+              Alimentation
+            </v-btn>
+          </VCol>
+        </VRow>
 
-
-              <v-card
-                rounded="lg"
-                height="50"
-                class="w-50 text-white action-bg-feeding"
-                @click="goToFeeding"
-              >
-                <div class="d-flex flex-column ga-1">
-                  <v-img
-                    src="/alimentation.png"
-                    max-width="30"
-                    max-height="30"
-                    contain
-                  />
-                  <div class="text-body-2 font-weight-medium">
-                    Alimentation
-                  </div>
-                </div>
-              </v-card>
-              </v-col>
         <QuickNoteCard />
     </main>
 
@@ -78,12 +69,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { ref, onMounted, watch, computed } from "vue";
+import { useRoute } from "vue-router";
 import { eventsApi } from "../api/events";
-import { getActiveHorseId } from "../utils/horseProfile"
+import { getActiveHorseId } from "../libs/horseProfile.js"
 import type { Event, SelectedKind } from "../types";
-import { deleteLabel } from '../utils/action'
 import  RemindersCard  from './reminders/RemindersCard.vue'
 import HealthCard from './health/HealthCard.vue'
 import QuickNoteDialog from './quickNote/QuickNoteDialog.vue'
@@ -93,7 +83,10 @@ const events = ref<Event[]>([]);
 const reminders = ref<Event[]>([]);
 
 const route = useRoute();
-const router = useRouter();
+
+const routeHorseId = computed(() => route.params.id as string | undefined);
+
+const horseId = getActiveHorseId(routeHorseId.value);
 
 const snackbar = ref({
   show: false,
@@ -106,8 +99,7 @@ const selectedEvent = ref<Event | null>(null);
 const deleteDialogOpen = ref(false);
 
 const loadDashboard = async () => {
-  try {
-    const horseId = getActiveHorseId();
+  try { 
     const [eventsResponse, remindersResponse] = await Promise.all([
       eventsApi.getAll(horseId),
       eventsApi.getReminders(horseId),
@@ -142,23 +134,26 @@ const confirmDelete = async () => {
   }
 };
 
-const goToActivities = () => {
-  const horseId = getActiveHorseId();
+const getActivitiesRoute = () => {
   if (horseId) {
-    router.push({ name: "HorseActivities", params: { id: horseId } });
-    return;
+    return { name: "HorseActivities", params: { id: horseId } };
   }
-  router.push("/horses/:id/activities");
+  return "/horses/:id/activities";
 };
 
 const goToFeeding = () => {
-  const horseId = getActiveHorseId();
   if (horseId) {
-    router.push({ name: "HorseFeeding", params: { id: horseId } });
-    return;
+    return { name: "HorseFeeding", params: { id: horseId } };
   }
-  router.push("/horses");
+  return "/horses/:id/feeding";
 };
+
+const deleteLabel = computed(() => {
+  if (selectedKind.value === "event" && selectedEvent.value) {
+    return selectedEvent.value.name;
+  }
+  return "";
+});
 
 onMounted(async () => {
   await loadDashboard();

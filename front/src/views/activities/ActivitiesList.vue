@@ -14,34 +14,11 @@
         </v-btn>
       </div>
           <div class="d-flex flex-column ga-4">
-            <v-card class="section-card" variant="outlined">
-              <v-card-title class="text-subtitle-1">Filtres</v-card-title>
-              <v-card-text class="pt-3">
-                <v-row dense>
-                  <v-col cols="12" md="4">
-                    <v-select
-                      v-model="selectedHorseId"
-                      :items="horseFilterOptions"
-                      label="Cheval"
-                      density="compact"
-                      variant="outlined"
-                    />
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <v-select
-                      v-model="selectedType"
-                      :items="activityTypeOptions"
-                      label="Type"
-                      density="compact"
-                      variant="outlined"
-                    />
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <DatePickerField v-model="selectedDate" label="Date" />
-                  </v-col>
-                </v-row>
-              </v-card-text>
-            </v-card>
+
+            <FiltersPanel
+              :filters="filterDefinitions"
+              v-model="filterValues"
+            />
 
             <div>
               <div class="text-subtitle-1 mb-2">Journal</div>
@@ -155,10 +132,13 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "../../api/events";
-import { ActionButtons, DatePickerField } from "../../components";
-import { horsesApi } from "../../api/horses";
-import { getStoredHorseId } from "../../utils/horseProfile";
-import type { Event, Horse } from "../../types";
+import { ActionButtons } from "../../components";
+import type { Event, SelectOption, ActivityType } from "../../types";
+import { toMonthKey, formatDateLong, formatDateMobile, isSameDayFilter, formatMonthLabel } from '../../libs/date';
+import { useHorseSelection } from '../../composable/useHorseSelection'
+import { useFilters } from '../../composable/useFilters';
+import FiltersPanel from '@/components/FiltersPanel.vue'
+
 
 type ActivityAction = {
   key: string
@@ -169,17 +149,17 @@ type ActivityAction = {
   onClick?: () => void
 }
 
+const {
+  selectedHorseId,
+} = useHorseSelection()
+
 type IntensityValue = "legere" | "normale" | "soutenue";
 
 const route = useRoute();
 const router = useRouter();
 const { xs } = useDisplay();
 const horseId = computed(() => route.params.id as string | undefined);
-const horses = ref<Horse[]>([]);
 const activities = ref<Event[]>([]);
-const selectedType = ref<string>("all");
-const selectedDate = ref<string>("");
-const selectedHorseId = ref<string>("all");
 const isDeleteOpen = ref(false);
 const selectedActivity = ref<Event | null>(null);
 const snackbar = ref({
@@ -190,14 +170,38 @@ const snackbar = ref({
 
 const cardMaxWidth = computed(() => (xs.value ? "100%" : "300px"));
 
-const activityTypes = [
-  { title: "Travail monté", value: "travail monté" },
-  { title: "Travail à pied", value: "travail à pied" },
-  { title: "Balade", value: "balade" },
-  { title: "Longe", value: "longe" },
-  { title: "Repos", value: "repos" },
-  { title: "Autre", value: "autre" },
-];
+
+const activityTypes: SelectOption<ActivityType>[] = [
+  { title: 'Travail monté', value: 'travail monté' },
+  { title: 'Travail à pied', value: 'travail à pied' },
+  { title: 'Balade', value: 'balade' },
+  { title: 'Longe', value: 'longe' },
+  { title: 'Repos', value: 'repos' },
+  { title: 'Autre', value: 'autre' },
+]
+
+
+const filters = [
+  {
+    key: 'type',
+    type: 'select',
+    label: 'Type d’activité',
+    defaultValue: 'all',
+    options: activityTypes,
+  },
+  {
+    key: 'date',
+    type: 'date',
+    label: 'Date',
+    defaultValue: '',
+  },
+] as const
+
+const {
+  filterValues,
+  filterDefinitions,
+} = useFilters(filters)
+
 
 const intensityLabel = (value?: IntensityValue): string => {
   switch (value) {
@@ -208,38 +212,6 @@ const intensityLabel = (value?: IntensityValue): string => {
     default:
       return "Normal";
   }
-};
-
-const formatDateLong = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-};
-
-const formatDateMobile = (dateString: string): string => {
-  const date = new Date(dateString);
-  const currentYear = new Date().getFullYear();
-  const monthShort = date
-    .toLocaleDateString("fr-FR", { month: "short" })
-    .replace(".", "");
-  return date.getFullYear() !== currentYear
-    ? `${date.getDate()} ${monthShort} ${date.getFullYear()}`
-    : `${date.getDate()} ${monthShort}`;
-};
-
-const toMonthKey = (dateString: string): string => {
-  const date = new Date(dateString);
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${date.getFullYear()}-${month}`;
-};
-
-const formatMonthLabel = (key: string): string => {
-  const [year, month] = key.split("-").map(Number);
-  const date = new Date(year, month - 1, 1);
-  return date.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
 };
 
 const groupedActivities = computed(() => {
@@ -263,40 +235,13 @@ const groupedActivities = computed(() => {
     }));
 });
 
-const activityTypeOptions = computed(() => {
-  const types = activityTypes.map((type) => type.value);
-  return [
-    { title: "Tous", value: "all" },
-    ...types.map((type) => ({ title: type, value: type })),
-  ];
-});
-
-const horseOptions = computed(() =>
-  horses.value.map((horse) => ({ title: horse.name, value: horse.id }))
-);
-
-const horseFilterOptions = computed(() => [
-  { title: "Tous les chevaux", value: "all" },
-  ...horseOptions.value,
-]);
-
-const isSameDayFilter = (dateString: string): boolean => {
-  if (!selectedDate.value) return true;
-  const date = new Date(dateString).toDateString();
-  const target = new Date(`${selectedDate.value}T00:00:00`).toDateString();
-  return date === target;
-};
-
-const filteredActivities = computed(() => {
-  const byType =
-    selectedType.value === "all"
-      ? activities.value
-      : activities.value.filter(
-          (activity) =>
-            (activity.activity_type || activity.name) === selectedType.value
-        );
-  return byType.filter((activity) => isSameDayFilter(activity.event_date));
-});
+watch(
+  () => filterValues.type,
+  (id) => {
+    selectedHorseId.value = id
+    loadActivities()
+  }
+)
 
 const loadActivities = async () => {
   try {
@@ -311,24 +256,23 @@ const loadActivities = async () => {
   }
 };
 
-const loadHorses = async () => {
-  try {
-    horses.value = await horsesApi.getAll();
-  } catch (error) {
-    console.error("Error loading horses:", error);
-  }
-};
+const filteredActivities = computed(() => {
+  let result = activities.value
 
-const setHorseFromRoute = () => {
-  if (horseId.value) {
-    selectedHorseId.value = horseId.value;
-    return;
+  if (filterValues.type !== 'all') {
+    result = result.filter(
+      a => (a.activity_type || a.name) === filterValues.type
+    )
   }
-  const storedHorseId = getStoredHorseId();
-  if (storedHorseId) {
-    selectedHorseId.value = storedHorseId;
-}
-};
+
+  if (filterValues.date) {
+    result = result.filter(a =>
+      isSameDayFilter(a.event_date, filterValues.date)
+    )
+  }
+
+  return result
+})
 
 const goToActivityCreate = () => {
   const id = horseId.value;
@@ -403,8 +347,6 @@ watch(selectedHorseId, () => {
 });
 
 onMounted(async () => {
-  await loadHorses();
-  setHorseFromRoute();
   await loadActivities();
 });
 </script>

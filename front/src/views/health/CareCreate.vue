@@ -90,9 +90,10 @@ import { eventsApi } from '../../api/events'
 import { DatePickerField, RecurrenceFields } from '../../components'
 import { materialsApi } from '../../api/materials'
 import { horsesApi } from '../../api/horses'
-import { getStoredHorseId } from '../../utils/horseProfile'
+import { getStoredHorseId } from '../../libs/horseProfile.js'
 import { validateRequiredFieldsMap } from '../../utils/validation'
 import type { Horse, Material } from '../../types'
+import { fromDateInputValue } from '../../libs/date.js'
 
 type RecurrenceUnit = 'days' | 'months' | 'years'
 
@@ -152,9 +153,6 @@ const recurrence = computed({
     form.value = { ...form.value, ...value }
   },
 })
-
-const fromDateInputValue = (value: string): string =>
-  new Date(`${value}T00:00:00`).toISOString()
 
 const loadHorses = async () => {
   try {

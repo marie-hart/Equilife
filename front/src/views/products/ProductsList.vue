@@ -116,7 +116,7 @@ import { materialsApi } from '../../api/materials'
 import { ActionButtons } from '../../components'
 import { eventsApi } from '../../api/events'
 import { horsesApi } from '../../api/horses'
-import { getStoredHorseId } from '../../utils/horseProfile'
+import { getStoredHorseId } from '../../libs/horseProfile.js'
 import type { Horse, Material } from '../../types'
 import type { Event } from '../../types'
 

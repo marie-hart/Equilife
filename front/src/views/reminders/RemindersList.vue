@@ -9,40 +9,11 @@
         </v-btn>
       </div>
           <div class="d-flex flex-column ga-4">
-            <v-card class="section-card" variant="outlined">
-              <v-card-title class="text-subtitle-1">Filtres</v-card-title>
-              <v-card-text class="pt-3">
-                <v-row dense>
-                  <v-col cols="12" md="4">
-                    <v-select
-                      v-model="selectedHorseId"
-                      :items="horseOptions"
-                      label="Cheval"
-                      density="compact"
-                      variant="outlined"
-                    />
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <v-select
-                      v-model="selectedStatus"
-                      :items="statusOptions"
-                      label="Statut"
-                      density="compact"
-                      variant="outlined"
-                    />
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <v-select
-                      v-model="selectedType"
-                      :items="reminderTypeOptions"
-                      label="Type"
-                      density="compact"
-                      variant="outlined"
-                    />
-                  </v-col>
-                </v-row>
-              </v-card-text>
-            </v-card>
+            <FiltersPanel
+              :filters="filterDefinitions"
+              v-model="filterValues"
+            />
+
 
             <v-card class="section-card" variant="outlined">
               <v-card-title class="text-subtitle-1">Liste des rappels</v-card-title>
@@ -73,7 +44,7 @@
                         </div>
                       </td>
                       <td class="d-none d-md-table-cell py-3 text-body-2">
-                            {{ getHorseName(reminder) }}
+                            {{ getHorseName() }}
                       </td>
                       <td class="d-none d-md-table-cell py-3">
                               <v-chip
@@ -105,7 +76,7 @@
                             {{ getReminderTitle(reminder) }}
                           </div>
                           <div class="text-body-2 text-grey-darken-1">
-                            {{ getHorseName(reminder) }}
+                            {{ getHorseName() }}
                           </div>
                           <div class="d-flex align-center ga-2 mt-2">
                             <v-chip
@@ -221,9 +192,13 @@ import { useRouter } from 'vue-router'
 import { eventsApi } from '../../api/events'
 import { ActionButtons, DatePickerField } from '../../components'
 import { horsesApi } from '../../api/horses'
-import { getStoredHorseId } from '../../utils/horseProfile'
+import { getStoredHorseId } from '../../libs/horseProfile.js'
 import { validateRequiredFieldsMap } from '../../utils/validation'
-import type { Event, Horse } from '../../types'
+import { formatDateLong, formatDateMobile, toDateInputValue, getReminderDate, fromDateInputValue } from '../../libs/date';
+import type { Event, Horse, SelectOption, ReminderType } from '../../types'
+import { getStatusKey, getStatusColor } from '../../libs/index';
+import { useFilters } from '../../composable/useFilters';
+import { useHorseSelection } from '../../composable/useHorseSelection';
 
 type ReminderAction = {
   key: string
@@ -237,8 +212,8 @@ type ReminderAction = {
 const reminders = ref<Event[]>([])
 const horses = ref<Horse[]>([])
 const router = useRouter()
+const { getHorseName, horseOptions } = useHorseSelection()
 const selectedHorseId = ref<string>('all')
-const selectedStatus = ref<'all' | 'overdue' | 'today' | 'upcoming'>('all')
 const isEditOpen = ref(false)
 const isDeleteOpen = ref(false)
 const selectedReminder = ref<Event | null>(null)
@@ -250,7 +225,6 @@ const editForm = ref({
   recurrenceUnit: 'months' as RecurrenceUnit,
 })
 const editErrors = ref<Record<string, string>>({})
-const selectedType = ref<'all' | 'soin' | 'activité' | 'alimentation' | 'autres'>('all')
 const snackbar = ref({
   show: false,
   message: '',
@@ -262,13 +236,6 @@ const careDoneErrors = ref<Record<string, string>>({})
 
 type RecurrenceUnit = 'days' | 'months' | 'years'
 
-const horseById = computed(() => new Map(horses.value.map((horse) => [horse.id, horse])))
-
-const horseOptions = computed(() => [
-  { title: 'Tous les chevaux', value: 'all' },
-  ...horses.value.map((horse) => ({ title: horse.name, value: horse.id })),
-])
-
 const statusOptions = [
   { title: 'Tous', value: 'all' },
   { title: 'En retard', value: 'overdue' },
@@ -276,7 +243,7 @@ const statusOptions = [
   { title: 'À venir', value: 'upcoming' },
 ]
 
-const reminderTypeOptions = [
+const reminderTypeOptions: SelectOption<ReminderType>[] = [
   { title: 'Tous', value: 'all' },
   { title: 'Soin', value: 'soin' },
   { title: 'Activité', value: 'activité' },
@@ -284,72 +251,64 @@ const reminderTypeOptions = [
   { title: 'Autres', value: 'autres' },
 ]
 
+
 const recurrenceUnits = [
   { title: 'Jours', value: 'days' },
   { title: 'Mois', value: 'months' },
   { title: 'Ans', value: 'years' },
 ]
 
-const formatDateLong = (dateString: string): string => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-}
+const filters = [
+  {
+    key: 'horseId',
+    type: 'select',
+    label: 'Cheval',
+    defaultValue: 'all',
+    options: horseOptions.value,
+  },
+  {
+    key: 'status',
+    type: 'select',
+    label: 'Statut',
+    defaultValue: 'upcoming',
+    options: statusOptions,
+  },
+  {
+    key: 'type',
+    type: 'select',
+    label: 'Type',
+    defaultValue: 'soin',
+    options: reminderTypeOptions,
+  },
+] as const
 
-const formatDateMobile = (dateString: string): string => {
-  const date = new Date(dateString)
-  const currentYear = new Date().getFullYear()
-  const monthShort = date.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '')
-  return date.getFullYear() !== currentYear
-    ? `${date.getDate()} ${monthShort} ${date.getFullYear()}`
-    : `${date.getDate()} ${monthShort}`
-}
+const {
+  filterValues,
+  filterDefinitions,
+} = useFilters(filters)
 
-const startOfDay = (date: Date): Date => {
-  const normalized = new Date(date)
-  normalized.setHours(0, 0, 0, 0)
-  return normalized
-}
+const filteredReminders = computed(() => {
+  let result = reminders.value
 
-const isSameDay = (dateString: string, baseDate: Date): boolean => {
-  const date = new Date(dateString)
-  return date.toDateString() === baseDate.toDateString()
-}
-
-const toDateInputValue = (dateString: string): string => {
-  const date = new Date(dateString)
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${date.getFullYear()}-${month}-${day}`
-}
-
-const fromDateInputValue = (value: string): string =>
-  new Date(`${value}T00:00:00`).toISOString()
-
-const getReminderDate = (reminder: Event): string =>
-  reminder.next_reminder_date || reminder.event_date
-
-const getStatusColor = (reminder: Event): 'error' | 'warning' | 'success' => {
-  const today = startOfDay(new Date())
-  if (isSameDay(getReminderDate(reminder), today)) {
-    return 'warning'
+  if (filterValues.horseId !== 'all') {
+    result = result.filter(r => r.horse_id === filterValues.horseId)
   }
-  return new Date(getReminderDate(reminder)) < today ? 'error' : 'success'
-}
 
-const getStatusKey = (reminder: Event): 'overdue' | 'today' | 'upcoming' => {
-  const today = startOfDay(new Date())
-  if (isSameDay(getReminderDate(reminder), today)) {
-    return 'today'
+  if (filterValues.status !== 'upcoming') {
+    result = result.filter(r => getStatusKey(r) === filterValues.status)
   }
-  return new Date(getReminderDate(reminder)) < today ? 'overdue' : 'upcoming'
-}
 
-const getHorseName = (reminder: Event): string => {
-  if (!reminder.horse_id) {
-    return 'Cheval inconnu'
+  if (filterValues.type !== 'soin') {
+    result = result.filter(r => r.reminder_type === filterValues.type)
   }
-  return horseById.value.get(reminder.horse_id)?.name ?? 'Cheval inconnu'
-}
+
+  return result.sort(
+    (a, b) =>
+      new Date(getReminderDate(a)).getTime() -
+      new Date(getReminderDate(b)).getTime()
+  )
+})
+
 
 const getReminderTitle = (reminder: Event): string => {
   if (reminder.reminder_type === 'alimentation' && reminder.name) {
@@ -382,24 +341,6 @@ const setHorseFromStorage = () => {
     selectedHorseId.value = storedHorseId
   }
 }
-
-const filteredReminders = computed(() => {
-  const byHorse =
-    selectedHorseId.value === 'all'
-      ? reminders.value
-      : reminders.value.filter((reminder) => reminder.horse_id === selectedHorseId.value)
-  const byStatus =
-    selectedStatus.value === 'all'
-      ? byHorse
-      : byHorse.filter((reminder) => getStatusKey(reminder) === selectedStatus.value)
-  const byType =
-    selectedType.value === 'all'
-      ? byStatus
-      : byStatus.filter((reminder) => reminder.reminder_type === selectedType.value)
-  return [...byType].sort(
-    (a, b) => new Date(getReminderDate(a)).getTime() - new Date(getReminderDate(b)).getTime()
-  )
-})
 
 
 const isCareRecurring = (reminder: Event): boolean => {

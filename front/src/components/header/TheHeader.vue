@@ -2,7 +2,7 @@
   <div>
     <v-sheet class="header" elevation="0">
       <div class="d-flex align-center justify-space-between">
-        <img src="/equilife_logo_white.svg" alt="EquiLife" class="app-logo" />
+        <img src="/logo-app.png" alt="EquiLife" class="app-logo" />
         <v-btn
           icon="mdi-bell-outline"
           variant="text"
@@ -241,7 +241,7 @@ watch(
 
 <style scoped>
 .header {
-  background: linear-gradient(135deg, #1e63b0 0%, #2f8f84 100%);
+  background-color: #2c4b29;
 }
 
 .app-logo {

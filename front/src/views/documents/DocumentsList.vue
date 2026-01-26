@@ -230,7 +230,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { documentsApi } from '../../api/documents'
 import { horsesApi } from '../../api/horses'
 import { ActionButtons } from '../../components'
-import { getStoredHorseId } from '../../utils/horseProfile'
+import { getStoredHorseId } from '../../libs/horseProfile.js'
 import type { Document, Horse } from '../../types'
 
 type DocumentTag =

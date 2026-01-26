@@ -85,7 +85,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { documentsApi } from '../../api/documents'
 import { DatePickerField } from '../../components'
 import { horsesApi } from '../../api/horses'
-import { getStoredHorseId } from '../../utils/horseProfile'
+import { getStoredHorseId } from '../../libs/horseProfile.js'
 import { validateRequiredFieldsMap } from '../../utils/validation'
 import type { Horse } from '../../types'
 

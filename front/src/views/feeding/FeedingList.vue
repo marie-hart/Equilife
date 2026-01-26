@@ -135,7 +135,7 @@ import { rationsApi } from '../../api/rations'
 import { ActionButtons } from '../../components'
 import { materialsApi } from '../../api/materials'
 import { horsesApi } from '../../api/horses'
-import { getStoredHorseId } from '../../utils/horseProfile'
+import { getStoredHorseId } from '../../libs/horseProfile.js'
 import type { Horse, Material, Ration } from '../../types'
 
 type RationAction = {

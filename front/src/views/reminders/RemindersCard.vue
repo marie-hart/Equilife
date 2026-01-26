@@ -121,15 +121,20 @@ import { computed, ref } from "vue";
 import { SectionCard } from "../../components";
 import { ActionButtons } from "../../components"
 import { useRoute, useRouter } from "vue-router";
-import { getStoredHorseId } from "../../utils/horseProfile.js";
-import { sortByDateAsc, startOfDay, formatDateLong, formatDateMobile } from "../../utils/date.js"
-import type { Event } from "../../types/index.js";
-import { getEventActions } from "../../utils/action.js"
+import {  getActiveHorseId } from "../../libs/horseProfile.js";
+import { sortByDateAsc, startOfDay, formatDateLong, formatDateMobile } from "../../libs/date.js"
+import type { Event, ActionButton, SelectedKind } from "../../types/index.js"
 
 const route = useRoute();
 const router = useRouter();
 
 const reminders = ref<Event[]>([]);
+const selectedKind = ref<SelectedKind>(null);
+const selectedEvent = ref<Event | null>(null);
+const deleteDialogOpen = ref(false);
+
+const routeHorseId = computed(() => route.params.id as string | undefined);
+const horseId = getActiveHorseId(routeHorseId.value);
 
 
 const goToReminders = () => {
@@ -159,17 +164,50 @@ const remindersUpcoming = computed(() => {
   );
 });
 
-const routeHorseId = computed(() => route.params.id as string | undefined);
-
-const getActiveHorseId = () =>
-  routeHorseId.value || getStoredHorseId() || undefined;
-
 const goToReminderCreate = () => {
-  const horseId = getActiveHorseId();
   router.push(
     horseId ? { path: "/reminders/new", query: { horseId } } : "/reminders/new",
   );
 };
+
+const openEventDetails = (event: Event) => {
+  router.push({ name: "EventDetails", params: { id: event.id } });
+};
+
+const openEventEdit = (event: Event) => {
+  router.push({ name: "EventEdit", params: { id: event.id } });
+};
+
+const openEventDelete = (event: Event) => {
+  selectedKind.value = "event";
+  selectedEvent.value = event;
+  deleteDialogOpen.value = true;
+};
+
+const getEventActions = (event: Event): ActionButton[] => [
+  {
+    key: "view",
+    title: "Voir",
+    icon: "mdi-eye",
+    disabled: false,
+    to:openEventDetails(event),
+  },
+  {
+    key: "edit",
+    title: "Éditer",
+    icon: "mdi-pencil",
+    disabled: false,
+    to:openEventEdit(event),
+  },
+  {
+    key: "delete",
+    title: "Supprimer",
+    icon: "mdi-trash-can",
+    color: "error",
+    disabled: false,
+    to:openEventDelete(event),
+  },
+];
 </script>
 
 <style scoped>
