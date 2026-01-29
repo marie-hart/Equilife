@@ -25,20 +25,20 @@ export default defineConfig(({ mode }) => {
       manifest: {
         name: "Horse Care",
         short_name: "HorseCare",
-        theme_color: "#1E63B0",
+        theme_color: "#2c4b29",
         background_color: "#ffffff",
         display: "standalone",
         start_url: "/",
         icons: [
           {
-            src: "/pwa-icon.svg",
+            src: "/logo-app.png",
             sizes: "any",
-            type: "image/svg+xml",
+            type: "image/png",
           },
           {
-            src: "/pwa-icon-maskable.svg",
+            src: "/logo-app.png",
             sizes: "any",
-            type: "image/svg+xml",
+            type: "image/png",
             purpose: "maskable",
           },
         ],
@@ -51,6 +51,7 @@ export default defineConfig(({ mode }) => {
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "@@": fileURLToPath(new URL("../", import.meta.url)),
     },
   },
   server: {

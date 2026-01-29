@@ -7,10 +7,10 @@ export const apiBaseUrl = baseURL;
 export const filesBaseUrl = filesBaseOverride || apiBaseUrl;
 
 const apiClient = axios.create({
-  baseURL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+    baseURL,
+    headers: {
+        "Content-Type": "application/json",
+    },
 });
 
 export default apiClient;

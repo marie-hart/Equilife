@@ -1,33 +1,31 @@
-import { reactive } from 'vue'
-import type { FilterDefinition } from '@/types/filters'
+import { reactive } from "vue";
+import type { FilterDefinition } from "@/types/filters";
 
-type ExtractValue<F> =
-  F extends { type: 'select'; defaultValue: infer V }
+type ExtractValue<F> = F extends { type: "select"; defaultValue: infer V }
     ? V
-    : string
+    : string;
 
 type FilterValues<Defs extends readonly FilterDefinition[]> = {
-  [K in Defs[number] as K['key']]: ExtractValue<K>
-}
+    [K in Defs[number] as K["key"]]: ExtractValue<K>;
+};
 
-export function useFilters<const Defs extends readonly FilterDefinition[]>(
-  definitions: Defs
+export function useFilters<Defs extends readonly FilterDefinition[]>(
+    definitions: Defs,
 ) {
-  const values = reactive(
-    Object.fromEntries(
-      definitions.map((f) => [f.key, f.defaultValue])
-    )
-  ) as FilterValues<Defs>
+    const defs = definitions;
+    const values = reactive(
+        Object.fromEntries(defs.map((f) => [f.key, f.defaultValue])),
+    ) as FilterValues<Defs>;
 
-  const reset = () => {
-    definitions.forEach((f) => {
-      values[f.key] = f.defaultValue as any
-    })
-  }
+    const reset = () => {
+        defs.forEach((f) => {
+            values[f.key as keyof typeof values] = f.defaultValue as any;
+        });
+    };
 
-  return {
-    filterDefinitions: definitions,
-    filterValues: values,
-    resetFilters: reset,
-  }
+    return {
+        filterDefinitions: defs,
+        filterValues: values,
+        resetFilters: reset,
+    };
 }

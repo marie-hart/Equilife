@@ -12,7 +12,10 @@ import pushRoutes from "./routes/pushRoutes";
 import pool from "./config/database";
 import redis from "./config/redis";
 import { swaggerSpec } from "./docs/swagger";
-import { initPushService, startReminderPushScheduler } from "./services/pushService";
+import {
+    initPushService,
+    startReminderPushScheduler,
+} from "./services/pushService";
 
 dotenv.config();
 
@@ -34,71 +37,72 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Root route - API information
 app.get("/", (req: Request, res: Response) => {
-  res.json({
-    message: "Horse Care App API",
-    version: "1.0.0",
-    endpoints: {
-      health: "/health",
-      events: {
-        base: "/api/events",
-        list: "GET /api/events",
-        reminders: "GET /api/events/reminders",
-        getById: "GET /api/events/:id",
-        create: "POST /api/events",
-        update: "PUT /api/events/:id",
-        delete: "DELETE /api/events/:id",
-      },
-      materials: {
-        base: "/api/materials",
-        list: "GET /api/materials",
-        dueForPurchase: "GET /api/materials/due-for-purchase",
-        getById: "GET /api/materials/:id",
-        create: "POST /api/materials",
-        update: "PUT /api/materials/:id",
-        delete: "DELETE /api/materials/:id",
-        markAsPurchased: "POST /api/materials/:id/purchase",
-      },
-      horses: {
-        base: "/api/horses",
-        list: "GET /api/horses",
-        first: "GET /api/horses/first",
-        getById: "GET /api/horses/:id",
-        create: "POST /api/horses",
-        update: "PUT /api/horses/:id",
-        uploadPhoto: "POST /api/horses/:id/photo",
-        delete: "DELETE /api/horses/:id",
-      },
-      documents: {
-        base: "/api/documents",
-        list: "GET /api/documents",
-        create: "POST /api/documents",
-        delete: "DELETE /api/documents/:id",
-      },
-      rations: {
-        base: "/api/rations",
-        list: "GET /api/rations",
-        create: "POST /api/rations",
-        getById: "GET /api/rations/:id",
-        update: "PUT /api/rations/:id",
-        delete: "DELETE /api/rations/:id",
-      },
-    },
-  });
+    res.json({
+        message: "Horse Care App API",
+        version: "1.0.0",
+        endpoints: {
+            health: "/health",
+            events: {
+                base: "/api/events",
+                list: "GET /api/events",
+                reminders: "GET /api/events/reminders",
+                getById: "GET /api/events/:id",
+                create: "POST /api/events",
+                update: "PUT /api/events/:id",
+                delete: "DELETE /api/events/:id",
+            },
+            materials: {
+                base: "/api/materials",
+                list: "GET /api/materials",
+                dueForPurchase: "GET /api/materials/due-for-purchase",
+                getById: "GET /api/materials/:id",
+                create: "POST /api/materials",
+                update: "PUT /api/materials/:id",
+                delete: "DELETE /api/materials/:id",
+                markAsPurchased: "POST /api/materials/:id/purchase",
+            },
+            horses: {
+                base: "/api/horses",
+                list: "GET /api/horses",
+                first: "GET /api/horses/first",
+                getById: "GET /api/horses/:id",
+                create: "POST /api/horses",
+                update: "PUT /api/horses/:id",
+                uploadPhoto: "POST /api/horses/:id/photo",
+                delete: "DELETE /api/horses/:id",
+            },
+            documents: {
+                base: "/api/documents",
+                list: "GET /api/documents",
+                create: "POST /api/documents",
+                delete: "DELETE /api/documents/:id",
+            },
+            rations: {
+                base: "/api/rations",
+                list: "GET /api/rations",
+                create: "POST /api/rations",
+                getById: "GET /api/rations/:id",
+                update: "PUT /api/rations/:id",
+                delete: "DELETE /api/rations/:id",
+            },
+        },
+    });
 });
 
 // Health check
 app.get("/health", async (req: Request, res: Response) => {
-  try {
-    await pool.query("SELECT 1");
-    const redisStatus = redis.status === "ready" ? "connected" : "disconnected";
-    res.json({
-      status: "ok",
-      database: "connected",
-      redis: redisStatus,
-    });
-  } catch (error) {
-    res.status(500).json({ status: "error", database: "disconnected" });
-  }
+    try {
+        await pool.query("SELECT 1");
+        const redisStatus =
+            redis.status === "ready" ? "connected" : "disconnected";
+        res.json({
+            status: "ok",
+            database: "connected",
+            redis: redisStatus,
+        });
+    } catch (error) {
+        res.status(500).json({ status: "error", database: "disconnected" });
+    }
 });
 
 // Routes
@@ -111,24 +115,24 @@ app.use("/api/push", pushRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
-  res.status(404).json({ error: "Route not found" });
+    res.status(404).json({ error: "Route not found" });
 });
 
 // Error handler
 app.use(
-  (err: Error, req: Request, res: Response, next: express.NextFunction) => {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
+    (err: Error, req: Request, res: Response, next: express.NextFunction) => {
+        console.error("Error:", err);
+        res.status(500).json({ error: "Internal server error" });
+    },
 );
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 void initPushService().then((enabled) => {
-  if (enabled) startReminderPushScheduler();
+    if (enabled) startReminderPushScheduler();
 });
 
 export default app;

@@ -1,0 +1,14 @@
+{
+    "files": [],
+    "references": [
+        { "path": "./front/tsconfig.json" },
+        { "path": "./back/tsconfig.json" }
+    ],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["front/src/*"],
+            "@@/*": ["*"]
+        }
+    }
+}

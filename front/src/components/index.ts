@@ -1,8 +1,7 @@
-export { default as Header } from "./header/TheHeader.vue";
-export { default as SectionCard } from "./SectionCard.vue";
-export { default as ReminderForm } from "./ReminderForm.vue";
-export { default as RecurrenceFields } from "./RecurrenceFields.vue";
-export { default as ActionButtons } from "./ui/ActionButtons.vue";
-export { default as DatePickerField } from "./ui/DatePickerField.vue";
-export { default as ProductForm } from "./ProductForm.vue";
-export { default as RationCard } from "../views/feeding/RationCard.vue";
+export { default as SectionCard } from "@/components/SectionCard.vue";
+export { default as RecurrenceFields } from "@/components/RecurrenceFields.vue";
+export { default as ActionButtons } from "@/components/ui/ActionButtons.vue";
+export { default as DatePickerField } from "@/components/ui/DatePickerField.vue";
+export { default as ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog.vue";
+export { default as FiltersPanel } from "@/components/FiltersPanel.vue";
+export { default as RationCard } from "@/views/feeding/RationCard.vue";

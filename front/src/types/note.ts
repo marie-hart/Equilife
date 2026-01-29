@@ -1,5 +1,5 @@
 export type DashboardNote = {
-  id: string;
-  text: string;
-  createdAt: string;
+    id: string;
+    text: string;
+    createdAt: string;
 };

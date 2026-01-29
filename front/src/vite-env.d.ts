@@ -2,15 +2,15 @@
 /// <reference types="vite-plugin-pwa/client" />
 
 declare module "*.vue" {
-  import type { DefineComponent } from "vue";
-  const component: DefineComponent<{}, {}, any>;
-  export default component;
+    import type { DefineComponent } from "vue";
+    const component: DefineComponent<{}, {}, any>;
+    export default component;
 }
 
 declare module "virtual:pwa-register" {
-  import type { RegisterSWOptions } from "vite-plugin-pwa";
+    import type { RegisterSWOptions } from "vite-plugin-pwa";
 
-  export function registerSW(
-    options?: RegisterSWOptions
-  ): (reloadPage?: boolean) => void;
+    export function registerSW(
+        options?: RegisterSWOptions,
+    ): (reloadPage?: boolean) => void;
 }

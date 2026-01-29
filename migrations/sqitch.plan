@@ -18,3 +18,4 @@ events_products 2026-01-20T12:30:00Z mariehdek <mariehdek@yahoo.fr> # Link event
 materials_unique_name 2026-01-20T12:35:00Z mariehdek <mariehdek@yahoo.fr> # Unique product names
 demo_eclipse_seed 2026-01-21T09:00:00Z mariehdek <mariehdek@yahoo.fr> # Seed demo data for Eclipse
 dedupe_eclipse 2026-01-21T09:30:00Z mariehdek <mariehdek@yahoo.fr> # Dedupe Eclipse horse
+horse_links_cascade 2026-01-26T10:00:00Z mariehdek <mariehdek@yahoo.fr> # Cascade delete horse links

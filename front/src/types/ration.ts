@@ -1,38 +1,38 @@
 export interface RationItem {
-  id: string;
-  ration_id: string;
-  product_id?: string;
-  quantity?: string;
-  frequency: string[];
-  type?: 'aliment' | 'complement' | 'autre';
-  created_at: string;
-  updated_at: string;
+    id: string;
+    ration_id: string;
+    product_id?: string;
+    quantity?: string;
+    frequency: string[];
+    type?: "aliment" | "complement" | "autre";
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Ration {
-  id: string;
-  horse_id: string;
-  name: string;
-  start_date?: string;
-  end_date?: string;
-  note?: string;
-  is_active: boolean;
-  items: RationItem[];
-  created_at: string;
-  updated_at: string;
+    id: string;
+    horse_id: string;
+    name: string;
+    start_date?: string;
+    end_date?: string;
+    note?: string;
+    is_active: boolean;
+    items: RationItem[];
+    created_at: string;
+    updated_at: string;
 }
 
 export interface CreateRationDto {
-  horse_id: string;
-  name: string;
-  start_date?: string;
-  end_date?: string;
-  note?: string;
-  is_active?: boolean;
-  items: Array<{
-    product_id?: string;
-    quantity?: string;
-    frequency?: string[];
-    type?: 'aliment' | 'complement' | 'autre';
-  }>;
+    horse_id: string;
+    name: string;
+    start_date?: string;
+    end_date?: string;
+    note?: string;
+    is_active?: boolean;
+    items: Array<{
+        product_id?: string;
+        quantity?: string;
+        frequency?: string[];
+        type?: "aliment" | "complement" | "autre";
+    }>;
 }

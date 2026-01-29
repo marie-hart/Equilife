@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.get("/", documentController.getAll.bind(documentController));
 router.post(
-  "/",
-  documentUpload.single("file") as any,
-  documentController.create.bind(documentController)
+    "/",
+    documentUpload.single("file") as any,
+    documentController.create.bind(documentController),
 );
 router.delete("/:id", documentController.delete.bind(documentController));
 

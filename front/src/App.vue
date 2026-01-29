@@ -1,32 +1,32 @@
 <template>
-  <div id="app">
-    <v-app>
-      <Header />
-      <v-main>
-        <router-view v-slot="{ Component }">
-          <component :is="Component" />
-        </router-view>
-      </v-main>
-    </v-app>
-  </div>
+    <div id="app">
+        <v-app>
+            <Header />
+            <v-main>
+                <router-view v-slot="{ Component }">
+                    <component :is="Component" />
+                </router-view>
+            </v-main>
+        </v-app>
+    </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { registerSW } from "virtual:pwa-register";
 // @ts-ignore Vue SFC default export is provided by vue-tsc
-import Header from "./components/header/TheHeader.vue";
-import { startReminderNotifications } from "./utils/notifications";
+import Header from "@/views/header/TheHeader.vue";
+import { startReminderNotifications } from "@/utils/notifications";
 
 onMounted(() => {
-  registerSW({
-    immediate: true,
-    onNeedRefresh() {
-      // Force reload to ensure the latest app shell is used.
-      window.location.reload();
-    },
-  });
-  startReminderNotifications();
+    registerSW({
+        immediate: true,
+        onNeedRefresh() {
+            // Force reload to ensure the latest app shell is used.
+            window.location.reload();
+        },
+    });
+    startReminderNotifications();
 });
 </script>
 
@@ -38,28 +38,27 @@ body,
 .v-application__wrap,
 .v-main,
 .v-main__wrap {
-  background-color: #f6f7fb !important;
+    background-color: #f6f7fb !important;
 }
 
 #app {
-  min-height: 100vh;
-  width: 100%;
-  overflow-x: hidden;
-  padding-bottom: 15px;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    padding-bottom: 15px;
 }
 
 /* Optimisation pour le viewport mobile */
 @supports (-webkit-touch-callout: none) {
-  #app {
-    min-height: -webkit-fill-available;
-  }
+    #app {
+        min-height: -webkit-fill-available;
+    }
 }
 
 /* Desktop - retirer le padding bottom */
 @media (min-width: 1024px) {
-  #app {
-    padding-bottom: 0;
-  }
+    #app {
+        padding-bottom: 0;
+    }
 }
 </style>
-
