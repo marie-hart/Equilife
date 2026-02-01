@@ -1,24 +1,23 @@
 <template>
     <v-container class="horses-view" fluid>
-        <div class="d-flex align-center justify-space-between ga-4 mb-6">
+        <div class="d-flex align-center justify-space-between ga-4 mb-4">
             <v-card-title class="ma-0 text-h5">Fiches chevaux</v-card-title>
         </div>
-
-    <div class="d-flex align-center justify-space-between ga-4 mb-4">
-        <v-btn variant="outlined" @click="goToDashboardHome">
-            <v-icon icon="mdi-arrow-left" class="me-2" />
-            Retour
-        </v-btn>
-        <v-btn
-            class="primary-btn"
-            color="primary"
-            variant="flat"
-            @click="goToCreate"
-        >
-            <font-awesome-icon icon="circle-plus" class="btn-icon me-2" />
-            Ajouter
-        </v-btn>
-    </div>
+        <div class="d-flex align-center justify-space-between ga-4 mb-4">
+            <v-btn variant="outlined" @click="goToDashboardHome">
+                <v-icon icon="mdi-arrow-left" class="me-2" />
+                Retour
+            </v-btn>
+            <v-btn
+                class="primary-btn"
+                color="primary"
+                variant="flat"
+                @click="goToCreate"
+            >
+                <font-awesome-icon icon="circle-plus" class="btn-icon me-2" />
+                Ajouter
+            </v-btn>
+        </div>
 
     <v-skeleton-loader
         v-if="isLoading"
@@ -85,10 +84,10 @@ const snackbar = ref({
     color: "success",
 });
 
-const cardHeight = computed(() => (xs.value ? 170 : 190));
-const cardMaxWidth = computed(() => (xs.value ? "100%" : "300px"));
-const photoWidth = computed(() => (xs.value ? 88 : 96));
-const photoHeight = computed(() => (xs.value ? 64 : 72));
+const cardHeight = computed(() => (xs.value ? 200 : 230));
+const cardMaxWidth = computed(() => "100%");
+const photoWidth = computed(() => (xs.value ? 120 : 140));
+const photoHeight = computed(() => (xs.value ? 90 : 110));
 
 const deleteMessage = computed(() =>
     horseToDelete.value

@@ -110,7 +110,7 @@ import { useRouter } from "vue-router";
 import { documentsApi } from "@/api/documents";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
-import { useHorseSelection } from "@/composable/useHorseSelection";
+import { useHorseSelection } from "@/composables/useHorseSelection";
 
 type DocumentTag =
     | "carte_immatriculation"

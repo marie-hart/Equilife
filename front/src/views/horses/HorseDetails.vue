@@ -7,13 +7,13 @@
                 <v-card-title class="ma-0 text-h5"
                     >Détails du cheval</v-card-title
                 >
-                <div
-                    class="d-flex align-center ga-3 w-100 w-md-auto justify-space-between justify-md-end"
-                >
+                <div class="d-flex justify-space-between ga-2 w-100">
                     <v-btn variant="tonal" @click="goBack">Retour</v-btn>
-                    <v-btn color="primary" variant="flat" @click="goToEdit"
-                        >Modifier</v-btn
-                    >
+                    <div class="d-flex ga-2">
+                        <v-btn color="primary" variant="flat" @click="goToEdit"
+                            >Modifier</v-btn
+                        >
+                    </div>
                 </div>
             </div>
 

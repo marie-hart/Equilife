@@ -7,21 +7,22 @@
                 <v-card-title class="ma-0 text-h5"
                     >Détails de l'événement</v-card-title
                 >
-                <div class="d-flex ga-2">
+                <div class="d-flex justify-space-between ga-2 w-100">
                     <v-btn variant="outlined" @click="goToDashboard">
                         <v-icon icon="mdi-arrow-left" class="me-2" />
                         Retour
                     </v-btn>
-                    <v-btn variant="outlined" @click="goBack">Précédent</v-btn>
-                    <v-btn color="primary" variant="flat" @click="goToEdit"
-                        >Modifier</v-btn
-                    >
-                    <v-btn
-                        color="error"
-                        variant="flat"
-                        @click="deleteDialogOpen = true"
-                        >Supprimer</v-btn
-                    >
+                    <div class="d-flex ga-2">
+                        <v-btn color="primary" variant="flat" @click="goToEdit"
+                            >Modifier</v-btn
+                        >
+                        <v-btn
+                            color="error"
+                            variant="flat"
+                            @click="deleteDialogOpen = true"
+                            >Supprimer</v-btn
+                        >
+                    </div>
                 </div>
             </div>
 

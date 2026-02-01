@@ -45,7 +45,7 @@
                     icon="mdi-plus"
                     size="small"
                     variant="text"
-                    @click.stop="emit('add')"
+                    @click.stop.prevent="emit('add')"
                 />
             </div>
         </v-card-title>

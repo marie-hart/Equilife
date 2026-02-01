@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Dashboard from "@/views/TheDashboard.vue";
 import Health from "@/views/health/HealthView.vue";
+import HealthEdit from "@/views/health/HealthEdit.vue";
 import Activities from "@/views/activities/ActivityView.vue";
 import Documents from "@/views/documents/DocumentView.vue";
 import Reminders from "@/views/reminders/ReminderView.vue";
@@ -79,6 +80,11 @@ const router = createRouter({
             path: "/horses/:id/health/new",
             name: "HorseCareCreate",
             component: CareCreate,
+        },
+        {
+            path: "/health/:id/edit",
+            name: "HealthEdit",
+            component: HealthEdit,
         },
         {
             path: "/horses/:id/activities",

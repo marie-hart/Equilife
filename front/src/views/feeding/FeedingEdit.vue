@@ -163,7 +163,7 @@ import { toDateInputValue } from "@/libs/date";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { Material, Ration } from "@/types";
-import { useHorseSelection } from "@/composable/useHorseSelection";
+import { useHorseSelection } from "@/composables/useHorseSelection";
 
 type RationFormItem = {
     key: string;

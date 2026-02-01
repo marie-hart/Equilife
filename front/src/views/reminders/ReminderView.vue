@@ -1,15 +1,10 @@
 <template>
     <div class="page">
         <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-6">
+            <div class="d-flex align-center justify-space-between ga-4 mb-4">
                 <v-card-title class="ma-0 text-h5">Rappels</v-card-title>
             </div>
             <div class="d-flex flex-column ga-4">
-                <FiltersPanel
-                    :filters="filterDefinitions"
-                    v-model="filterValues"
-                />
-
                 <div class="d-flex align-center justify-space-between ga-4">
                     <v-btn variant="outlined" @click="goToDashboard">
                         <v-icon icon="mdi-arrow-left" class="me-2" />
@@ -26,6 +21,10 @@
                     </v-btn>
                 </div>
 
+                <FiltersPanel
+                    :filters="filterDefinitions"
+                    v-model="filterValues"
+                />
                 <v-card class="section-card" variant="outlined">
                     <v-card-title class="text-subtitle-1"
                         >Liste des rappels</v-card-title
@@ -119,8 +118,8 @@ import { ConfirmDeleteDialog, DatePickerField, FiltersPanel } from "@/components
 import type { Event, SelectOption, ReminderType } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import { getStatusKey, getStatusColor } from "@/libs/index";
-import { useFilters } from "@/composable/useFilters";
-import { useHorseSelection } from "@/composable/useHorseSelection";
+import { useFilters } from "@/composables/useFilters";
+import { useHorseSelection } from "@/composables/useHorseSelection";
 import { ReminderEdit, ReminderList } from "@/views/reminders";
 
 type ReminderAction = {

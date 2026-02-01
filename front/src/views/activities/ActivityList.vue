@@ -12,26 +12,27 @@
                         <div v-for="activity in group.items" :key="activity.id">
                             <v-card
                                 variant="outlined"
-                                class="overflow-hidden d-flex flex-column w-100"
+                                class="d-flex flex-column w-100 pa-3"
                                 :style="{ maxWidth: cardMaxWidth }"
-                                height="190"
                             >
-                                <v-card-title
-                                    class="bg-primary text-white text-subtitle-1 d-flex align-center justify-space-between"
+                                <div
+                                    class="d-flex align-center justify-space-between mb-3"
                                 >
-                                    <span>{{
-                                        activity.activity_type || activity.name
-                                    }}</span>
+                                    <div class="text-h6">
+                                        {{
+                                            activity.activity_type ||
+                                            activity.name
+                                        }}
+                                    </div>
                                     <ActionButtons
-                                        class="d-md-none"
                                         mode="auto"
                                         button-size="x-small"
                                         menu-button-size="x-small"
                                         :actions="getActivityActions(activity)"
                                     />
-                                </v-card-title>
-                                <v-card-text class="flex-grow-1 pt-3">
-                                    <div class="text-body-2 text-grey-darken-1">
+                                </div>
+                                <v-card-text class="flex-grow-1 pa-0">
+                                    <div class="text-body-2 text-primary">
                                         <span class="d-none d-md-inline">{{
                                             formatDateLong(activity.event_date)
                                         }}</span>
@@ -40,27 +41,31 @@
                                                 activity.event_date,
                                             )
                                         }}</span>
-                                        <span
+                                    </div>
+                                    <div class="d-flex flex-wrap ga-2 mt-2">
+                                        <v-chip
                                             v-if="
                                                 activity.activity_duration_minutes
                                             "
+                                            size="small"
+                                            variant="outlined"
                                         >
-                                            •
                                             {{
                                                 activity.activity_duration_minutes
                                             }}
                                             min
-                                        </span>
-                                        <span
+                                        </v-chip>
+                                        <v-chip
                                             v-if="activity.activity_intensity"
+                                            size="small"
+                                            variant="outlined"
                                         >
-                                            •
                                             {{
                                                 intensityLabel(
                                                     activity.activity_intensity,
                                                 )
                                             }}
-                                        </span>
+                                        </v-chip>
                                     </div>
                                     <div
                                         v-if="
@@ -75,14 +80,6 @@
                                         }}
                                     </div>
                                 </v-card-text>
-                                <v-card-actions class="mt-auto justify-end">
-                                    <ActionButtons
-                                        class="d-none d-md-flex align-center ga-2"
-                                        mode="inline"
-                                        button-size="x-small"
-                                        :actions="getActivityActions(activity)"
-                                    />
-                                </v-card-actions>
                             </v-card>
                         </div>
                     </div>

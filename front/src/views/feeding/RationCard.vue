@@ -32,7 +32,11 @@
         </div>
 
         <v-expansion-panels variant="accordion">
-            <v-expansion-panel v-for="meal in meals" :key="meal.key">
+            <v-expansion-panel
+                v-for="meal in meals"
+                v-show="meal.items.length"
+                :key="meal.key"
+            >
                 <v-expansion-panel-title>
                     {{ meal.label }}
                 </v-expansion-panel-title>
@@ -53,16 +57,6 @@
                 </v-expansion-panel-text>
             </v-expansion-panel>
         </v-expansion-panels>
-
-        <v-btn
-            block
-            class="mt-4"
-            color="primary"
-            variant="outlined"
-            @click="emit('edit', ration)"
-        >
-            Modifier la ration
-        </v-btn>
 
         <v-dialog v-model="confirmDelete" max-width="360">
             <v-card>

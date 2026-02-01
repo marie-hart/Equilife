@@ -1,5 +1,4 @@
 <template>
-    <v-col cols="12" sm="6" md="6" class="d-flex pa-0">
         <SectionCard
             title="Rappels"
             icon="alarm-clock"
@@ -129,7 +128,6 @@
                 </div>
             </div>
         </SectionCard>
-    </v-col>
 </template>
 
 <script setup lang="ts">

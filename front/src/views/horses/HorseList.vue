@@ -11,25 +11,22 @@
                 class="d-flex"
             >
                 <v-card
-                    class="overflow-hidden d-flex flex-column w-100"
+                    class="d-flex flex-column w-100 pa-3"
                     variant="outlined"
                     :height="cardHeight"
                     :style="{ maxWidth: cardMaxWidth }"
                 >
-                    <v-card-title
-                        class="bg-primary text-white text-subtitle-1 d-flex align-center justify-space-between"
-                    >
-                        <span>{{ horse.name }}</span>
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <div class="text-h6">{{ horse.name }}</div>
                         <ActionButtons
-                            class="d-md-none"
                             mode="auto"
                             button-size="x-small"
                             menu-button-size="x-small"
                             :actions="getHorseActions(horse)"
                         />
-                    </v-card-title>
+                    </div>
                     <v-card-text
-                        class="pt-2 pb-2"
+                        class="pa-0"
                         @click="onOpenDashboard(horse.id)"
                     >
                         <div
@@ -37,11 +34,11 @@
                         >
                             <div class="flex-grow-1 text-truncate">
                                 <div class="text-body-2 text-grey-darken-1">
-                                    <span v-if="horse.breed">{{
+                                    <v-chip v-if="horse.breed" size="small" variant="outlined" class="mr-1">{{
                                         horse.breed
-                                    }}</span>
-                                    <span v-if="horse.age"
-                                        >• {{ horse.age }} ans</span
+                                    }}</v-chip>
+                                    <v-chip v-if="horse.age" size="small" variant="outlined"
+                                        >{{ horse.age }} ans</v-chip
                                     >
                                 </div>
                                 <div
@@ -61,14 +58,6 @@
                             />
                         </div>
                     </v-card-text>
-                    <v-card-actions class="justify-end mt-auto">
-                        <ActionButtons
-                            class="d-none d-md-flex align-center ga-2"
-                            mode="inline"
-                            button-size="x-small"
-                            :actions="getHorseActions(horse)"
-                        />
-                    </v-card-actions>
                 </v-card>
             </v-col>
         </v-row>
@@ -100,3 +89,4 @@ defineProps<{
     onOpenDashboard: (horseId: string) => void;
 }>();
 </script>
+

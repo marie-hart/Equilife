@@ -172,7 +172,7 @@ import { materialsApi } from "@/api/materials";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { Material } from "@/types";
-import { useHorseSelection } from "@/composable/useHorseSelection";
+import { useHorseSelection } from "@/composables/useHorseSelection";
 
 type RationFormItem = {
     key: string;

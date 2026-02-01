@@ -1,7 +1,6 @@
 <template>
     <div>
         <v-bottom-navigation
-            v-if="showBottomNav"
             :model-value="activeTab"
             grow
             app
@@ -61,22 +60,34 @@ const emit = defineEmits<{
     (event: "update:activeTab", value: NavTab): void;
 }>();
 
-const { lgAndUp } = useDisplay();
-
-const showBottomNav = computed(() => !lgAndUp.value);
+const { mdAndUp } = useDisplay();
 
 const getItem = (tab: NavTab) =>
     props.navItems.find((item) => item.tab === tab);
 
-const bottomNavItems = computed(() => {
+
+    const bottomNavItems = computed(() => {
     const items: NavItem[] = [];
+
     const baseTabs: NavTab[] = ["dashboard", "products", "documents", "horses"];
+
     baseTabs.forEach((tab) => {
         const item = getItem(tab);
         if (item) items.push(item);
     });
+
+    if (mdAndUp.value) {
+        const extraTabs: NavTab[] = ["activities", "feeding"];
+
+        extraTabs.forEach((tab) => {
+            const item = getItem(tab);
+            if (item) items.push(item);
+        });
+    }
+
     return items;
 });
+
 
 const go = (item: NavItem) => {
     emit("navigate", item.routeName);

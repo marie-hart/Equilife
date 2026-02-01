@@ -6,11 +6,17 @@
                 type="card, card, card"
             />
             <template v-else>
-                <ReminderCard />
-
-                <HealthCard />
-
                 <VRow no-gutters class="mx-n1">
+                    <VCol cols="12" sm="6" class="pa-1">
+                        <ReminderCard />
+                    </VCol>
+
+                    <VCol cols="12" sm="6" class="pa-1">
+                        <HealthCard />
+                    </VCol>
+                </VRow>
+
+                <VRow v-if="!mdAndUp" no-gutters class="mx-n1">
                     <VCol cols="12" sm="6" class="pa-1">
                         <v-btn
                             class="action-bg-training action-btn"
@@ -98,6 +104,9 @@ import type { Event, SelectedKind } from "../types";
 import { ReminderCard } from "./reminders/index";
 import { HealthCard } from "./health/index";
 import { QuickNoteView } from "./quickNote/index";
+import { useDisplay } from "vuetify";
+
+const { mdAndUp } = useDisplay();
 
 const events = ref<Event[]>([]);
 const reminders = ref<Event[]>([]);

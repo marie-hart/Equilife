@@ -1,27 +1,10 @@
 <template>
     <div class="page">
         <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-6">
+            <div class="d-flex align-center justify-space-between ga-4 mb-4">
                 <v-card-title class="ma-0 text-h5">Alimentation</v-card-title>
             </div>
             <div class="d-flex flex-column ga-4">
-                <v-card class="section-card" variant="outlined">
-                    <v-card-title class="text-subtitle-1">Filtres</v-card-title>
-                    <v-card-text class="pt-3">
-                        <v-row dense>
-                            <v-col cols="12" md="6">
-                                <v-select
-                                    v-model="selectedHorseId"
-                                    :items="horseFilterOptions"
-                                    label="Cheval"
-                                    density="compact"
-                                    variant="outlined"
-                                />
-                            </v-col>
-                        </v-row>
-                    </v-card-text>
-                </v-card>
-
                 <div class="d-flex align-center justify-space-between ga-4">
                     <v-btn variant="outlined" @click="goToDashboard">
                         <v-icon icon="mdi-arrow-left" class="me-2" />
@@ -38,6 +21,22 @@
                     </v-btn>
                 </div>
 
+                <v-card class="section-card" variant="outlined">
+                    <v-card-title class="text-subtitle-1">Filtres</v-card-title>
+                    <v-card-text class="pt-3">
+                        <v-row dense>
+                            <v-col cols="12" md="6">
+                                <v-select
+                                    v-model="selectedHorseId"
+                                    :items="horseFilterOptions"
+                                    label="Cheval"
+                                    density="compact"
+                                    variant="outlined"
+                                />
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
                 <v-skeleton-loader
                     v-if="isLoading"
                     type="list-item-two-line, list-item-two-line, list-item-two-line"
@@ -71,7 +70,7 @@ import { useRoute, useRouter } from "vue-router";
 import { rationsApi } from "@/api/rations";
 import { materialsApi } from "@/api/materials";
 import type { Horse, Material, Ration } from "@/types";
-import { useHorseSelection } from "@/composable/useHorseSelection";
+import { useHorseSelection } from "@/composables/useHorseSelection";
 import { FeedingList } from "@/views/feeding";
 
 const route = useRoute();

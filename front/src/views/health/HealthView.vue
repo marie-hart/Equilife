@@ -1,15 +1,10 @@
 <template>
     <div class="page">
         <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-6">
+            <div class="d-flex align-center justify-space-between ga-4 mb-4">
                 <v-card-title class="ma-0 text-h5">Santé</v-card-title>
             </div>
             <div class="d-flex flex-column ga-4">
-                <FiltersPanel
-                    :filters="filterDefinitions"
-                    v-model="filterValues"
-                />
-
                 <div class="d-flex align-center justify-space-between ga-4">
                     <v-btn variant="outlined" @click="goToDashboard">
                         <v-icon icon="mdi-arrow-left" class="me-2" />
@@ -26,6 +21,10 @@
                     </v-btn>
                 </div>
 
+                <FiltersPanel
+                    :filters="filterDefinitions"
+                    v-model="filterValues"
+                />
                 <v-skeleton-loader
                     v-if="isLoading"
                     type="list-item-two-line, list-item-two-line, list-item-two-line"
@@ -41,19 +40,42 @@
                 />
             </div>
 
-            <HealthEdit
-                v-model="isEditOpen"
-                :form="editForm"
-                :errors="editErrors"
-                @save="saveEdit"
-            />
-
             <ConfirmDeleteDialog
                 v-model="isDeleteOpen"
                 title="Supprimer le soin"
                 message="Confirmer la suppression de ce soin ?"
                 @confirm="confirmDelete"
             />
+
+            <v-dialog v-model="isCareDoneOpen" max-width="420">
+                <v-card>
+                    <v-card-title>Soin effectué</v-card-title>
+                    <v-card-text>
+                        <DatePickerField
+                            v-model="careDoneForm.date"
+                            label="Date du soin"
+                            :error-messages="
+                                careDoneErrors.date
+                                    ? [careDoneErrors.date]
+                                    : undefined
+                            "
+                        />
+                    </v-card-text>
+                    <v-card-actions class="justify-end">
+                        <v-btn
+                            variant="outlined"
+                            @click="isCareDoneOpen = false"
+                            >Annuler</v-btn
+                        >
+                        <v-btn
+                            variant="elevated"
+                            color="primary"
+                            @click="saveCareDone"
+                            >Valider</v-btn
+                        >
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
 
             <v-snackbar
                 v-model="snackbar.show"
@@ -70,9 +92,8 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
-import { useFilters } from "@/composable/useFilters";
-import { useHorseSelection } from "@/composable/useHorseSelection";
-import { validateRequiredFieldsMap } from "@/utils/validation";
+import { useFilters } from "@/composables/useFilters";
+import { useHorseSelection } from "@/composables/useHorseSelection";
 import type { Event } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import {
@@ -83,8 +104,8 @@ import {
     startOfDay,
     toDateInputValue,
 } from "@/libs/date";
-import { ConfirmDeleteDialog, FiltersPanel } from "@/components";
-import { HealthEdit, HealthList } from "@/views/health";
+import { ConfirmDeleteDialog, DatePickerField, FiltersPanel } from "@/components";
+import { HealthList } from "@/views/health";
 
 type CareAction = {
     key: string;
@@ -280,11 +301,11 @@ const filteredCares = computed(() => {
     );
 });
 
-const isEditOpen = ref(false);
 const isDeleteOpen = ref(false);
 const selectedCare = ref<Event | null>(null);
-const editForm = ref({ name: "", description: "", date: "" });
-const editErrors = ref<Record<string, string>>({});
+const isCareDoneOpen = ref(false);
+const careDoneForm = ref({ date: "" });
+const careDoneErrors = ref<Record<string, string>>({});
 
 const loadCares = async () => {
     isLoading.value = true;
@@ -299,48 +320,39 @@ const loadCares = async () => {
 };
 
 const openEdit = (care: Event) => {
-    selectedCare.value = care;
-    editForm.value = {
-        name: care.name,
-        description: care.description || "",
-        date: toDateInputValue(care.event_date),
-    };
-    isEditOpen.value = true;
+    router.push({ name: "HealthEdit", params: { id: care.id } });
 };
 
-const saveEdit = async () => {
-    if (!selectedCare.value) return;
+const isCareRecurring = (care: Event): boolean =>
+    care.reminder_enabled &&
+    Boolean(
+        care.reminder_interval_days ||
+            care.reminder_interval_months ||
+            care.reminder_interval_years,
+    );
+
+const markDone = async (care: Event) => {
+    if (isCareRecurring(care)) {
+        selectedCare.value = care;
+        careDoneForm.value = {
+            date: toDateInputValue(care.event_date),
+        };
+        isCareDoneOpen.value = true;
+        return;
+    }
     try {
-        const { errors, firstError } = await validateRequiredFieldsMap([
-            { key: "name", label: "un nom", value: editForm.value.name.trim() },
-            { key: "date", label: "une date", value: editForm.value.date },
-        ]);
-        editErrors.value = errors;
-        if (firstError) {
-            snackbar.value = {
-                show: true,
-                message: firstError,
-                color: "error",
-            };
-            return;
-        }
-        await eventsApi.update(selectedCare.value.id, {
-            name: editForm.value.name.trim(),
-            description: editForm.value.description.trim() || undefined,
-            event_date: fromDateInputValue(editForm.value.date),
-        });
+        await eventsApi.update(care.id, { reminder_enabled: false });
         await loadCares();
-        isEditOpen.value = false;
         snackbar.value = {
             show: true,
-            message: "Soin mis à jour.",
+            message: "Soin marqué comme fait.",
             color: "success",
         };
     } catch (error) {
-        console.error("Error updating care:", error);
+        console.error("Error marking care as done:", error);
         snackbar.value = {
             show: true,
-            message: "Mise à jour impossible.",
+            message: "Action impossible.",
             color: "error",
         };
     }
@@ -352,6 +364,13 @@ const openDelete = (care: Event) => {
 };
 
 const getCareActions = (care: Event): CareAction[] => [
+    {
+        key: "done",
+        title: "Valider",
+        icon: "mdi-check",
+        disabled: false,
+        onClick: () => markDone(care),
+    },
     {
         key: "edit",
         title: "Éditer",
@@ -369,6 +388,48 @@ const getCareActions = (care: Event): CareAction[] => [
     },
 ];
 
+const saveCareDone = async () => {
+    if (!selectedCare.value) return;
+    if (!careDoneForm.value.date) {
+        careDoneErrors.value = { date: "Merci de renseigner une date." };
+        return;
+    }
+    careDoneErrors.value = {};
+    try {
+        const appointmentDate = fromDateInputValue(careDoneForm.value.date);
+        await eventsApi.create({
+            name: selectedCare.value.name,
+            description: selectedCare.value.description,
+            event_date: appointmentDate,
+            horse_id: selectedCare.value.horse_id,
+            product_id: selectedCare.value.product_id,
+            is_care: true,
+            reminder_type: "soin",
+            reminder_enabled: false,
+        });
+        await eventsApi.update(selectedCare.value.id, {
+            event_date: appointmentDate,
+            reminder_enabled: true,
+            reminder_interval_days: selectedCare.value.reminder_interval_days,
+            reminder_interval_months: selectedCare.value.reminder_interval_months,
+            reminder_interval_years: selectedCare.value.reminder_interval_years,
+        });
+        await loadCares();
+        isCareDoneOpen.value = false;
+        snackbar.value = {
+            show: true,
+            message: "Soin enregistré et rappel reprogrammé.",
+            color: "success",
+        };
+    } catch (error) {
+        console.error("Error saving care appointment:", error);
+        snackbar.value = {
+            show: true,
+            message: "Action impossible.",
+            color: "error",
+        };
+    }
+};
 const confirmDelete = async () => {
     if (!selectedCare.value) return;
     try {

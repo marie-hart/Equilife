@@ -114,7 +114,7 @@ import { materialsApi } from "@/api/materials";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { Material } from "@/types";
 import { fromDateInputValue } from "@/libs/date";
-import { useHorseSelection } from "@/composable/useHorseSelection";
+import { useHorseSelection } from "@/composables/useHorseSelection";
 
 type RecurrenceUnit = "days" | "months" | "years";
 

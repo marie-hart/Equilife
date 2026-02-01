@@ -126,6 +126,21 @@ const isMoreOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
 
+const horseRouteNames = new Set([
+    "HorseDashboardView",
+    "HorseHealth",
+    "HorseCareCreate",
+    "HorseActivities",
+    "HorseActivityCreate",
+    "HorseDocuments",
+    "HorseDocumentCreate",
+    "HorseFeeding",
+    "HorseFeedingCreate",
+    "HorseProducts",
+    "HorseProductCreate",
+    "HorseDetails",
+]);
+
 const getStoredHorseId = (): string | null => {
     try {
         return localStorage.getItem(SELECTED_HORSE_ID_KEY);
@@ -144,8 +159,9 @@ const setStoredHorseId = (horseId: string) => {
 };
 
 const resolveHorseId = (): string | null => {
+    const routeName = route.name as string | undefined;
     const routeHorseId = route.params.id as string | undefined;
-    if (routeHorseId) {
+    if (routeHorseId && routeName && horseRouteNames.has(routeName)) {
         setStoredHorseId(routeHorseId);
         return routeHorseId;
     }
@@ -232,21 +248,6 @@ const navigate = (name: NavItem["routeName"]) => {
 const goToReminders = () => {
     router.push({ name: "Reminders" });
 };
-
-const horseRouteNames = new Set([
-    "HorseDashboardView",
-    "HorseHealth",
-    "HorseCareCreate",
-    "HorseActivities",
-    "HorseActivityCreate",
-    "HorseDocuments",
-    "HorseDocumentCreate",
-    "HorseFeeding",
-    "HorseFeedingCreate",
-    "HorseProducts",
-    "HorseProductCreate",
-    "HorseDetails",
-]);
 
 const handleHorseSelect = (horse: Horse) => {
     horseProfile.value = horse;

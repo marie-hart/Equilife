@@ -113,7 +113,7 @@ import { eventsApi } from "@/api/events";
 import { fromDateInputValue, toDateInputValue } from "@/libs/date";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
-import { useHorseSelection } from "@/composable/useHorseSelection";
+import { useHorseSelection } from "@/composables/useHorseSelection";
 
 type IntensityValue = "legere" | "normale" | "soutenue";
 

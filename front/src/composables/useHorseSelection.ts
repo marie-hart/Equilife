@@ -1,4 +1,4 @@
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { horsesApi } from "@/api/horses";
 import { getStoredHorseId } from "@/libs/horseProfile";
@@ -88,6 +88,13 @@ export const useHorseSelection = (options?: { useRouteHorseId?: boolean }) => {
         await loadHorses();
         setHorseFromContext();
     });
+
+    watch(
+        () => route.params.id,
+        () => {
+            setHorseFromContext();
+        },
+    );
 
     return {
         horses,

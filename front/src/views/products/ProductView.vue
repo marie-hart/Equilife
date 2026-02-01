@@ -1,10 +1,26 @@
 <template>
     <div class="page">
         <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-6">
+            <div class="d-flex align-center justify-space-between ga-4 mb-4">
                 <v-card-title class="ma-0 text-h5">Produits</v-card-title>
             </div>
             <div class="d-flex flex-column ga-4">
+                <div class="d-flex align-center justify-space-between ga-4">
+                    <v-btn variant="outlined" @click="goToDashboard">
+                        <v-icon icon="mdi-arrow-left" class="me-2" />
+                        Retour
+                    </v-btn>
+                    <v-btn
+                        class="primary-btn"
+                        color="primary"
+                        variant="flat"
+                        @click="goToProductCreate"
+                    >
+                        <v-icon icon="mdi-plus" class="me-2" />
+                        Ajouter
+                    </v-btn>
+                </div>
+
                 <v-card class="section-card" variant="outlined">
                     <v-card-title class="text-subtitle-1">Filtres</v-card-title>
                     <v-card-text class="pt-3">
@@ -28,23 +44,6 @@
                         </v-row>
                     </v-card-text>
                 </v-card>
-
-                <div class="d-flex align-center justify-space-between ga-4">
-                    <v-btn variant="outlined" @click="goToDashboard">
-                        <v-icon icon="mdi-arrow-left" class="me-2" />
-                        Retour
-                    </v-btn>
-                    <v-btn
-                        class="primary-btn"
-                        color="primary"
-                        variant="flat"
-                        @click="goToProductCreate"
-                    >
-                        <v-icon icon="mdi-plus" class="me-2" />
-                        Ajouter
-                    </v-btn>
-                </div>
-
                 <v-skeleton-loader
                     v-if="isLoading"
                     type="list-item-two-line, list-item-two-line, list-item-two-line"
@@ -83,7 +82,7 @@ import { useRoute, useRouter } from "vue-router";
 import { materialsApi } from "@/api/materials";
 import { eventsApi } from "@/api/events";
 import { ConfirmDeleteDialog } from "@/components";
-import { useHorseSelection } from "@/composable/useHorseSelection";
+import { useHorseSelection } from "@/composables/useHorseSelection";
 import type { Material } from "@/types";
 import type { Event } from "@/types";
 import { ProductList } from "@/views/products";

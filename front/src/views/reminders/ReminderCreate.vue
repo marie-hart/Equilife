@@ -39,7 +39,7 @@ import { useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { fromDateInputValue } from "@/libs/date";
 import { validateRequiredFieldsMap } from "@/utils/validation";
-import { useHorseSelection } from "@/composable/useHorseSelection";
+import { useHorseSelection } from "@/composables/useHorseSelection";
 import { ReminderForm } from "@/views/reminders";
 
 type ReminderFormValue = {

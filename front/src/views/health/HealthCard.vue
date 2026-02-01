@@ -1,11 +1,10 @@
 <template>
-    <v-col cols="12" sm="6" md="6" class="d-flex pa-0">
         <SectionCard
             title="Santé"
             icon="house-chimney-medical"
             :showAdd="true"
             class="clickable-card dashboard-card dashboard-card--primary"
-            @add="goToCareCreate()"
+            @add="goToCareCreate"
             :to="goToHealth()"
         >
             <v-list
@@ -32,19 +31,21 @@
                         }}</span>
                     </v-list-item-subtitle>
                     <template #append>
-                        <ActionButtons
-                            class="d-none d-md-flex align-center ga-1"
-                            mode="inline"
-                            button-size="x-small"
-                            :actions="getEventActions(care)"
-                        />
-                        <ActionButtons
-                            class="d-md-none"
-                            mode="auto"
-                            button-size="x-small"
-                            menu-button-size="x-small"
-                            :actions="getEventActions(care)"
-                        />
+                        <div class="d-contents" @click.stop>
+                            <ActionButtons
+                                class="d-none d-md-flex align-center ga-1"
+                                mode="inline"
+                                button-size="x-small"
+                                :actions="getEventActions(care)"
+                            />
+                            <ActionButtons
+                                class="d-md-none"
+                                mode="auto"
+                                button-size="x-small"
+                                menu-button-size="x-small"
+                                :actions="getEventActions(care)"
+                            />
+                        </div>
                     </template>
                 </v-list-item>
             </v-list>
@@ -60,12 +61,11 @@
             </p>
             <p v-else class="empty-state">Aucun soin prévu</p>
         </SectionCard>
-    </v-col>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { useRoute } from "vue-router";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import type { Event, SelectedKind, ActionButton } from "@/types";
 import { SectionCard, ActionButtons } from "@/components";
 import { getActiveHorseId } from "@/libs/horseProfile";
@@ -76,8 +76,10 @@ import {
     formatDateMobile,
     isSameDay,
 } from "@/libs/date";
+import { eventsApi } from "@/api/events";
 
 const route = useRoute();
+const router = useRouter();
 
 const events = ref<Event[]>([]);
 const selectedKind = ref<SelectedKind>(null);
@@ -89,7 +91,7 @@ const careEvents = computed(() =>
 );
 
 const routeHorseId = computed(() => route.params.id as string | undefined);
-const horseId = getActiveHorseId(routeHorseId.value);
+const horseId = computed(() => getActiveHorseId(routeHorseId.value));
 
 const todayCares = computed(() => {
     const today = startOfDay(new Date());
@@ -110,17 +112,29 @@ const nextCare = computed(() => {
 });
 
 const goToCareCreate = () => {
-    if (horseId) {
-        return { name: "HorseCareCreate", params: { id: horseId } };
+    const id = horseId.value;
+    if (id) {
+        router.push({ name: "HorseCareCreate", params: { id } });
+        return;
+    }
+    router.push("/horses");
+};
+
+const goToHealth = () => {
+    const id = horseId.value;
+    if (id) {
+        return { name: "HorseHealth", params: { id } };
     }
     return "/horses";
 };
 
-const goToHealth = () => {
-    if (horseId) {
-        return { name: "HorseHealth", params: { id: horseId } };
+const loadCares = async () => {
+    try {
+        events.value = await eventsApi.getAll(horseId.value);
+    } catch (error) {
+        console.error("Error loading cares:", error);
+        events.value = [];
     }
-    return "/horses";
 };
 
 const openEventDetails = (event: Event) => {
@@ -161,6 +175,15 @@ const getEventActions = (event: Event): ActionButton[] => [
         to: openEventDelete(event),
     },
 ];
+
+onMounted(loadCares);
+
+watch(
+    () => route.params.id,
+    () => {
+        loadCares();
+    },
+);
 </script>
 
 <style scoped>

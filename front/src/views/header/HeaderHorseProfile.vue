@@ -69,6 +69,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { Horse } from "@/types";
+import { filesBaseUrl } from "@/api/client";
 
 const props = defineProps<{
     horseProfile: Horse | null;
@@ -81,8 +82,45 @@ const emit = defineEmits<{
 
 const profileBackgroundUrl = "/view-wild-horse.jpg";
 
+const resolveFilesOrigin = (): string => {
+    if (filesBaseUrl.startsWith("http")) {
+        try {
+            const url = new URL(filesBaseUrl);
+            const isLocal = ["localhost", "127.0.0.1", "0.0.0.0"].includes(
+                url.hostname,
+            );
+            return isLocal ? window.location.origin : url.origin;
+        } catch {
+            return window.location.origin;
+        }
+    }
+    return window.location.origin;
+};
+
+const normalizePhotoUrl = (path?: string): string | null => {
+    if (!path) return null;
+    if (path.startsWith("http")) {
+        try {
+            const url = new URL(path);
+            const isLocal = ["localhost", "127.0.0.1", "0.0.0.0"].includes(
+                url.hostname,
+            );
+            return isLocal ? `${window.location.origin}${url.pathname}` : path;
+        } catch {
+            return path;
+        }
+    }
+    if (path.startsWith("/")) return `${resolveFilesOrigin()}${path}`;
+    return path;
+};
+
+const backgroundImageUrl = computed(() => {
+    const uploaded = normalizePhotoUrl(props.horseProfile?.photo_path);
+    return uploaded || profileBackgroundUrl;
+});
+
 const backgroundStyle = computed(() => ({
-    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('${profileBackgroundUrl}')`,
+    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('${backgroundImageUrl.value}')`,
 }));
 
 const showHorseSwitcher = computed(() => (props.horses?.length ?? 0) > 1);

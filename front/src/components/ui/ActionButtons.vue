@@ -1,5 +1,5 @@
 <template>
-    <div v-if="hasActions" class="action-buttons">
+    <div v-if="hasActions" class="action-buttons" @click.stop>
         <template v-if="mode === 'inline'">
             <v-btn
                 v-for="action in inlineActions"
@@ -14,7 +14,7 @@
                 :download="action.download"
                 :aria-label="action.title"
                 :title="action.title"
-                @click="runAction(action)"
+                @click="(event) => runAction(action, event)"
             >
                 <v-icon
                     v-if="showIcon"
@@ -35,6 +35,8 @@
                             v-bind="props"
                             aria-label="Actions"
                             title="Actions"
+                            @click.stop
+                            @mousedown.stop
                         >
                             <v-icon :icon="menuIcon" />
                         </v-btn>
@@ -47,7 +49,7 @@
                             :href="action.href"
                             :target="action.target"
                             :download="action.download"
-                            @click="runAction(action)"
+                            @click="(event) => runAction(action, event)"
                         >
                             <template #prepend>
                                 <v-icon
@@ -74,7 +76,7 @@
                     :download="enabledActions[0].download"
                     :aria-label="enabledActions[0].title"
                     :title="enabledActions[0].title"
-                    @click="runAction(enabledActions[0])"
+                    @click="(event) => runAction(enabledActions[0], event)"
                 />
             </template>
         </template>
@@ -144,7 +146,13 @@ const inlineActions = computed(() =>
 const showLabel = computed(() => props.showLabel);
 const showIcon = computed(() => props.showIcon);
 
-const runAction = (action?: ActionButton) => {
-    if (action?.onClick) action.onClick();
+const runAction = (action?: ActionButton, event?: Event) => {
+    if (event) {
+        event.stopPropagation();
+    }
+    if (action?.onClick) {
+        event?.preventDefault();
+        action.onClick();
+    }
 };
 </script>
