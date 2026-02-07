@@ -31,12 +31,12 @@ export default defineConfig(({ mode }) => {
         start_url: "/",
         icons: [
           {
-            src: "/logo-app.png",
+            src: "/logo-beige.png",
             sizes: "any",
             type: "image/png",
           },
           {
-            src: "/logo-app.png",
+            src: "/logo-beige.png",
             sizes: "any",
             type: "image/png",
             purpose: "maskable",

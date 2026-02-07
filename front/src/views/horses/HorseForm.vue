@@ -151,10 +151,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { horsesApi } from "../../api/horses";
-import { DatePickerField } from "../../components";
-import { validateRequiredFieldsMap } from "../../utils/validation";
-import type { CreateHorseDto, Horse } from "../../types";
+import { horsesApi } from "@/api/horses";
+import { DatePickerField } from "@/components";
+import { validateRequiredFieldsMap } from "@/utils/validation";
+import type { CreateHorseDto, Horse } from "@/types";
 
 const route = useRoute();
 const router = useRouter();

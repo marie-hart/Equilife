@@ -33,13 +33,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import axios from "axios";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { fromDateInputValue } from "@/libs/date";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import { useHorseSelection } from "@/composables/useHorseSelection";
+import { getActiveHorseId } from "@/libs/horseProfile";
 import { ReminderForm } from "@/views/reminders";
 
 type ReminderFormValue = {
@@ -54,6 +55,7 @@ type ReminderFormValue = {
 
 type RecurrenceUnit = "days" | "months" | "years";
 
+const route = useRoute();
 const router = useRouter();
 const { horses, getHorseIdsFromQuery, loadHorses } = useHorseSelection();
 const isLoading = ref(true);
@@ -73,6 +75,9 @@ const snackbar = ref({
     message: "",
     color: "success",
 });
+
+const routeHorseId = computed(() => route.params.id as string | undefined);
+const horseId = getActiveHorseId(routeHorseId.value);
 
 const getErrorMessage = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
@@ -176,7 +181,7 @@ const createReminder = async () => {
             message: "Rappel(s) créé(s).",
             color: "success",
         };
-        await router.push("/reminders");
+        await router.push( horseId ? { path: `/horses/${horseId}/reminders`, query: { horseId } } : `/horses/${horseId}/reminders`);
     } catch (error) {
         console.error("Error creating reminder:", error);
         snackbar.value = {
@@ -190,7 +195,7 @@ const createReminder = async () => {
 };
 
 const goBack = () => {
-    router.push("/reminders");
+    router.push( horseId ? { path: `/horses/${horseId}/reminders`, query: { horseId } } : `/horses/${horseId}/reminders`);
 };
 
 onMounted(async () => {

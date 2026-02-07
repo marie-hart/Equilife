@@ -45,8 +45,13 @@ const initWebPush = () => {
 };
 
 export const initPushService = async () => {
-    await ensureTables();
-    return initWebPush();
+    try {
+        await ensureTables();
+        return initWebPush();
+    } catch (error) {
+        console.error("❌ Push service init failed:", error);
+        return false;
+    }
 };
 
 export const getPublicKey = (): string => VAPID_PUBLIC_KEY;
@@ -92,29 +97,31 @@ const markNotified = async (eventId: string, reminderDate: string) => {
 };
 
 const fetchDueReminders = async () => {
-    const result = await pool.query(
-        `
-    SELECT
-      e.id,
-      e.name,
-      e.description,
-      COALESCE(e.next_reminder_date, e.event_date) AS reminder_date
-    FROM events e
-    LEFT JOIN push_notifications pn
-      ON pn.event_id = e.id
-      AND pn.reminder_date = COALESCE(e.next_reminder_date, e.event_date)
-    WHERE e.reminder_enabled = true
-      AND COALESCE(e.next_reminder_date, e.event_date) <= NOW()
-      AND pn.event_id IS NULL
-    `,
-    );
-    return result.rows as Array<{
-        id: string;
-        name: string;
-        description?: string;
-        reminder_date: string;
-    }>;
+    try {
+        const result = await pool.query(
+            `
+            SELECT
+              e.id,
+              e.name,
+              e.description,
+              COALESCE(e.next_reminder_date, e.event_date) AS reminder_date
+            FROM events e
+            LEFT JOIN push_notifications pn
+              ON pn.event_id = e.id
+              AND pn.reminder_date = COALESCE(e.next_reminder_date, e.event_date)
+            WHERE e.reminder_enabled = true
+              AND COALESCE(e.next_reminder_date, e.event_date) IS NOT NULL
+              AND COALESCE(e.next_reminder_date, e.event_date) <= NOW()
+              AND pn.event_id IS NULL
+            `,
+        );
+        return result.rows;
+    } catch (error) {
+        console.error("❌ Error fetching due reminders:", error);
+        return [];
+    }
 };
+
 
 const sendToAll = async (payload: Record<string, unknown>) => {
     if (!isPushConfigured()) return;
@@ -140,23 +147,43 @@ const sendToAll = async (payload: Record<string, unknown>) => {
 
 export const startReminderPushScheduler = () => {
     if (!isPushConfigured()) return;
+
     const run = async () => {
-        const due = await fetchDueReminders();
-        for (const reminder of due) {
-            const payload = {
-                title: "Rappel",
-                body:
-                    reminder.description || reminder.name || "Rappel à traiter",
-                tag: `reminder-${reminder.id}`,
-                data: { reminderId: reminder.id, date: reminder.reminder_date },
-            };
-            await sendToAll(payload);
-            await markNotified(reminder.id, reminder.reminder_date);
+        try {
+            const due = await fetchDueReminders();
+
+            for (const reminder of due) {
+                try {
+                    const payload = {
+                        title: "Rappel",
+                        body:
+                            reminder.description ||
+                            reminder.name ||
+                            "Rappel à traiter",
+                        tag: `reminder-${reminder.id}`,
+                        data: {
+                            reminderId: reminder.id,
+                            date: reminder.reminder_date,
+                        },
+                    };
+
+                    await sendToAll(payload);
+                    await markNotified(
+                        reminder.id,
+                        reminder.reminder_date,
+                    );
+                } catch (err) {
+                    console.error(
+                        `❌ Failed to process reminder ${reminder.id}`,
+                        err,
+                    );
+                }
+            }
+        } catch (error) {
+            console.error("❌ Reminder scheduler crashed:", error);
         }
     };
 
     void run();
-    setInterval(() => {
-        void run();
-    }, REMINDER_POLL_INTERVAL_MS);
+    setInterval(() => void run(), REMINDER_POLL_INTERVAL_MS);
 };

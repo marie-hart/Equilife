@@ -1,72 +1,92 @@
 <template>
-    <div class="dashboard">
-        <main class="mx-3 d-flex flex-column ga-3">
+    <div>
+        <v-container fluid class="pa-3">
             <v-skeleton-loader
                 v-if="isLoading"
                 type="card, card, card"
             />
+
             <template v-else>
-                <VRow no-gutters class="mx-n1">
-                    <VCol cols="12" sm="6" class="pa-1">
-                        <ReminderCard />
-                    </VCol>
+                <!-- PROFIL  -->
+                 <div class="mb-4">
+                    <v-card rounded="xl" height="100%">
+                        <HorseProfileCard
+                            :horseProfile="horseProfile"
+                            :horses="horses"
+                            @select="onHorseSelect"
+                        />
+                    </v-card>
+                 </div>   
+                 
+                 <div class="mb-4">
+                    <QuickNoteView />
+                 </div>
 
-                    <VCol cols="12" sm="6" class="pa-1">
-                        <HealthCard />
-                    </VCol>
-                </VRow>
-
-                <VRow v-if="!mdAndUp" no-gutters class="mx-n1">
-                    <VCol cols="12" sm="6" class="pa-1">
-                        <v-btn
-                            class="action-bg-training action-btn"
-                            height="60"
-                            rounded="lg"
-                            variant="flat"
-                            block
+               <!-- ACTIONS : < md -->
+                <v-row v-if="smAndDown" dense>
+                    <v-col cols="12" sm="6">
+                        <v-card
                             :to="getActivitiesRoute()"
+                            link
+                            rounded="xl"
+                            variant="tonal"
+                            style="background-color: #f1d9c2;"
+                            class="pa-4"
                         >
-                            <div class="action-btn-content">
-                                <img
-                                    src="/equestre.png"
-                                    alt=""
-                                    class="action-btn-icon"
-                                />
-                                <div class="action-btn-text">
-                                    <span>Suivi</span>
-                                    <span>d'Entraînement</span>
-                                </div>
-                            </div>
-                        </v-btn>
-                    </VCol>
+                <div class="d-flex align-center ga-3">
+                    <img
+                        src="/equestre.png"
+                        alt="Suivi d’entraînement"
+                        width="32"
+                    />
+                   <div>
+                        <div class="text-subtitle-1 font-weight-medium">
+                            Suivi d’entraînement
+                        </div>
+                        <div class="text-caption text-grey-darken-1">
+                            Activités & séances
+                        </div>
+                    </div>
+                </div>
+                </v-card>
+                </v-col>
 
-                    <VCol cols="12" sm="6" class="pa-1">
-                        <v-btn
-                            class="action-bg-feeding action-btn"
-                            height="60"
-                            rounded="lg"
-                            variant="flat"
-                            block
-                            :to="goToFeeding()"
-                        >
-                            <div class="action-btn-content">
-                                <img
-                                    src="/alimentation.png"
-                                    alt=""
-                                    class="action-btn-icon action-btn-icon--food"
-                                />
-                                <div class="action-btn-text">
-                                    <span>Alimentation</span>
-                                </div>
-                            </div>
-                        </v-btn>
-                    </VCol>
-                </VRow>
+                <v-col cols="12" sm="6">
+                    <v-card
+                    :to="goToFeeding()"
+                    link
+                    rounded="xl"
+                    variant="tonal"
+                    style="background-color:#c7c8b7;"
+                    class="pa-4"
+                    >
+                    <div class="d-flex align-center ga-3">
+                        <img
+                        src="/ration.png"
+                        alt="Alimentation"
+                        width="32"
+                        />
+                        <div>
+                        <div class="text-subtitle-1 font-weight-medium">
+                            Alimentation
+                        </div>
+                        <div class="text-caption text-grey-darken-1">
+                            Rations & repas
+                        </div>
+                    </div>
+                    </div>
+                    </v-card>
+                </v-col>
+                </v-row>
 
-                <QuickNoteView />
+                <!-- RAPPELS + Notes -->
+               <div class="mt-4">
+                    <ReminderCard />
+                </div>
             </template>
-        </main>
+        </v-container>
 
+        <!-- DIALOG -->
         <v-dialog v-model="deleteDialogOpen" max-width="420">
             <v-card>
                 <v-card-title>Supprimer</v-card-title>
@@ -75,16 +95,21 @@
                     <strong>{{ deleteLabel }}</strong> ?
                 </v-card-text>
                 <v-card-actions class="justify-end">
-                    <v-btn variant="outlined" @click="deleteDialogOpen = false"
-                        >Annuler</v-btn
+                    <v-btn variant="outlined" @click="deleteDialogOpen = false">
+                        Annuler
+                    </v-btn>
+                    <v-btn
+                        color="error"
+                        variant="flat"
+                        @click="confirmDelete"
                     >
-                    <v-btn color="error" variant="flat" @click="confirmDelete"
-                        >Supprimer</v-btn
-                    >
+                        Supprimer
+                    </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
 
+        <!-- SNACKBAR -->
         <v-snackbar
             v-model="snackbar.show"
             :color="snackbar.color"
@@ -95,24 +120,46 @@
     </div>
 </template>
 
+
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from "vue";
 import { useRoute } from "vue-router";
 import { eventsApi } from "../api/events";
 import { getActiveHorseId } from "../libs/horseProfile.js";
 import type { Event, SelectedKind } from "../types";
-import { ReminderCard } from "./reminders/index";
-import { HealthCard } from "./health/index";
-import { QuickNoteView } from "./quickNote/index";
+import { ReminderCard } from "./reminders";
+import { QuickNoteView } from "./quickNote";
 import { useDisplay } from "vuetify";
+import { HorseProfileCard } from "./horses";
+import { useHorseSelection } from "@/composables/useHorseSelection";
+import type { Horse } from "@/types";
 
-const { mdAndUp } = useDisplay();
+
+const { mdAndUp, smAndDown } = useDisplay();
 
 const events = ref<Event[]>([]);
 const reminders = ref<Event[]>([]);
 const isLoading = ref(true);
 
 const route = useRoute();
+
+const {
+    horses,
+    selectedHorseId,
+    horseById,
+} = useHorseSelection({ useRouteHorseId: true });
+
+
+const horseProfile = computed(() =>
+  selectedHorseId.value && selectedHorseId.value !== "all"
+    ? horseById.value.get(selectedHorseId.value) ?? null
+    : null
+);
+
+
+const onHorseSelect = (horse: Horse) => {
+    selectedHorseId.value = horse.id;
+};
 
 const routeHorseId = computed(() => route.params.id as string | undefined);
 
@@ -199,50 +246,3 @@ watch(
     },
 );
 </script>
-
-<style scoped>
-.action-bg-training {
-    background: url("/training.svg") center / cover no-repeat;
-    cursor: pointer;
-}
-
-.action-bg-feeding {
-    background: url("/alimentation.svg") center / cover no-repeat;
-    cursor: pointer;
-}
-
-.action-bg-training:hover,
-.action-bg-feeding:hover {
-    box-shadow: 0 6px 18px rgba(30, 99, 176, 0.2);
-}
-
-.action-btn {
-    color: #ffffff;
-    text-transform: none;
-}
-
-.action-btn-content {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    text-align: left;
-}
-
-.action-btn-text {
-    display: inline-flex;
-    flex-direction: column;
-    line-height: 1.1;
-}
-
-.action-btn-icon {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-    background: transparent;
-}
-
-.action-btn-icon--food {
-    width: 28px;
-    height: 28px;
-}
-</style>

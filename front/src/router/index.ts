@@ -29,15 +29,24 @@ const router = createRouter({
         {
             path: "/",
             name: "Dashboard",
-            component: Dashboard,
+            redirect: () => {
+                // récupère l'UUID stocké ou sélectionné
+                const storedHorseId = localStorage.getItem("selectedHorseId"); // ou getStoredHorseId()
+                if (storedHorseId) {
+                  return `/horses/${storedHorseId}/dashboard`;
+                }
+                // si aucun cheval sélectionné, redirige vers liste chevaux
+                return "/horses";
+              },
+           
         },
         {
-            path: "/reminders",
+            path: "/horses/:id/reminders",
             name: "Reminders",
             component: Reminders,
         },
         {
-            path: "/reminders/new",
+            path: "/horses/:id/reminders/new",
             name: "ReminderCreate",
             component: ReminderCreate,
         },

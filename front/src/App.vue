@@ -5,6 +5,7 @@
             <v-main>
                 <router-view v-slot="{ Component }">
                     <component :is="Component" />
+                    <slot name="context-left" />
                 </router-view>
             </v-main>
         </v-app>
@@ -38,7 +39,7 @@ body,
 .v-application__wrap,
 .v-main,
 .v-main__wrap {
-    background-color: #f6f7fb !important;
+    background-color: #f3eadf !important;
 }
 
 #app {

@@ -141,12 +141,17 @@ const snackbar = ref({
 });
 
 const activityTypes = [
-    { title: "Travail monté", value: "travail monté" },
+    { title: "Travail sur le plat", value: "travail sur le plat" },
     { title: "Travail à pied", value: "travail à pied" },
+    { title: "Obstacle", value: "obstacle"},
+    { title: "Barre au sol", value: "barre au sol"},
     { title: "Balade", value: "balade" },
     { title: "Longe", value: "longe" },
     { title: "Repos", value: "repos" },
-    { title: "Autre", value: "autre" },
+    { title: "Trotting", value: "Trotting" },
+    { title: "Cours", value: "cours" },
+    { title: "Concours", value: "concours" },
+    { title: "Stage", value: "stage" },
 ];
 
 const intensityOptions = [

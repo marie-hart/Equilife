@@ -1,3 +1,5 @@
+import type { RouteLocationRaw } from "vue-router";
+
 export interface Horse {
     id: string;
     name: string;
@@ -38,3 +40,13 @@ export interface UpdateHorseDto {
     feed?: string;
     additional_info?: string;
 }
+
+export type HorseAction = {
+    key: string;
+    title: string;
+    icon: string;
+    color?: string;
+    disabled: boolean;
+    to?: RouteLocationRaw;
+    onClick?: () => void;
+};

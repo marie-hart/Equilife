@@ -230,35 +230,36 @@ export class EventRepository {
     }
 
     async getReminders(horseId?: string): Promise<Event[]> {
-        // Vérifier le cache
-        const cacheKey = CacheKeys.eventsRemindersKey(horseId);
+        const safeHorseId = horseId && horseId.length > 0 ? horseId : undefined;
+        console.log("getReminders", safeHorseId);
+        const cacheKey = CacheKeys.eventsRemindersKey(safeHorseId);
         const cached = await cacheService.get<Event[]>(cacheKey);
-        if (cached) {
-            return cached;
-        }
-
-        // Récupérer depuis la base de données
-        const result = horseId
-            ? await pool.query(
-                  `SELECT * FROM events
-           WHERE reminder_enabled = true
-           AND horse_id = $1
-           ORDER BY event_date ASC`,
-                  [horseId],
-              )
-            : await pool.query(
-                  `SELECT * FROM events
-           WHERE reminder_enabled = true
-           ORDER BY event_date ASC`,
-              );
-
+        if (cached) return cached;
+      
+        const result = safeHorseId
+          ? await pool.query(
+              `
+              SELECT * FROM events
+              WHERE reminder_enabled = true
+              AND horse_id = $1
+              ORDER BY event_date ASC
+              `,
+              [safeHorseId],
+            )
+          : await pool.query(
+              `
+              SELECT * FROM events
+              WHERE reminder_enabled = true
+              ORDER BY event_date ASC
+              `,
+            );
+      
         const events = result.rows.map(this.mapRowToEvent);
-
-        // Mettre en cache (TTL de 1 minute car les rappels peuvent changer rapidement)
         await cacheService.set(cacheKey, events, 60);
-
+      
         return events;
     }
+      
 
     /**
      * Invalide le cache pour un événement

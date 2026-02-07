@@ -5,7 +5,11 @@
                 <v-card-title class="ma-0 text-h5">Activités</v-card-title>
             </div>
             <div class="d-flex flex-column ga-4">
-                <div class="d-flex align-center justify-end ga-4">
+                <div class="d-flex align-center justify-space-between ga-4">
+                    <v-btn variant="outlined" @click="goToDashboard">
+                        <v-icon icon="mdi-arrow-left" class="me-2" />
+                        Retour
+                    </v-btn>
                     <v-btn
                         class="primary-btn"
                         color="primary"
@@ -227,6 +231,10 @@ const loadActivities = async () => {
     } finally {
         isLoading.value = false;
     }
+};
+
+const goToDashboard = () => {
+    router.push({ name: "Dashboard" });
 };
 
 const goToActivityCreate = () => {

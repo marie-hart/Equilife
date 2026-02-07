@@ -19,8 +19,8 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { saveNotes, loadNotes } from "../../libs/note";
-import type { DashboardNote } from "../../types/note.js";
+import { saveNotes, loadNotes } from "@/libs/note";
+import type { DashboardNote } from "@/types/note.js";
 import { QuickNoteCard, QuickNoteDialog } from "./";
 
 const quickNote = ref("");

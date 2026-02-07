@@ -1,5 +1,5 @@
 <template>
-    <v-card variant="outlined" class="rounded-lg w-100 h-100">
+    <v-card variant="flat" class="rounded-xl w-100 h-100">
         <v-card-title>
             <div class="d-flex align-center justify-space-between ga-3">
                 <div class="d-inline-flex align-center ga-2">
@@ -44,13 +44,14 @@
                     v-if="showAdd"
                     icon="mdi-plus"
                     size="small"
-                    variant="text"
+                    :style="{
+                        backgroundColor: '#f2e8dc',
+                        color: '#554338'
+                    }"
                     @click.stop.prevent="emit('add')"
                 />
             </div>
         </v-card-title>
-
-        <v-divider />
 
         <v-card-text>
             <slot />

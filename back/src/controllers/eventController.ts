@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import eventRepository from "../repositories/eventRepository";
 import { CreateEventDto, UpdateEventDto } from "../types";
+import { normalizeHorseId } from "../utils/normalizeHorseId";
 
 export class EventController {
     async getAll(req: Request, res: Response): Promise<void> {
@@ -87,16 +88,17 @@ export class EventController {
         }
     }
 
-    async getReminders(req: Request, res: Response): Promise<void> {
+    async getReminders(req: Request, res: Response) {
         try {
-            const horseId = req.query.horseId as string | undefined;
-            const events = await eventRepository.getReminders(horseId);
-            res.json(events);
+          const horseId = normalizeHorseId(req.query.horseId);
+          const events = await eventRepository.getReminders(horseId);
+          res.json(events);
         } catch (error) {
-            console.error("Error fetching reminders:", error);
-            res.status(500).json({ error: "Failed to fetch reminders" });
+          console.error("Error fetching reminders:", error);
+          res.status(500).json({ error: "Failed to fetch reminders" });
         }
     }
+      
 }
 
 export default new EventController();

@@ -18,6 +18,8 @@ import {
     faHouse,
     faPen,
     faTrash,
+    faBook,
+    faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import "@mdi/font/css/materialdesignicons.css";
@@ -44,6 +46,8 @@ library.add(
     faHouse,
     faPen,
     faTrash,
+    faBook,
+    faTriangleExclamation,
 );
 
 const vuetify = createVuetify({
@@ -56,8 +60,9 @@ const vuetify = createVuetify({
         themes: {
             light: {
                 colors: {
-                    primary: "#1E63B0",
-                    background: "#D3D3D3",
+                    primary: "#2F4F2F",
+                    secondary: "#E8E4DA",
+                    surface: "#FAFAF8",
                 },
             },
         },

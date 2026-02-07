@@ -1,263 +1,141 @@
 <template>
-        <SectionCard
-            title="Rappels"
-            icon="alarm-clock"
-            :showAdd="true"
-            class="clickable-card dashboard-card dashboard-card--primary"
-            @add="goToReminderCreate"
-            @click="goToReminders"
+    <SectionCard
+      title="Rappels"
+      icon="alarm-clock"
+      :showAdd="true"
+      :to="{ name: 'ReminderCreate', params: { id: horseId } }"
+    >
+    <v-card
+          variant="outlined"
+          rounded="lg"
+          class="pa-4 border-md"
+      >
+      <div class="d-flex flex-column ga-4">
+        <!-- Chip À prévoir -->
+        <v-chip
+          prepend-icon="mdi-alarm-light"
+          size="small"
+          variant="flat"
+          class="align-self-start"
+          :style="{
+            backgroundColor: '#e3b077',
+            color: '#3c3226'
+          }"
         >
-            <div class="d-flex flex-column ga-6">
-                <div>
-                    <div class="d-flex align-center justify-space-between mb-1">
-                        <span class="text-subtitle-2 text-grey-darken-1"
-                            >En retard</span
-                        >
-                        <v-chip size="x-small" color="error" variant="flat">
-                            {{ remindersOverdue.length }}
-                        </v-chip>
-                    </div>
-                    <v-list
-                        v-if="remindersOverdue.length"
-                        density="compact"
-                        class="d-flex flex-column ga-2"
-                    >
-                        <v-list-item
-                            v-for="reminder in remindersOverdue.slice(0, 3)"
-                            :key="reminder.id"
-                            class="rounded-lg bg-grey-lighten-4 px-3 py-2"
-                        >
-                            <v-list-item-title class="text-subtitle-2">{{
-                                reminder.name
-                            }}</v-list-item-title>
-                            <v-list-item-subtitle
-                                class="text-caption text-grey-darken-1"
-                            >
-                                <span class="d-none d-md-inline">
-                                    {{
-                                        formatDateLong(
-                                            getReminderDate(reminder),
-                                        )
-                                    }}
-                                </span>
-                                <span class="d-inline d-md-none">
-                                    {{
-                                        formatDateMobile(
-                                            getReminderDate(reminder),
-                                        )
-                                    }}
-                                </span>
-                            </v-list-item-subtitle>
-                            <template #append>
-                                <ActionButtons
-                                    class="d-none d-md-flex align-center ga-1"
-                                    mode="inline"
-                                    button-size="x-small"
-                                    :actions="getEventActions(reminder)"
-                                />
-                                <ActionButtons
-                                    class="d-md-none"
-                                    mode="auto"
-                                    button-size="x-small"
-                                    menu-button-size="x-small"
-                                    :actions="getEventActions(reminder)"
-                                />
-                            </template>
-                        </v-list-item>
-                    </v-list>
-                    <p v-else class="empty-state">Aucun rappel en retard</p>
-                </div>
-                <div>
-                    <div class="d-flex align-center justify-space-between mb-1">
-                        <span class="text-subtitle-2 text-grey-darken-1"
-                            >À venir</span
-                        >
-                        <v-chip size="x-small" color="primary" variant="flat">
-                            {{ remindersUpcoming.length }}
-                        </v-chip>
-                    </div>
-                    <v-list
-                        v-if="remindersUpcoming.length"
-                        density="compact"
-                        class="d-flex flex-column ga-2"
-                    >
-                        <v-list-item
-                            v-for="reminder in remindersUpcoming.slice(0, 3)"
-                            :key="reminder.id"
-                            class="rounded-lg bg-grey-lighten-4 px-3 py-2"
-                        >
-                            <v-list-item-title class="text-subtitle-2">{{
-                                reminder.name
-                            }}</v-list-item-title>
-                            <v-list-item-subtitle
-                                class="text-caption text-grey-darken-1"
-                            >
-                                <span class="d-none d-md-inline">
-                                    {{
-                                        formatDateLong(
-                                            getReminderDate(reminder),
-                                        )
-                                    }}
-                                </span>
-                                <span class="d-inline d-md-none">
-                                    {{
-                                        formatDateMobile(
-                                            getReminderDate(reminder),
-                                        )
-                                    }}
-                                </span>
-                            </v-list-item-subtitle>
-                            <template #append>
-                                <ActionButtons
-                                    class="d-none d-md-flex align-center ga-1"
-                                    mode="inline"
-                                    button-size="x-small"
-                                    :actions="getEventActions(reminder)"
-                                />
-                                <ActionButtons
-                                    class="d-md-none"
-                                    mode="auto"
-                                    button-size="x-small"
-                                    menu-button-size="x-small"
-                                    :actions="getEventActions(reminder)"
-                                />
-                            </template>
-                        </v-list-item>
-                    </v-list>
-                    <p v-else class="empty-state">Aucun rappel à venir</p>
-                </div>
-            </div>
-        </SectionCard>
-</template>
-
-<script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
-import { SectionCard, ActionButtons } from "@/components";
-import { useRoute, useRouter } from "vue-router";
-import { eventsApi } from "@/api/events";
-import { getActiveHorseId } from "@/libs/horseProfile";
-import {
+            À prévoir
+        </v-chip>
+  
+        <!-- Liste des rappels -->
+        <v-list
+          v-if="remindersUpcoming.length"
+          density="compact"
+        >
+          <v-list-item
+            v-for="reminder in remindersUpcoming.slice(0, 1)"
+            :key="reminder.id"
+            @click="openEventDetails(reminder)"
+          >
+            <v-list-item-title class="text-body-2">
+              {{ reminder.name }}
+            </v-list-item-title>
+  
+            <v-list-item-subtitle class="text-caption">
+              {{ formatDateLong(getReminderDate(reminder)) }}
+            </v-list-item-subtitle>
+  
+            <template #append>
+              <v-icon size="18">mdi-chevron-right</v-icon>
+            </template>
+          </v-list-item>
+        </v-list>
+  
+        <v-alert
+          v-else
+          type="info"
+          variant="tonal"
+          density="comfortable"
+          text="Aucun rappel à prévoir"
+        />
+      </div>
+    </v-card>
+    <!-- Bouton voir tous -->
+    <div class="d-flex justify-center">
+          <v-btn
+            rounded="lg"
+            variant="flat"
+            :to="{ name: 'Reminders' }"
+            class="mt-4"
+            :style="{
+              backgroundColor: '#f2e8dc',
+              color: '#554338'
+            }"
+          >
+            Voir tous les rappels
+            <v-icon end>mdi-arrow-right</v-icon>
+          </v-btn>
+        </div>
+    </SectionCard>
+  </template>
+  
+  
+  <script setup lang="ts">
+  import { computed, onMounted, ref, watch } from "vue";
+  import { SectionCard } from "@/components";
+  import { useRoute, useRouter } from "vue-router";
+  import { eventsApi } from "@/api/events";
+  import { getActiveHorseId } from "@/libs/horseProfile";
+  import {
     sortByDateAsc,
     startOfDay,
     formatDateLong,
-    formatDateMobile,
-} from "@/libs/date";
-import type { Event, SelectedKind } from "@/types";
-
-const route = useRoute();
-const router = useRouter();
-
-const reminders = ref<Event[]>([]);
-const selectedKind = ref<SelectedKind>(null);
-const selectedEvent = ref<Event | null>(null);
-const deleteDialogOpen = ref(false);
-
-const routeHorseId = computed(() => route.params.id as string | undefined);
-const horseId = getActiveHorseId(routeHorseId.value);
-
-const goToReminders = () => {
-    router.push({ name: "Reminders" });
-};
-
-const getReminderDate = (reminder: Event): string =>
+  } from "@/libs/date";
+  import type { Event } from "@/types";
+  
+  const route = useRoute();
+  const router = useRouter();
+  
+  const reminders = ref<Event[]>([]);
+  
+  const routeHorseId = computed(() => route.params.id as string | undefined);
+  const horseId = getActiveHorseId(routeHorseId.value);
+  
+  const getReminderDate = (reminder: Event): string =>
     reminder.next_reminder_date || reminder.event_date;
-
-const loadReminders = async () => {
+  
+  const loadReminders = async () => {
     try {
-        reminders.value = await eventsApi.getReminders(horseId);
+      reminders.value = horseId
+        ? await eventsApi.getReminders(horseId)
+        : await eventsApi.getReminders();
     } catch (error) {
-        console.error("Error loading reminders:", error);
+      console.error("Error loading reminders:", error);
+      reminders.value = [];
     }
-};
-
-const remindersOverdue = computed(() => {
+  };
+  
+  const remindersUpcoming = computed(() => {
     const today = startOfDay(new Date());
     return sortByDateAsc(
-        reminders.value.filter(
-            (reminder) => new Date(getReminderDate(reminder)) < today,
-        ),
-        getReminderDate,
+      reminders.value.filter(
+        r => new Date(getReminderDate(r)) >= today
+      ),
+      getReminderDate,
     );
-});
-
-const remindersUpcoming = computed(() => {
-    const today = startOfDay(new Date());
-    return sortByDateAsc(
-        reminders.value.filter(
-            (reminder) => new Date(getReminderDate(reminder)) >= today,
-        ),
-        getReminderDate,
-    );
-});
-
-const goToReminderCreate = () => {
-    router.push(
-        horseId
-            ? { path: "/reminders/new", query: { horseId } }
-            : "/reminders/new",
-    );
-};
-
-const openEventDetails = (event: Event) => {
+  });
+  
+  
+  const openEventDetails = (event: Event) => {
     router.push({ name: "EventDetails", params: { id: event.id } });
-};
-
-const openEventEdit = (event: Event) => {
-    router.push({ name: "EventEdit", params: { id: event.id } });
-};
-
-const openEventDelete = (event: Event) => {
-    selectedKind.value = "event";
-    selectedEvent.value = event;
-    deleteDialogOpen.value = true;
-};
-
-onMounted(loadReminders);
-
-watch(
-    () => route.params.id,
-    () => {
-        loadReminders();
-    },
-);
-
-type ReminderAction = {
-    key: string;
-    title: string;
-    icon: string;
-    color?: string;
-    disabled: boolean;
-    onClick?: () => void;
-};
-
-const getEventActions = (event: Event): ReminderAction[] => [
-    {
-        key: "view",
-        title: "Voir",
-        icon: "mdi-eye",
-        disabled: false,
-        onClick: () => openEventDetails(event),
-    },
-    {
-        key: "edit",
-        title: "Éditer",
-        icon: "mdi-pencil",
-        disabled: false,
-        onClick: () => openEventEdit(event),
-    },
-    {
-        key: "delete",
-        title: "Supprimer",
-        icon: "mdi-trash-can",
-        color: "error",
-        disabled: false,
-        onClick: () => openEventDelete(event),
-    },
-];
-</script>
-
-<style scoped>
-.clickable-card {
-    cursor: pointer;
-}
-</style>
+  };
+  
+  onMounted(loadReminders);
+  
+  watch(() => route.params.id, loadReminders);
+  
+  // Styles partagés boutons
+  const actionBtnStyle = {
+    backgroundColor: "#f2e8dc",
+    color: "#554338",
+  };
+  </script>
+  

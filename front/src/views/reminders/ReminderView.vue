@@ -105,7 +105,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { getStoredHorseId } from "@/libs/horseProfile";
 import { validateRequiredFieldsMap } from "@/utils/validation";
@@ -121,6 +121,7 @@ import { getStatusKey, getStatusColor } from "@/libs/index";
 import { useFilters } from "@/composables/useFilters";
 import { useHorseSelection } from "@/composables/useHorseSelection";
 import { ReminderEdit, ReminderList } from "@/views/reminders";
+import { getActiveHorseId } from "@/libs/horseProfile";
 
 type ReminderAction = {
     key: string;
@@ -133,10 +134,6 @@ type ReminderAction = {
 
 const reminders = ref<Event[]>([]);
 const isLoading = ref(true);
-const router = useRouter();
-const { horseFilterOptions, getHorseNameById, loadHorses } = useHorseSelection();
-const getHorseName = (horseId?: string): string =>
-    getHorseNameById(horseId) ?? "Cheval inconnu";
 const isEditOpen = ref(false);
 const isDeleteOpen = ref(false);
 const selectedReminder = ref<Event | null>(null);
@@ -156,6 +153,14 @@ const snackbar = ref({
 const isCareDoneOpen = ref(false);
 const careDoneForm = ref({ date: "" });
 const careDoneErrors = ref<Record<string, string>>({});
+
+const router = useRouter();
+const route = useRoute();
+const { horseFilterOptions, getHorseNameById, loadHorses } = useHorseSelection();
+
+const getHorseName = (horseId?: string): string =>
+    getHorseNameById(horseId) ?? "Cheval inconnu";
+
 
 type RecurrenceUnit = "days" | "months" | "years";
 type ReminderStatus = "overdue" | "today" | "upcoming";
@@ -299,6 +304,9 @@ const filteredReminders = computed(() => {
     );
 });
 
+const routeHorseId = computed(() => route.params.id as string | undefined);
+const horseId = getActiveHorseId(routeHorseId.value);
+
 const getReminderTitle = (reminder: Event): string => {
     if (reminder.reminder_type === "alimentation" && reminder.name) {
         return reminder.name;
@@ -325,7 +333,7 @@ const goToDashboard = () => {
 };
 
 const goToReminderCreate = () => {
-    router.push("/reminders/new");
+    router.push( horseId ? { path: `/horses/${horseId}/reminders/new`, query: { horseId } } : `/horses/${horseId}/reminders/new`);
 };
 
 const setHorseFromStorage = () => {

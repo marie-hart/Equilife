@@ -1,101 +1,101 @@
 <template>
     <div>
-        <v-bottom-navigation
-            :model-value="activeTab"
-            grow
-            app
-            @update:model-value="emit('update:activeTab', $event)"
+      <!-- BOTTOM NAV : < lg -->
+      <v-bottom-navigation
+        v-if="!lgAndUp"
+        class="rounded-t-xl"
+        app
+        grow
+      >
+        <v-btn
+          v-for="item in bottomNavItems"
+          :key="item.tab"
+          :value="item.tab"
+          :to="getRoute(item)"
         >
-            <v-btn
-                v-for="item in bottomNavItems"
-                :key="item.tab"
-                :value="item.tab"
-                @click="go(item)"
-            >
-                <font-awesome-icon :icon="item.icon" />
-                <span>{{ item.label }}</span>
-            </v-btn>
-        </v-bottom-navigation>
+          <font-awesome-icon :icon="item.icon" />
+          <span class="text-caption">{{ item.label }}</span>
+        </v-btn>
+      </v-bottom-navigation>
+  
+      <!-- DRAWER : ≥ lg -->
+      <v-navigation-drawer
+        v-else
+        app
+        temporary
+        location="left"
+        :model-value="isMoreOpen"
+      >
+        <v-list nav>
+          <v-list-item
+            v-for="item in navItems"
+            :key="item.tab"
+            :to="getRoute(item)"
+          >
+            <template #prepend>
+              <font-awesome-icon :icon="item.icon" />
+            </template>
+            <v-list-item-title>{{ item.label }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
     </div>
-</template>
-
+  </template>
+  
 <script setup lang="ts">
-import { computed } from "vue";
-import { useDisplay } from "vuetify";
+  import { computed } from "vue";
+  import { useDisplay } from "vuetify";
+  import type { NavItem, NavTab } from "@/types";
+  import { useHorseSelection } from "@/composables/useHorseSelection";
 
-type NavTab =
-    | "dashboard"
-    | "reminders"
-    | "health"
-    | "activities"
-    | "documents"
-    | "feeding"
-    | "products"
-    | "horses";
-
-type NavItem = {
-    tab: NavTab;
-    label: string;
-    routeName:
-        | "HorseDashboardView"
-        | "Reminders"
-        | "HorseHealth"
-        | "HorseActivities"
-        | "HorseDocuments"
-        | "HorseFeeding"
-        | "HorseProducts"
-        | "Horses";
-    icon: string;
-};
-
-const props = defineProps<{
+  const { selectedHorseId } = useHorseSelection();
+  
+  const props = defineProps<{
     navItems: NavItem[];
-    activeTab: NavTab;
     isMoreOpen: boolean;
-}>();
-
-const emit = defineEmits<{
-    (event: "navigate", routeName: NavItem["routeName"]): void;
-    (event: "update:isMoreOpen", value: boolean): void;
-    (event: "update:activeTab", value: NavTab): void;
-}>();
-
-const { mdAndUp } = useDisplay();
-
-const getItem = (tab: NavTab) =>
+  }>();
+  
+  const emit = defineEmits<{
+    (e: "navigate", routeName: NavItem["routeName"], params?: Record<string, any>): void;
+    (e: "update:isMoreOpen", value: boolean): void;
+  }>();
+  
+  const { mdAndUp, lgAndUp } = useDisplay();
+  
+  const getItem = (tab: NavTab) =>
     props.navItems.find((item) => item.tab === tab);
-
-
-    const bottomNavItems = computed(() => {
+  
+  const bottomNavItems = computed(() => {
     const items: NavItem[] = [];
-
-    const baseTabs: NavTab[] = ["dashboard", "products", "documents", "horses"];
-
-    baseTabs.forEach((tab) => {
-        const item = getItem(tab);
-        if (item) items.push(item);
+  
+    ["dashboard", 'health', "products", "horses"].forEach((tab) => {
+      const item = getItem(tab as NavTab);
+      if (item) items.push(item);
     });
-
+  
     if (mdAndUp.value) {
-        const extraTabs: NavTab[] = ["activities", "feeding"];
-
-        extraTabs.forEach((tab) => {
-            const item = getItem(tab);
-            if (item) items.push(item);
-        });
+      ["activities", "feeding"].forEach((tab) => {
+        const item = getItem(tab as NavTab);
+        if (item) items.push(item);
+      });
     }
 
     return items;
+  });
+
+  const isHorseIdReady = computed(() => {
+  return selectedHorseId.value && selectedHorseId.value !== "all";
 });
 
-
-const go = (item: NavItem) => {
-    emit("navigate", item.routeName);
+  const getRoute = (item: NavItem) => {
+  if (item.tab === "horses") {
+    return {name: item.routeName }
+  } else {
+    if (!isHorseIdReady.value) {
+      return;
+    }
+    return {name: item.routeName, params: { id: selectedHorseId.value }}
+  }
 };
 </script>
-
-<script lang="ts">
-import { defineComponent } from "vue";
-
-export default defineComponent({});
-</script>
+  
