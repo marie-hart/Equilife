@@ -40,16 +40,7 @@
                     <span>{{ title }}</span>
                 </div>
 
-                <v-btn
-                    v-if="showAdd"
-                    icon="mdi-plus"
-                    size="small"
-                    :style="{
-                        backgroundColor: '#f2e8dc',
-                        color: '#554338'
-                    }"
-                    @click.stop.prevent="emit('add')"
-                />
+                <slot name="action" />
             </div>
         </v-card-title>
 

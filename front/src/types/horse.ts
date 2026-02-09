@@ -30,7 +30,7 @@ export interface CreateHorseDto {
 }
 
 export interface UpdateHorseDto {
-    name?: string;
+    name: string;
     nickname?: string;
     sex?: "Jument" | "Hongre" | "Etalon";
     breed?: string;

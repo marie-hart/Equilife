@@ -1,23 +1,45 @@
 <template>
-    <div class="page">
+    <div class="page" :style="{ backgroundColor: '#fdfaf6', minHeight: '100vh' }">
         <main class="pa-4">
             <div
                 class="d-flex flex-column flex-md-row align-start align-md-center justify-space-between ga-4 mb-6"
             >
-                <v-card-title class="ma-0 text-h5"
-                    >Détails du cheval</v-card-title
-                >
+                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
+                    Détails du cheval
+                </v-card-title>
+                
                 <div class="d-flex justify-space-between ga-2 w-100">
-                    <v-btn variant="tonal" @click="goBack">Retour</v-btn>
-                    <div class="d-flex ga-2">
-                        <v-btn color="primary" variant="flat" @click="goToEdit"
-                            >Modifier</v-btn
-                        >
-                    </div>
+                    <v-btn 
+                        variant="outlined" 
+                        :to="{ name: 'Horses' }"
+                        rounded="lg"
+                        class="text-none"
+                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
+                    >
+                        <v-icon start icon="mdi-arrow-left" />
+                        Retour
+                    </v-btn>
+                    
+                    <v-btn 
+                        color="primary" 
+                        variant="flat" 
+                        :to="{ name: 'HorseEdit', params: { id: horse?.id } }"
+                        rounded="lg"
+                        class="text-none"
+                        :style="{ backgroundColor: '#554338', color: 'white' }"
+                    >
+                        <v-icon start icon="mdi-pencil" />
+                        Modifier
+                    </v-btn>
                 </div>
             </div>
 
-            <v-card class="card" variant="outlined">
+            <v-card 
+                class="pa-2" 
+                variant="flat" 
+                rounded="lg"
+                :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
+            >
                 <v-card-text>
                     <v-skeleton-loader
                         v-if="isLoading"
@@ -25,104 +47,32 @@
                     />
                     <div v-else-if="horse">
                         <v-row dense class="ga-4">
-                            <v-col cols="12" md="8">
-                                <v-list density="compact">
-                                    <v-list-item>
-                                        <v-list-item-title
-                                            >Nom</v-list-item-title
-                                        >
-                                        <v-list-item-subtitle>{{
-                                            horse.name
-                                        }}</v-list-item-subtitle>
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <v-list-item-title
-                                            >Surnom</v-list-item-title
-                                        >
-                                        <v-list-item-subtitle>{{
-                                            horse.nickname || "-"
-                                        }}</v-list-item-subtitle>
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <v-list-item-title
-                                            >Sexe</v-list-item-title
-                                        >
-                                        <v-list-item-subtitle>{{
-                                            horse.sex || "-"
-                                        }}</v-list-item-subtitle>
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <v-list-item-title
-                                            >Date de
-                                            naissance</v-list-item-title
-                                        >
-                                        <v-list-item-subtitle>
-                                            {{
-                                                horse.birth_date
-                                                    ? formatDate(
-                                                          horse.birth_date,
-                                                      )
-                                                    : "-"
-                                            }}
-                                            <span v-if="horse.age"
-                                                >• {{ horse.age }} ans</span
-                                            >
+                            <v-col cols="12" md="7">
+                                <v-list density="comfortable" bg-color="transparent">
+                                    <v-list-item v-for="(item, i) in horseInfo" :key="i">
+                                        <v-list-item-title class="font-weight-bold text-caption" :style="{ color: '#7a6e61' }">
+                                            {{ item.title }}
+                                        </v-list-item-title>
+                                        <v-list-item-subtitle class="text-body-1 font-weight-medium" :style="{ color: '#3c3226' }">
+                                            {{ item.value }}
                                         </v-list-item-subtitle>
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <v-list-item-title
-                                            >Race</v-list-item-title
-                                        >
-                                        <v-list-item-subtitle>{{
-                                            horse.breed || "-"
-                                        }}</v-list-item-subtitle>
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <v-list-item-title
-                                            >Robe</v-list-item-title
-                                        >
-                                        <v-list-item-subtitle>{{
-                                            horse.coat || "-"
-                                        }}</v-list-item-subtitle>
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <v-list-item-title
-                                            >Écurie / Lieu</v-list-item-title
-                                        >
-                                        <v-list-item-subtitle>{{
-                                            horse.stable_location || "-"
-                                        }}</v-list-item-subtitle>
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <v-list-item-title
-                                            >Alimentation</v-list-item-title
-                                        >
-                                        <v-list-item-subtitle>{{
-                                            horse.feed || "-"
-                                        }}</v-list-item-subtitle>
-                                    </v-list-item>
-                                    <v-list-item>
-                                        <v-list-item-title
-                                            >Note libre</v-list-item-title
-                                        >
-                                        <v-list-item-subtitle>{{
-                                            horse.additional_info || "-"
-                                        }}</v-list-item-subtitle>
                                     </v-list-item>
                                 </v-list>
                             </v-col>
-                            <v-col cols="12" md="4">
+                            
+                            <v-col cols="12" md="4" class="d-flex justify-center align-start">
                                 <v-img
                                     :src="getPhotoUrl(horse)"
                                     :alt="horse.name"
-                                    height="240"
+                                    max-width="300"
+                                    height="300"
                                     cover
-                                    class="rounded-lg"
+                                    class="rounded-xl elevation-2"
                                 />
                             </v-col>
                         </v-row>
                     </div>
-                    <p v-else class="empty-state">Cheval introuvable.</p>
+                    <p v-else class="empty-state text-center py-4" :style="{ color: '#7a6e61' }">Cheval introuvable.</p>
                 </v-card-text>
             </v-card>
 
@@ -138,10 +88,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { horsesApi } from "../../api/horses";
-import { filesBaseUrl } from "../../api/client";
 import type { Horse } from "../../types";
 
 const route = useRoute();
@@ -161,40 +110,26 @@ const formatDate = (dateString: string): string =>
         year: "numeric",
     });
 
-const resolveFilesOrigin = (): string => {
-    if (filesBaseUrl.startsWith("http")) {
-        try {
-            const url = new URL(filesBaseUrl);
-            const isLocal = ["localhost", "127.0.0.1", "0.0.0.0"].includes(
-                url.hostname,
-            );
-            return isLocal ? window.location.origin : url.origin;
-        } catch {
-            return window.location.origin;
-        }
-    }
-    return window.location.origin;
+const getPhotoUrl = (horseData: Horse): string => {
+    if (!horseData.photo_path) return "/placeholder-horse.jpg";
+    return horseData.photo_path; 
 };
 
-const normalizePhotoUrl = (path?: string): string => {
-    if (!path) return "/placeholder-horse.jpg";
-    if (path.startsWith("http")) {
-        try {
-            const url = new URL(path);
-            const isLocal = ["localhost", "127.0.0.1", "0.0.0.0"].includes(
-                url.hostname,
-            );
-            return isLocal ? `${window.location.origin}${url.pathname}` : path;
-        } catch {
-            return path;
-        }
-    }
-    if (path.startsWith("/")) return `${resolveFilesOrigin()}${path}`;
-    return path;
-};
-
-const getPhotoUrl = (horseData: Horse): string =>
-    normalizePhotoUrl(horseData.photo_path);
+const horseInfo = computed(() => {
+    if (!horse.value) return [];
+    const h = horse.value;
+    return [
+        { title: "Nom", value: h.name },
+        { title: "Surnom", value: h.nickname || "-" },
+        { title: "Sexe", value: h.sex || "-" },
+        { title: "Date de naissance", value: h.birth_date ? `${formatDate(h.birth_date)} (${h.age} ans)` : "-" },
+        { title: "Race", value: h.breed || "-" },
+        { title: "Robe", value: h.coat || "-" },
+        { title: "Écurie / Lieu", value: h.stable_location || "-" },
+        { title: "Alimentation", value: h.feed || "-" },
+        { title: "Note libre", value: h.additional_info || "-" },
+    ];
+});
 
 const loadHorse = async () => {
     try {
@@ -212,14 +147,6 @@ const loadHorse = async () => {
     }
 };
 
-const goBack = () => {
-    router.push("/horses");
-};
-
-const goToEdit = () => {
-    if (!horse.value) return;
-    router.push(`/horses/${horse.value.id}/edit`);
-};
 
 onMounted(() => {
     loadHorse();

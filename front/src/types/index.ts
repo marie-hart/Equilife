@@ -9,3 +9,4 @@ export * from "@/types/filters";
 export * from "@/types/activity";
 export * from "@/types/reminder";
 export * from "@/types/navigation";
+export * from "@/types/health";

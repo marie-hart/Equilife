@@ -1,14 +1,15 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Dashboard from "@/views/TheDashboard.vue";
-import Health from "@/views/health/HealthView.vue";
-import HealthEdit from "@/views/health/HealthEdit.vue";
-import Activities from "@/views/activities/ActivityView.vue";
-import Documents from "@/views/documents/DocumentView.vue";
 import Reminders from "@/views/reminders/ReminderView.vue";
 import ReminderCreate from "@/views/reminders/ReminderCreate.vue";
-import CareCreate from "@/views/health/HealthCreate.vue";
+import EventDetails from "@/views/events/EventView.vue";
+import EventEdit from "@/views/events/EventEdit.vue";
+import Health from "@/views/health/HealthView.vue";
+import HealthForm from "@/views/health/HealthForm.vue";
+import Activities from "@/views/activities/ActivityView.vue";
 import ActivityCreate from "@/views/activities/ActivityCreate.vue";
 import ActivityEdit from "@/views/activities/ActivityEdit.vue";
+import Documents from "@/views/documents/DocumentView.vue";
 import DocumentCreate from "@/views/documents/DocumentCreate.vue";
 import Feeding from "@/views/feeding/FeedingView.vue";
 import FeedingCreate from "@/views/feeding/FeedingCreate.vue";
@@ -18,8 +19,6 @@ import ProductsCreate from "@/views/products/ProductsCreate.vue";
 import Horses from "@/views/horses/HorseView.vue";
 import HorseForm from "@/views/horses/HorseForm.vue";
 import HorseDetails from "@/views/horses/HorseDetails.vue";
-import EventDetails from "@/views/events/EventView.vue";
-import EventEdit from "@/views/events/EventEdit.vue";
 import MaterialDetails from "@/views/materials/MaterialView.vue";
 import MaterialEdit from "@/views/materials/MaterialEdit.vue";
 
@@ -88,12 +87,12 @@ const router = createRouter({
         {
             path: "/horses/:id/health/new",
             name: "HorseCareCreate",
-            component: CareCreate,
+            component: HealthForm,
         },
         {
             path: "/health/:id/edit",
             name: "HealthEdit",
-            component: HealthEdit,
+            component: HealthForm,
         },
         {
             path: "/horses/:id/activities",

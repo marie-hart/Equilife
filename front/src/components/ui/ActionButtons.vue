@@ -9,12 +9,12 @@
                 :disabled="action.disabled"
                 :size="buttonSize"
                 :variant="buttonVariant"
-                :href="action.href"
+                :to="action.to"
                 :target="action.target"
                 :download="action.download"
                 :aria-label="action.title"
                 :title="action.title"
-                @click="(event) => runAction(action, event)"
+                @click="runAction(action, $event)"
             >
                 <v-icon
                     v-if="showIcon"
@@ -30,7 +30,6 @@
                     <template #activator="{ props }">
                         <v-btn
                             icon
-                            :size="menuButtonSize"
                             :variant="menuButtonVariant"
                             v-bind="props"
                             aria-label="Actions"
@@ -46,10 +45,10 @@
                             v-for="action in actions"
                             :key="action.key"
                             :disabled="action.disabled"
-                            :href="action.href"
+                            :to="action.to"
                             :target="action.target"
                             :download="action.download"
-                            @click="(event) => runAction(action, event)"
+                            @click="runAction(action, $event)"
                         >
                             <template #prepend>
                                 <v-icon
@@ -71,12 +70,12 @@
                     :disabled="enabledActions[0].disabled"
                     :size="buttonSize"
                     :variant="buttonVariant"
-                    :href="enabledActions[0].href"
+                    :to="enabledActions[0].to"
                     :target="enabledActions[0].target"
                     :download="enabledActions[0].download"
                     :aria-label="enabledActions[0].title"
                     :title="enabledActions[0].title"
-                    @click="(event) => runAction(enabledActions[0], event)"
+                    @click="runAction(enabledActions[0], $event)"
                 />
             </template>
         </template>
@@ -85,6 +84,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import type { RouteLocationRaw } from "vue-router";
 
 type ActionButton = {
     key: string;
@@ -92,7 +92,7 @@ type ActionButton = {
     icon: string;
     color?: string;
     disabled?: boolean;
-    href?: string;
+    to?: RouteLocationRaw;
     target?: string;
     download?: boolean;
     onClick?: () => void;

@@ -2,21 +2,28 @@
     <div class="page">
         <main class="pa-4">
             <div class="d-flex align-center justify-space-between ga-4 mb-4">
-                <v-card-title class="ma-0 text-h5">Santé</v-card-title>
+                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">Soins</v-card-title>
             </div>
             <div class="d-flex flex-column ga-4">
                 <div class="d-flex align-center justify-space-between ga-4">
-                    <v-btn variant="outlined" @click="goToDashboard">
+                    <v-btn 
+                        variant="outlined" 
+                        @click="goToDashboard"
+                        rounded="lg"
+                        class="text-none"
+                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
+                    >
                         <v-icon icon="mdi-arrow-left" class="me-2" />
                         Retour
                     </v-btn>
                     <v-btn
-                        class="primary-btn"
-                        color="primary"
+                        class="text-none"
                         variant="flat"
-                        @click="goToCareCreate"
+                        rounded="lg"
+                        :to="{ name: 'HorseCareCreate', params: { id: horseId } }"
+                        :style="{ backgroundColor: '#554338', color: 'white' }"
                     >
-                        <v-icon icon="mdi-plus" class="me-2" />
+                        <v-icon start icon="mdi-plus" />
                         Ajouter
                     </v-btn>
                 </div>
@@ -39,52 +46,7 @@
                     :get-care-actions="getCareActions"
                 />
             </div>
-
-            <ConfirmDeleteDialog
-                v-model="isDeleteOpen"
-                title="Supprimer le soin"
-                message="Confirmer la suppression de ce soin ?"
-                @confirm="confirmDelete"
-            />
-
-            <v-dialog v-model="isCareDoneOpen" max-width="420">
-                <v-card>
-                    <v-card-title>Soin effectué</v-card-title>
-                    <v-card-text>
-                        <DatePickerField
-                            v-model="careDoneForm.date"
-                            label="Date du soin"
-                            :error-messages="
-                                careDoneErrors.date
-                                    ? [careDoneErrors.date]
-                                    : undefined
-                            "
-                        />
-                    </v-card-text>
-                    <v-card-actions class="justify-end">
-                        <v-btn
-                            variant="outlined"
-                            @click="isCareDoneOpen = false"
-                            >Annuler</v-btn
-                        >
-                        <v-btn
-                            variant="elevated"
-                            color="primary"
-                            @click="saveCareDone"
-                            >Valider</v-btn
-                        >
-                    </v-card-actions>
-                </v-card>
-            </v-dialog>
-
-            <v-snackbar
-                v-model="snackbar.show"
-                :color="snackbar.color"
-                timeout="2500"
-            >
-                {{ snackbar.message }}
-            </v-snackbar>
-        </main>
+            </main>
     </div>
 </template>
 
@@ -307,6 +269,8 @@ const isCareDoneOpen = ref(false);
 const careDoneForm = ref({ date: "" });
 const careDoneErrors = ref<Record<string, string>>({});
 
+const horseId = computed(() => route.params.id as string | undefined);
+
 const loadCares = async () => {
     isLoading.value = true;
     try {
@@ -449,15 +413,6 @@ const confirmDelete = async () => {
             color: "error",
         };
     }
-};
-
-const goToCareCreate = () => {
-    const horseId = route.params.id as string | undefined;
-    if (horseId) {
-        router.push({ name: "HorseCareCreate", params: { id: horseId } });
-        return;
-    }
-    router.push("/horses");
 };
 
 const goToDashboard = () => {

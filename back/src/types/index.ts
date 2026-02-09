@@ -41,7 +41,7 @@ export interface CreateEventDto {
 }
 
 export interface UpdateEventDto {
-    name?: string;
+    name: string;
     description?: string;
     event_date?: string;
     horse_id?: string;
@@ -140,7 +140,7 @@ export interface CreateHorseDto {
 }
 
 export interface UpdateHorseDto {
-    name?: string;
+    name: string;
     nickname?: string;
     sex?: "Jument" | "Hongre" | "Etalon";
     breed?: string;

@@ -31,12 +31,12 @@ export default defineConfig(({ mode }) => {
         start_url: "/",
         icons: [
           {
-            src: "/logo-beige.png",
+            src: "/logo-equilife.png",
             sizes: "any",
             type: "image/png",
           },
           {
-            src: "/logo-beige.png",
+            src: "/logo-equilife.png",
             sizes: "any",
             type: "image/png",
             purpose: "maskable",
@@ -59,11 +59,11 @@ export default defineConfig(({ mode }) => {
     allowedHosts: ["dave-bushier-tobias.ngrok-free.dev"],
     proxy: {
       "/api": {
-          target: proxyTarget,
+        target: 'http://localhost:3001',
         changeOrigin: true,
       },
       "/uploads": {
-          target: proxyTarget,
+        target: 'http://localhost:3001',
         changeOrigin: true,
       },
     },

@@ -134,14 +134,12 @@ import { HorseProfileCard } from "./horses";
 import { useHorseSelection } from "@/composables/useHorseSelection";
 import type { Horse } from "@/types";
 
-
-const { mdAndUp, smAndDown } = useDisplay();
-
 const events = ref<Event[]>([]);
 const reminders = ref<Event[]>([]);
 const isLoading = ref(true);
 
 const route = useRoute();
+const { smAndDown } = useDisplay();
 
 const {
     horses,

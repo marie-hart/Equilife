@@ -2,14 +2,24 @@
     <SectionCard
       title="Rappels"
       icon="alarm-clock"
-      :showAdd="true"
-      :to="{ name: 'ReminderCreate', params: { id: horseId } }"
     >
+    <template #action>
+      <v-btn   
+          icon="mdi-plus"
+          class="elevation-0 px-2"
+          size="small"
+          :style="{
+              backgroundColor: '#f2e8dc',
+              color: '#554338'
+          }"
+          :to="{ name: 'ReminderCreate', params: { id: horseId } }"
+      />
+    </template>
     <v-card
-          variant="outlined"
+          variant="flat"
           rounded="lg"
           class="pa-4 border-md"
-      >
+    >
       <div class="d-flex flex-column ga-4">
         <!-- Chip À prévoir -->
         <v-chip
@@ -26,28 +36,37 @@
         </v-chip>
   
         <!-- Liste des rappels -->
-        <v-list
-          v-if="remindersUpcoming.length"
-          density="compact"
-        >
-          <v-list-item
+        <div v-if="remindersUpcoming.length">
+          <div
             v-for="reminder in remindersUpcoming.slice(0, 1)"
             :key="reminder.id"
-            @click="openEventDetails(reminder)"
+            class="mb-2"
           >
-            <v-list-item-title class="text-body-2">
-              {{ reminder.name }}
-            </v-list-item-title>
-  
-            <v-list-item-subtitle class="text-caption">
-              {{ formatDateLong(getReminderDate(reminder)) }}
-            </v-list-item-subtitle>
-  
-            <template #append>
-              <v-icon size="18">mdi-chevron-right</v-icon>
-            </template>
-          </v-list-item>
-        </v-list>
+            <v-card
+                :to="{ name: 'EventDetails', params: { id: reminder.id } }"
+                variant="tonal"
+                rounded="lg"
+                class="pa-3 d-flex align-center justify-space-between"
+                :style="{
+                    backgroundColor: '#fdfaf6', // Fond léger pour l'item
+                    color: '#554338',
+                    border: 'none'
+                }"
+                flat
+            >
+                <div class="d-flex flex-column">
+                    <span class="text-body-2 font-weight-medium">
+                        {{ reminder.name }}
+                    </span>
+                    <span class="text-caption" :style="{ color: '#7a6e61' }">
+                        {{ formatDateLong(getReminderDate(reminder)) }}
+                    </span>
+                </div>
+
+                <v-icon size="20" :style="{ color: '#554338' }">mdi-chevron-right</v-icon>
+            </v-card>
+          </div>
+        </div>
   
         <v-alert
           v-else

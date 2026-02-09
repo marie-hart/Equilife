@@ -1,20 +1,29 @@
 <template>
     <v-container fluid class="pa-4">
         <div class="d-flex align-center justify-space-between ga-4 mb-6">
-            <v-card-title class="ma-0 d-flex align-center ga-2">
+            <v-card-title class="ma-0 d-flex align-center ga-2 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
                 <font-awesome-icon icon="horse" class="fa-icon me-2" />
                 {{ isEdit ? "Modifier un cheval" : "Ajouter un cheval" }}
             </v-card-title>
-            <v-btn variant="outlined" @click="goBack">Retour</v-btn>
+            <v-btn 
+                variant="outlined" 
+                @click="goBack"
+                rounded="lg"
+                class="text-none"
+                :style="{ color: '#554338', borderColor: '#d1c7bc' }"
+            >
+                Retour
+            </v-btn>
         </div>
 
-        <v-card class="w-100" variant="outlined">
-            <v-card-title class="d-flex align-center ga-2 text-subtitle-1">
-                <font-awesome-icon icon="circle-plus" class="fa-icon me-2" />
-                {{ isEdit ? "Fiche cheval" : "Nouvelle fiche" }}
-            </v-card-title>
-            <v-divider />
-            <v-card-text>
+        <v-card 
+            class="w-100 pa-2" 
+            variant="flat" 
+            rounded="lg" 
+            :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
+        >
+            <v-divider :style="{ borderColor: '#efe5d9' }" />
+            <v-card-text class="mt-4">
                 <v-skeleton-loader
                     v-if="isLoading"
                     type="card, list-item-two-line"
@@ -25,6 +34,9 @@
                             v-model="form.name"
                             label="Nom *"
                             density="comfortable"
+                            variant="outlined"
+                            bg-color="white"
+                            rounded="lg"
                             required
                             :error-messages="
                                 fieldErrors.name
@@ -38,6 +50,9 @@
                             v-model="form.nickname"
                             label="Surnom"
                             density="comfortable"
+                            variant="outlined"
+                            bg-color="white"
+                            rounded="lg"
                         />
                     </v-col>
                     <v-col cols="12" md="6">
@@ -45,6 +60,8 @@
                             label="Photo"
                             variant="outlined"
                             density="comfortable"
+                            bg-color="white"
+                            rounded="lg"
                             accept="image/*"
                             :multiple="false"
                             @update:model-value="handleFileChange"
@@ -57,6 +74,8 @@
                             label="Sexe"
                             variant="outlined"
                             density="comfortable"
+                            bg-color="white"
+                            rounded="lg"
                             clearable
                         />
                     </v-col>
@@ -65,6 +84,9 @@
                             v-model="form.birth_date"
                             label="Date de naissance"
                             density="comfortable"
+                            variant="outlined"
+                            bg-color="white"
+                            rounded="lg"
                         />
                     </v-col>
                     <v-col cols="12" md="6">
@@ -74,6 +96,8 @@
                             label="Race"
                             variant="outlined"
                             density="comfortable"
+                            bg-color="white"
+                            rounded="lg"
                             clearable
                         />
                     </v-col>
@@ -84,6 +108,8 @@
                             label="Robe"
                             variant="outlined"
                             density="comfortable"
+                            bg-color="white"
+                            rounded="lg"
                             clearable
                         />
                     </v-col>
@@ -92,6 +118,9 @@
                             v-model="form.stable_location"
                             label="Écurie / Lieu"
                             density="comfortable"
+                            variant="outlined"
+                            bg-color="white"
+                            rounded="lg"
                         />
                     </v-col>
                     <v-col cols="12">
@@ -100,6 +129,8 @@
                             label="Alimentation"
                             variant="outlined"
                             density="comfortable"
+                            bg-color="white"
+                            rounded="lg"
                             rows="2"
                         />
                     </v-col>
@@ -109,15 +140,18 @@
                             label="Note libre"
                             variant="outlined"
                             density="comfortable"
+                            bg-color="white"
+                            rounded="lg"
                             rows="3"
                         />
                     </v-col>
                 </v-row>
-                <div class="d-flex align-center ga-3 mt-4 flex-wrap">
+                <div class="d-flex align-center ga-3 mt-6 flex-wrap">
                     <v-btn
-                        class="primary-btn"
-                        color="primary"
+                        class="text-none"
+                        :style="{ backgroundColor: '#554338', color: 'white' }"
                         variant="flat"
+                        rounded="lg"
                         :loading="isSubmitting"
                         type="button"
                         @click="handleSubmit"
@@ -130,7 +164,15 @@
                                   : "Créer"
                         }}
                     </v-btn>
-                    <v-btn variant="outlined" @click="goBack">Annuler</v-btn>
+                    <v-btn 
+                        variant="outlined" 
+                        @click="goBack"
+                        rounded="lg"
+                        class="text-none"
+                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
+                    >
+                        Annuler
+                    </v-btn>
                     <span v-if="formError" class="text-error text-caption">{{
                         formError
                     }}</span>

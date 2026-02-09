@@ -12,7 +12,7 @@
         <!-- MOBILE : logo à gauche -->
         <img
           v-if="!lgAndUp"
-          src="/logo-beige.png"
+          src="/logo-equilife.png"
           alt="EquiLife"
           height="50"
           class="ml-3"
@@ -23,7 +23,7 @@
         <!-- DESKTOP : logo centré -->
         <img
           v-if="lgAndUp"
-          src="/logo-beige.png"
+          src="/logo-equilife.png"
           alt="EquiLife"
           height="50"
         />
