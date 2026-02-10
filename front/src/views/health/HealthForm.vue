@@ -5,15 +5,6 @@
                 <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
                     {{ isEdit ? "Modifier le soin" : "Ajouter un soin" }}
                 </v-card-title>
-                <v-btn 
-                    variant="outlined" 
-                    @click="goBack"
-                    rounded="lg"
-                    class="text-none"
-                    :style="{ color: '#554338', borderColor: '#d1c7bc' }"
-                >
-                    Retour
-                </v-btn>
             </div>
 
             <v-card 
@@ -103,6 +94,14 @@
                         </v-row>
                         
                         <div class="d-flex justify-end mt-4">
+                            <v-btn 
+                                variant="outlined" 
+                                rounded="lg"
+                                class="mr-2"
+                                @click="goBack"
+                            >
+                                Annuler
+                            </v-btn>
                             <v-btn
                                 variant="flat"
                                 :style="{ backgroundColor: '#554338', color: 'white' }"
@@ -126,13 +125,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { DatePickerField, RecurrenceFields } from "@/components";
 import { materialsApi } from "@/api/materials";
 import { validateRequiredFieldsMap } from "@/utils/validation";
-import type { Material, Event, RecurrenceUnit, CreateEventDto } from "@/types";
+import type { Product, Event, RecurrenceUnit, CreateEventDto } from "@/types";
 import { fromDateInputValue, toDateInputValue } from "@/libs/date";
 import { useHorseSelection } from "@/composables/useHorseSelection";
 
@@ -143,7 +142,7 @@ const { horses, getHorseIdsFromParamsOrStored } = useHorseSelection();
 // État
 const isLoading = ref(true);
 const isSubmitting = ref(false);
-const materials = ref<Material[]>([]);
+const products = ref<Product[]>([]);
 const fieldErrors = ref<Record<string, string>>({});
 const snackbar = ref({ show: false, message: "", color: "success" });
 const horseId = computed(() => route.params.id as string | undefined);
@@ -170,15 +169,15 @@ const horseOptions = computed(() =>
 
 const productOptions = computed(() => {
     const seen = new Set<string>();
-    return materials.value
-        .filter((material) => material.category === "Soin")
-        .filter((material) => {
-            const key = material.name?.trim().toLowerCase();
+    return products.value
+        .filter((product) => product.category === "Soin")
+        .filter((product) => {
+            const key = product.name?.trim().toLowerCase();
             if (!key || seen.has(key)) return false;
             seen.add(key);
             return true;
         })
-        .map((material) => ({ title: material.name, value: material.id }));
+        .map((product) => ({ title: product.name, value: product.id }));
 });
 
 const recurrenceUnits = [
@@ -202,7 +201,7 @@ const recurrence = computed({
 const loadData = async () => {
     isLoading.value = true;
     try {
-        await materialsApi.getAll(false).then(res => materials.value = res);
+        await materialsApi.getAll(false).then(res => products.value = res);
         
         if (isEdit.value && eventId.value) {
             const event = await eventsApi.getById(eventId.value);
@@ -243,7 +242,7 @@ const fillForm = (event: Event) => {
 };
 
 const handleSubmit = async () => {
-    const productName = materials.value.find(m => m.id === form.value.productId)?.name?.trim() || "";
+    const productName = products.value.find(m => m.id === form.value.productId)?.name?.trim() || "";
     const careName = form.value.careDescription.trim() || productName;
     
     const { errors, firstError } = await validateRequiredFieldsMap([

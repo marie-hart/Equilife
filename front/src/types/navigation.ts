@@ -18,7 +18,7 @@ export type NavItem = {
         | "HorseActivities"
         // | "HorseDocuments"
         | "HorseFeeding"
-        | "HorseProducts"
+        | "Products"
         | "Horses";
     icon: string;
 };

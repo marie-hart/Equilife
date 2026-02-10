@@ -69,7 +69,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { rationsApi } from "@/api/rations";
 import { materialsApi } from "@/api/materials";
-import type { Horse, Material, Ration } from "@/types";
+import type { Product, Ration } from "@/types";
 import { useHorseSelection } from "@/composables/useHorseSelection";
 import { FeedingList } from "@/views/feeding";
 
@@ -80,8 +80,9 @@ const {
     horseFilterOptions,
     selectedHorseId,
     setHorseFromParamsOrStored,
+    getHorseName,
 } = useHorseSelection();
-const materials = ref<Material[]>([]);
+const products = ref<Product[]>([]);
 const rations = ref<Ration[]>([]);
 const isLoading = ref(true);
 const snackbar = ref({
@@ -106,16 +107,13 @@ const itemTypeLabel = (value?: string): string => {
 };
 
 const getProductName = (productId?: string): string | undefined =>
-    materials.value.find((material) => material.id === productId)?.name;
+    products.value.find((product) => product.id === productId)?.name;
 
-const getHorseName = (horseId?: string): string =>
-    horseById.value.get(horseId || "")?.name ?? "Cheval inconnu";
-
-const loadMaterials = async () => {
+const loadProducts = async () => {
     try {
-        materials.value = await materialsApi.getAll(false);
+        products.value = await materialsApi.getAll(false);
     } catch (error) {
-        console.error("Error loading materials:", error);
+        console.error("Error loading products:", error);
     }
 };
 
@@ -133,13 +131,13 @@ const loadRations = async () => {
 };
 
 watch(selectedHorseId, () => {
-    loadMaterials();
+    loadProducts();
     loadRations();
 });
 
 onMounted(async () => {
     setHorseFromParamsOrStored("all");
-    await loadMaterials();
+    await loadProducts();
     await loadRations();
 });
 
@@ -169,7 +167,7 @@ const shareRation = async (ration: Ration) => {
             return `• ${parts.join(" • ")}`;
         })
         .join("\n");
-    const horseName = getHorseName(ration.horse_id);
+    const horseName = getHorseName();
     const text = `Ration: ${ration.name}\nCheval: ${horseName}\n${items}`;
     try {
         if (navigator.share) {

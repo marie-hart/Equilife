@@ -30,3 +30,5 @@ export interface TimelineEvent {
     date: string;
     type: "vet" | "farrier" | "dentistry" | "injury";
 }
+
+export type RecurrenceUnit = "days" | "months" | "years";

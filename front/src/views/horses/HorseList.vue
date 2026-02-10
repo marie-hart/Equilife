@@ -179,16 +179,17 @@ const openDeleteDialog = (horse: Horse) => {
                             cover
                         />
                     </div>
-                <v-btn
-                    variant="tonal"
-                    block
-                    class="text-none rounded-lg"
-                    :style="{ color: '#554338' }"
-                    :to="{ name: 'HorseDashboardView', params: { id: horse.id } }"
-                >
-                    Mon Dashboard
-                    <v-icon end>mdi-arrow-right</v-icon>
-                </v-btn>
+                <div class="d-flex justify-center">                
+                    <v-btn
+                        variant="flat"
+                        class="text-none rounded-lg"
+                        :style="{ color: '#554338', backgroundColor: '#efe5d9' }"
+                        :to="{ name: 'HorseDashboardView', params: { id: horse.id } }"
+                    >
+                        Mon Dashboard
+                        <v-icon end>mdi-arrow-right</v-icon>
+                    </v-btn>
+                </div>
             </v-card>
         </v-col>
     </v-row>

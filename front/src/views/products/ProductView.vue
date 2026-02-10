@@ -1,35 +1,56 @@
 <template>
-    <div class="page">
+    <div class="page" :style="{ minHeight: '100vh' }">
         <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-4">
-                <v-card-title class="ma-0 text-h5">Produits</v-card-title>
+            <div class="d-flex align-center justify-space-between ga-4 mb-6">
+                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
+                    Produits
+                </v-card-title>
             </div>
+            
             <div class="d-flex flex-column ga-4">
                 <div class="d-flex align-center justify-space-between ga-4">
-                    <v-btn variant="outlined" @click="goToDashboard">
+                    <v-btn 
+                        variant="outlined" 
+                        :to="{ name: 'Dashboard'}"
+                        rounded="lg"
+                        class="text-none"
+                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
+                    >
                         <v-icon icon="mdi-arrow-left" class="me-2" />
                         Retour
                     </v-btn>
                     <v-btn
-                        class="primary-btn"
-                        color="primary"
                         variant="flat"
-                        @click="goToProductCreate"
+                        rounded="lg"
+                        :to="{ name: 'ProductCreate', params: { id: horseId } }"
+                        :style="{ backgroundColor: '#554338', color: 'white' }"
+                        class="text-none"
                     >
-                        <v-icon icon="mdi-plus" class="me-2" />
+                        <v-icon start icon="mdi-plus" />
                         Ajouter
                     </v-btn>
                 </div>
 
-                <v-card class="section-card" variant="outlined">
-                    <v-card-title class="text-subtitle-1">Filtres</v-card-title>
+                <v-card 
+                    class="pa-2" 
+                    variant="flat" 
+                    rounded="lg"
+                    :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
+                >
+                    <v-card-title class="text-subtitle-1 font-weight-bold" :style="{ color: '#3c3226' }">
+                        Filtres
+                    </v-card-title>
                     <v-card-text class="pt-3">
                         <v-row dense>
                             <v-col cols="12" md="6">
                                 <v-text-field
                                     v-model="searchQuery"
                                     label="Rechercher par nom"
-                                    density="compact"
+                                    density="comfortable"
+                                    variant="outlined"
+                                    bg-color="white"
+                                    rounded="lg"
+                                    prepend-inner-icon="mdi-magnify"
                                 />
                             </v-col>
                             <v-col cols="12" md="6">
@@ -37,23 +58,28 @@
                                     v-model="selectedCategory"
                                     :items="categoryFilterOptions"
                                     label="Catégorie"
-                                    density="compact"
+                                    density="comfortable"
                                     variant="outlined"
+                                    bg-color="white"
+                                    rounded="lg"
+                                    clearable
                                 />
                             </v-col>
                         </v-row>
                     </v-card-text>
                 </v-card>
+                
                 <v-skeleton-loader
                     v-if="isLoading"
                     type="list-item-two-line, list-item-two-line, list-item-two-line"
                 />
+                
                 <ProductList
                     v-else
-                    :materials="filteredMaterials"
+                    :products="filteredProducts"
                     :get-horse-name="getHorseName"
                     :recurrence-label="recurrenceLabel"
-                    :get-material-actions="getMaterialActions"
+                    :get-product-actions="getProductActions"
                     :toggle-repurchase="toggleRepurchase"
                 />
             </div>
@@ -78,39 +104,32 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { materialsApi } from "@/api/materials";
 import { eventsApi } from "@/api/events";
 import { ConfirmDeleteDialog } from "@/components";
 import { useHorseSelection } from "@/composables/useHorseSelection";
-import type { Material } from "@/types";
+import type { Product, ProductAction } from "@/types";
 import type { Event } from "@/types";
 import { ProductList } from "@/views/products";
 
 const route = useRoute();
-const router = useRouter();
-const { horses, getHorseNameById, getHorseIdsFromParamsOrStored } =
+const { getHorseNameById, getHorseIdsFromParamsOrStored } =
     useHorseSelection();
-const materials = ref<Material[]>([]);
+
+const products = ref<Product[]>([]);
 const isLoading = ref(true);
 const snackbar = ref({
     show: false,
     message: "",
     color: "success",
 });
-const selectedMaterial = ref<Material | null>(null);
+const selectedProduct = ref<Product | null>(null);
 const isDeleteOpen = ref(false);
 const selectedCategory = ref<string>("all");
 const searchQuery = ref<string>("");
 
-type MaterialAction = {
-    key: string;
-    title: string;
-    icon: string;
-    color?: string;
-    disabled: boolean;
-    onClick?: () => void;
-};
+const horseId = route.params.id as string | undefined;
 
 const categoryFilterOptions = [
     { title: "Toutes", value: "all" },
@@ -122,31 +141,31 @@ const categoryFilterOptions = [
 ];
 
 const deleteMessage = computed(() =>
-    selectedMaterial.value
-        ? `Confirmer la suppression de ${selectedMaterial.value.name} ?`
+    selectedProduct.value
+        ? `Confirmer la suppression de ${selectedProduct.value.name} ?`
         : "Confirmer la suppression de ce produit ?",
 );
 
 const getHorseName = (horseId?: string): string | undefined =>
     getHorseNameById(horseId);
 
-const recurrenceLabel = (material: Material): string => {
-    if (material.purchase_interval_years) {
-        return `Tous les ${material.purchase_interval_years} an${material.purchase_interval_years > 1 ? "s" : ""}`;
+const recurrenceLabel = (product: Product): string => {
+    if (product.purchase_interval_years) {
+        return `Tous les ${product.purchase_interval_years} an${product.purchase_interval_years > 1 ? "s" : ""}`;
     }
-    if (material.purchase_interval_months) {
-        return `Tous les ${material.purchase_interval_months} mois`;
+    if (product.purchase_interval_months) {
+        return `Tous les ${product.purchase_interval_months} mois`;
     }
     return "";
 };
 
-const getMaterialActions = (material: Material): MaterialAction[] => [
+const getProductActions = (product: Product): ProductAction[] => [
     {
         key: "edit",
         title: "Éditer",
         icon: "mdi-pencil",
         disabled: false,
-        onClick: () => openEdit(material),
+        to: { name: 'ProductEdit', params: { id: product.id }}
     },
     {
         key: "delete",
@@ -154,16 +173,16 @@ const getMaterialActions = (material: Material): MaterialAction[] => [
         icon: "mdi-trash-can",
         color: "error",
         disabled: false,
-        onClick: () => openDelete(material),
+        onClick: () => openDelete(product),
     },
 ];
 
-const loadMaterials = async () => {
+const loadProducts = async () => {
     isLoading.value = true;
     try {
-        materials.value = await materialsApi.getAll(false);
+        products.value = await materialsApi.getAll(false);
     } catch (error) {
-        console.error("Error loading materials:", error);
+        console.error("Error loading products:", error);
     } finally {
         isLoading.value = false;
     }
@@ -178,29 +197,29 @@ const normalizeText = (value: string): string =>
 const getReminderHorseId = (): string | undefined =>
     getHorseIdsFromParamsOrStored()[0];
 
-const getMaterialReminder = (
+const getProductReminder = (
     reminders: Event[],
-    materialId: string,
+    productId: string,
 ): Event | undefined =>
     reminders.find(
         (reminder) =>
-            reminder.product_id === materialId &&
+            reminder.product_id === productId &&
             reminder.reminder_type === "alimentation",
     );
 
-const syncRepurchaseReminder = async (material: Material) => {
+const syncRepurchaseReminder = async (product: Product) => {
     const horseId = getReminderHorseId();
     const reminders = await eventsApi.getReminders(horseId);
-    const existing = getMaterialReminder(reminders, material.id);
+    const existing = getProductReminder(reminders, product.id);
 
-    if (material.needs_repurchase) {
+    if (product.needs_repurchase) {
         if (existing) return;
         await eventsApi.create({
-            name: material.name,
+            name: product.name,
             description: "À racheter",
             event_date: new Date().toISOString(),
             horse_id: horseId,
-            product_id: material.id,
+            product_id: product.id,
             reminder_type: "alimentation",
             reminder_enabled: true,
         });
@@ -212,26 +231,26 @@ const syncRepurchaseReminder = async (material: Material) => {
     }
 };
 
-const filteredMaterials = computed(() => {
+const filteredProducts = computed(() => {
     const normalizedQuery = normalizeText(searchQuery.value.trim());
     const categoryFiltered =
         selectedCategory.value === "all"
-            ? materials.value
-            : materials.value.filter(
-                  (material) => material.category === selectedCategory.value,
+            ? products.value
+            : products.value.filter(
+                  (product) => product.category === selectedCategory.value,
               );
     if (!normalizedQuery) return categoryFiltered;
-    return categoryFiltered.filter((material) =>
-        normalizeText(material.name || "").includes(normalizedQuery),
+    return categoryFiltered.filter((product) =>
+        normalizeText(product.name || "").includes(normalizedQuery),
     );
 });
 
-const toggleRepurchase = async (material: Material) => {
+const toggleRepurchase = async (product: Product) => {
     try {
-        await materialsApi.update(material.id, {
-            needs_repurchase: material.needs_repurchase ?? false,
+        await materialsApi.update(product.id, {
+            needs_repurchase: product.needs_repurchase ?? false,
         });
-        await syncRepurchaseReminder(material);
+        await syncRepurchaseReminder(product);
     } catch (error) {
         console.error("Error updating repurchase state:", error);
         snackbar.value = {
@@ -242,20 +261,16 @@ const toggleRepurchase = async (material: Material) => {
     }
 };
 
-const openEdit = (material: Material) => {
-    router.push({ name: "MaterialEdit", params: { id: material.id } });
-};
-
-const openDelete = (material: Material) => {
-    selectedMaterial.value = material;
+const openDelete = (product: Product) => {
+    selectedProduct.value = product;
     isDeleteOpen.value = true;
 };
 
 const confirmDelete = async () => {
-    if (!selectedMaterial.value) return;
+    if (!selectedProduct.value) return;
     try {
-        await materialsApi.delete(selectedMaterial.value.id);
-        await loadMaterials();
+        await materialsApi.delete(selectedProduct.value.id);
+        await loadProducts();
         isDeleteOpen.value = false;
         snackbar.value = {
             show: true,
@@ -263,7 +278,7 @@ const confirmDelete = async () => {
             color: "success",
         };
     } catch (error) {
-        console.error("Error deleting material:", error);
+        console.error("Error deleting product:", error);
         snackbar.value = {
             show: true,
             message: "Suppression impossible.",
@@ -272,20 +287,7 @@ const confirmDelete = async () => {
     }
 };
 
-const goToProductCreate = () => {
-    const horseId = route.params.id as string | undefined;
-    if (horseId) {
-        router.push({ name: "HorseProductCreate", params: { id: horseId } });
-        return;
-    }
-    router.push("/horses");
-};
-
-const goToDashboard = () => {
-    router.push({ name: "Dashboard" });
-};
-
 onMounted(async () => {
-    await loadMaterials();
+    await loadProducts();
 });
 </script>

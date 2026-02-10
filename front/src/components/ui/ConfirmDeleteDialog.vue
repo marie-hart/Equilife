@@ -10,7 +10,7 @@
                 <v-btn
                     variant="elevated"
                     color="error"
-                    @click="$emit('confirm')"
+                    @click.stop.prevent="$emit('confirm')"
                     >Supprimer</v-btn
                 >
             </v-card-actions>

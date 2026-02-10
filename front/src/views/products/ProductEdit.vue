@@ -5,10 +5,9 @@
                 <v-card-title class="ma-0 text-h5"
                     >Modifier le produit</v-card-title
                 >
-                <v-btn variant="outlined" @click="goBack">Retour</v-btn>
             </div>
 
-            <v-card class="card" variant="outlined">
+            <v-card class="card" variant="flat">
                 <v-card-text>
                     <v-skeleton-loader
                         v-if="isLoading"
@@ -60,10 +59,23 @@
                     </div>
                 </v-card-text>
                 <v-card-actions class="justify-end">
-                    <v-btn variant="outlined" @click="goBack">Annuler</v-btn>
-                    <v-btn variant="elevated" color="primary" @click="save"
-                        >Enregistrer</v-btn
+                    <v-btn 
+                        variant="outlined" 
+                        rounded="lg"
+                        @click="goBack"
                     >
+                        Annuler
+                    </v-btn>
+                    <v-btn 
+                        variant="flat"
+                        :style="{ backgroundColor: '#554338', color: 'white' }"
+                        rounded="lg"
+                        class="text-none"
+                        :loading="isSubmitting"
+                        @click="handleSubmit"
+                    >
+                        Enregistrer
+                    </v-btn>
                 </v-card-actions>
             </v-card>
 
@@ -81,17 +93,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { materialsApi } from "../../api/materials";
-import { RecurrenceFields } from "../../components";
-import { validateRequiredFieldsMap } from "../../utils/validation";
-import type { Material } from "../../types";
+import { materialsApi } from "@/api/materials.js";
+import { RecurrenceFields } from "@/components/index.js";
+import { validateRequiredFieldsMap } from "@/utils/validation.js";
+import type { Product, RecurrenceUnit } from "@/types/index.js";
 
 const route = useRoute();
 const router = useRouter();
 const isLoading = ref(true);
+const isSubmitting = ref(false);
 const form = ref({
     name: "",
-    category: "" as Material["category"] | "",
+    category: "" as Product["category"] | "",
     brand: "",
     note: "",
     needs_repurchase: false,
@@ -114,8 +127,6 @@ const categoryOptions = [
     { title: "Autres", value: "Autres" },
 ];
 
-type RecurrenceUnit = "months" | "years";
-
 const recurrenceUnits = [
     { title: "Mois", value: "months" },
     { title: "Ans", value: "years" },
@@ -132,30 +143,30 @@ const recurrence = computed({
     },
 });
 
-const loadMaterial = async () => {
+const loadProduct = async () => {
     try {
         const id = route.params.id as string;
-        const material = await materialsApi.getById(id);
-        const hasMonthlyRecurrence = Boolean(material.purchase_interval_months);
-        const hasYearlyRecurrence = Boolean(material.purchase_interval_years);
+        const product = await materialsApi.getById(id);
+        const hasMonthlyRecurrence = Boolean(product.purchase_interval_months);
+        const hasYearlyRecurrence = Boolean(product.purchase_interval_years);
         const recurrenceUnit: RecurrenceUnit = hasYearlyRecurrence
             ? "years"
             : "months";
         const recurrenceInterval = hasYearlyRecurrence
-            ? material.purchase_interval_years || 1
-            : material.purchase_interval_months || 1;
+            ? product.purchase_interval_years || 1
+            : product.purchase_interval_months || 1;
         form.value = {
-            name: material.name,
-            category: material.category || "",
-            brand: material.brand || "",
-            note: material.note || "",
-            needs_repurchase: material.needs_repurchase ?? false,
+            name: product.name,
+            category: product.category || "",
+            brand: product.brand || "",
+            note: product.note || "",
+            needs_repurchase: product.needs_repurchase ?? false,
             isRecurring: hasMonthlyRecurrence || hasYearlyRecurrence,
             recurrenceInterval,
             recurrenceUnit,
         };
     } catch (error) {
-        console.error("Error loading material:", error);
+        console.error("Error loading product:", error);
         snackbar.value = {
             show: true,
             message: "Impossible de charger le produit.",
@@ -166,12 +177,14 @@ const loadMaterial = async () => {
     }
 };
 
-const save = async () => {
+const handleSubmit = async () => {
     try {
         const { errors, firstError } = await validateRequiredFieldsMap([
             { key: "name", label: "un nom", value: form.value.name.trim() },
         ]);
+
         fieldErrors.value = errors;
+
         if (firstError) {
             snackbar.value = {
                 show: true,
@@ -180,6 +193,7 @@ const save = async () => {
             };
             return;
         }
+
         if (
             form.value.isRecurring &&
             (!form.value.recurrenceInterval ||
@@ -192,15 +206,22 @@ const save = async () => {
             };
             return;
         }
+
         const intervalMonths =
             form.value.isRecurring && form.value.recurrenceUnit === "months"
                 ? form.value.recurrenceInterval
                 : 0;
+
         const intervalYears =
             form.value.isRecurring && form.value.recurrenceUnit === "years"
                 ? form.value.recurrenceInterval
                 : 0;
+
         const id = route.params.id as string;
+
+
+        isSubmitting.value = true;
+
         await materialsApi.update(id, {
             name: form.value.name.trim(),
             category: form.value.category || undefined,
@@ -215,9 +236,9 @@ const save = async () => {
             message: "Produit mis à jour.",
             color: "success",
         };
-        router.push({ name: "MaterialDetails", params: { id } });
+        router.push({ name: "ProductDetails", params: { id } });
     } catch (error) {
-        console.error("Error saving material:", error);
+        console.error("Error saving product:", error);
         snackbar.value = {
             show: true,
             message: "Modification impossible.",
@@ -231,6 +252,6 @@ const goBack = () => {
 };
 
 onMounted(() => {
-    loadMaterial();
+    loadProduct();
 });
 </script>

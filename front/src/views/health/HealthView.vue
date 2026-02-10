@@ -8,7 +8,7 @@
                 <div class="d-flex align-center justify-space-between ga-4">
                     <v-btn 
                         variant="outlined" 
-                        @click="goToDashboard"
+                        :to="{ name: 'Dashboard' }"
                         rounded="lg"
                         class="text-none"
                         :style="{ color: '#554338', borderColor: '#d1c7bc' }"
@@ -48,6 +48,17 @@
             </div>
             </main>
     </div>
+    <div class="page">
+        <main class="pa-4">
+            <ConfirmDeleteDialog
+                v-model="isDeleteOpen"
+                title="Supprimer le soin"
+                :message="deleteMessage"
+                @confirm="confirmDelete"
+            />
+            
+            </main>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -56,7 +67,7 @@ import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { useFilters } from "@/composables/useFilters";
 import { useHorseSelection } from "@/composables/useHorseSelection";
-import type { Event } from "@/types";
+import type { CareAction, CareStatus, Event,  } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import {
     formatDateLong,
@@ -66,33 +77,33 @@ import {
     startOfDay,
     toDateInputValue,
 } from "@/libs/date";
-import { ConfirmDeleteDialog, DatePickerField, FiltersPanel } from "@/components";
+import { ConfirmDeleteDialog, FiltersPanel } from "@/components";
 import { HealthList } from "@/views/health";
 
-type CareAction = {
-    key: string;
-    title: string;
-    icon: string;
-    color?: string;
-    disabled: boolean;
-    onClick?: () => void;
-};
+const route = useRoute();
+
 
 const cares = ref<Event[]>([]);
 const isLoading = ref(true);
-const router = useRouter();
-const route = useRoute();
+const isDeleteOpen = ref(false);
+const selectedCare = ref<Event | null>(null);
+const isCareDoneOpen = ref(false);
+const careDoneForm = ref({ date: "" });
 const snackbar = ref({
     show: false,
     message: "",
     color: "success",
 });
 
+const horseId = computed(() => route.params.id as string | undefined);
+
 const {
     horses,
     horseFilterOptions,
     selectedHorseId: horseSelectionId,
+    getHorseName,
 } = useHorseSelection();
+
 const statusOptions = [
     { title: "Tous", value: "all" },
     { title: "Passé", value: "past" },
@@ -143,8 +154,16 @@ const filters: readonly FilterDefinition<string>[] = [
 ];
 
 const { filterValues } = useFilters(filters);
+
 const getCareType = (care: Event): string => (care.name || "").trim();
-type CareStatus = "past" | "today" | "upcoming";
+
+const deleteMessage = computed(() => 
+    selectedCare.value 
+        ? `Confirmer la suppression du soin "${selectedCare.value.name}" ?`
+        : "Confirmer la suppression ?"
+);
+
+
 const applyCareFilters = (
     items: Event[],
     overrides: Partial<{
@@ -169,6 +188,7 @@ const applyCareFilters = (
     }
     return result;
 };
+
 const availableHorseOptions = computed(() => {
     const filtered = applyCareFilters(cares.value, { horseId: "all" });
     const ids = new Set(
@@ -190,6 +210,7 @@ const availableHorseOptions = computed(() => {
     }
     return options.length ? options : base;
 });
+
 const availableStatusOptions = computed(() => {
     const filtered = applyCareFilters(cares.value, { status: "all" });
     const statuses = new Set(filtered.map((care) => getStatusKey(care)));
@@ -208,6 +229,7 @@ const availableStatusOptions = computed(() => {
     }
     return options.length ? options : statusOptions;
 });
+
 const availableTypeOptions = computed(() => {
     const filtered = applyCareFilters(cares.value, { type: "all" });
     const uniqueTypes = Array.from(
@@ -223,6 +245,7 @@ const availableTypeOptions = computed(() => {
     }
     return dynamic.length ? dynamic : careTypeOptions.value;
 });
+
 const filterDefinitions = computed(() => [
     { ...filters[0], options: availableHorseOptions.value },
     { ...filters[1], options: availableStatusOptions.value },
@@ -238,13 +261,6 @@ const recurrenceLabel = (care: Event): string => {
     if (months) return `Tous les ${months} mois`;
     if (years) return `Tous les ${years} an${years > 1 ? "s" : ""}`;
     return "-";
-};
-
-const getHorseName = (care: Event): string => {
-    if (!care.horse_id) {
-        return "Cheval inconnu";
-    }
-    return horseById.value.get(care.horse_id)?.name ?? "Cheval inconnu";
 };
 
 const getStatusKey = (care: Event): "past" | "today" | "upcoming" => {
@@ -263,14 +279,6 @@ const filteredCares = computed(() => {
     );
 });
 
-const isDeleteOpen = ref(false);
-const selectedCare = ref<Event | null>(null);
-const isCareDoneOpen = ref(false);
-const careDoneForm = ref({ date: "" });
-const careDoneErrors = ref<Record<string, string>>({});
-
-const horseId = computed(() => route.params.id as string | undefined);
-
 const loadCares = async () => {
     isLoading.value = true;
     try {
@@ -281,10 +289,6 @@ const loadCares = async () => {
     } finally {
         isLoading.value = false;
     }
-};
-
-const openEdit = (care: Event) => {
-    router.push({ name: "HealthEdit", params: { id: care.id } });
 };
 
 const isCareRecurring = (care: Event): boolean =>
@@ -340,7 +344,7 @@ const getCareActions = (care: Event): CareAction[] => [
         title: "Éditer",
         icon: "mdi-pencil",
         disabled: false,
-        onClick: () => openEdit(care),
+        to: { name: 'HealthEdit', params: { id: care.id }},
     },
     {
         key: "delete",
@@ -352,48 +356,6 @@ const getCareActions = (care: Event): CareAction[] => [
     },
 ];
 
-const saveCareDone = async () => {
-    if (!selectedCare.value) return;
-    if (!careDoneForm.value.date) {
-        careDoneErrors.value = { date: "Merci de renseigner une date." };
-        return;
-    }
-    careDoneErrors.value = {};
-    try {
-        const appointmentDate = fromDateInputValue(careDoneForm.value.date);
-        await eventsApi.create({
-            name: selectedCare.value.name,
-            description: selectedCare.value.description,
-            event_date: appointmentDate,
-            horse_id: selectedCare.value.horse_id,
-            product_id: selectedCare.value.product_id,
-            is_care: true,
-            reminder_type: "soin",
-            reminder_enabled: false,
-        });
-        await eventsApi.update(selectedCare.value.id, {
-            event_date: appointmentDate,
-            reminder_enabled: true,
-            reminder_interval_days: selectedCare.value.reminder_interval_days,
-            reminder_interval_months: selectedCare.value.reminder_interval_months,
-            reminder_interval_years: selectedCare.value.reminder_interval_years,
-        });
-        await loadCares();
-        isCareDoneOpen.value = false;
-        snackbar.value = {
-            show: true,
-            message: "Soin enregistré et rappel reprogrammé.",
-            color: "success",
-        };
-    } catch (error) {
-        console.error("Error saving care appointment:", error);
-        snackbar.value = {
-            show: true,
-            message: "Action impossible.",
-            color: "error",
-        };
-    }
-};
 const confirmDelete = async () => {
     if (!selectedCare.value) return;
     try {
@@ -413,10 +375,6 @@ const confirmDelete = async () => {
             color: "error",
         };
     }
-};
-
-const goToDashboard = () => {
-    router.push({ name: "Dashboard" });
 };
 
 onMounted(() => {

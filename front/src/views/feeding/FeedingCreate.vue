@@ -171,7 +171,7 @@ import { rationsApi } from "@/api/rations";
 import { materialsApi } from "@/api/materials";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
-import type { Material } from "@/types";
+import type { Product } from "@/types";
 import { useHorseSelection } from "@/composables/useHorseSelection";
 
 type RationFormItem = {
@@ -190,7 +190,7 @@ const {
     loadHorses,
     setHorseFromParamsOrStored,
 } = useHorseSelection();
-const materials = ref<Material[]>([]);
+const products = ref<Product[]>([]);
 const isSubmitting = ref(false);
 const isLoading = ref(true);
 const fieldErrors = ref<Record<string, string>>({});
@@ -211,22 +211,22 @@ const form = ref({
 const productOptions = computed(() => {
     const allowed = new Set(["Aliment", "Complément"]);
     const seen = new Set<string>();
-    const hasCategory = materials.value.some((material) =>
-        Boolean(material.category),
+    const hasCategory = products.value.some((product) =>
+        Boolean(product.category),
     );
-    return materials.value
-        .filter((material) =>
+    return products.value
+        .filter((product) =>
             hasCategory
-                ? material.category && allowed.has(material.category)
+                ? product.category && allowed.has(product.category)
                 : true,
         )
-        .filter((material) => {
-            const key = material.name?.trim().toLowerCase();
+        .filter((product) => {
+            const key = product.name?.trim().toLowerCase();
             if (!key || seen.has(key)) return false;
             seen.add(key);
             return true;
         })
-        .map((material) => ({ title: material.name, value: material.id }));
+        .map((product) => ({ title: product.name, value: product.id }));
 });
 
 const activeOptions = [
@@ -272,11 +272,11 @@ const resetForm = () => {
     addItem();
 };
 
-const loadMaterials = async () => {
+const loadProducts = async () => {
     try {
-        materials.value = await materialsApi.getAll(false);
+        products.value = await materialsApi.getAll(false);
     } catch (error) {
-        console.error("Error loading materials:", error);
+        console.error("Error loading products:", error);
     }
 };
 
@@ -350,18 +350,18 @@ const goBack = () => {
     router.push("/horses");
 };
 
-const refreshMaterials = async () => {
-    await loadMaterials();
+const refreshProducts = async () => {
+    await loadProducts();
 };
 
 const handleVisibilityRefresh = () => {
     if (document.visibilityState === "visible") {
-        refreshMaterials();
+        refreshProducts();
     }
 };
 
 watch(selectedHorseId, () => {
-    refreshMaterials();
+    refreshProducts();
 });
 
 onMounted(async () => {
@@ -370,8 +370,8 @@ onMounted(async () => {
         await loadHorses();
         setHorseFromParamsOrStored("");
         resetForm();
-        await refreshMaterials();
-        window.addEventListener("focus", refreshMaterials);
+        await refreshProducts();
+        window.addEventListener("focus", refreshProducts);
         document.addEventListener("visibilitychange", handleVisibilityRefresh);
     } finally {
         isLoading.value = false;
@@ -379,11 +379,11 @@ onMounted(async () => {
 });
 
 onActivated(() => {
-    refreshMaterials();
+    refreshProducts();
 });
 
 onUnmounted(() => {
-    window.removeEventListener("focus", refreshMaterials);
+    window.removeEventListener("focus", refreshProducts);
     document.removeEventListener("visibilitychange", handleVisibilityRefresh);
 });
 </script>

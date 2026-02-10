@@ -1,5 +1,4 @@
 export * from "@/types/event";
-export * from "@/types/material";
 export * from "@/types/horse";
 export * from "@/types/ui";
 export * from "@/types/document";
@@ -10,3 +9,4 @@ export * from "@/types/activity";
 export * from "@/types/reminder";
 export * from "@/types/navigation";
 export * from "@/types/health";
+export * from "@/types/product"

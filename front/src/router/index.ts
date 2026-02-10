@@ -15,12 +15,12 @@ import Feeding from "@/views/feeding/FeedingView.vue";
 import FeedingCreate from "@/views/feeding/FeedingCreate.vue";
 import FeedingEdit from "@/views/feeding/FeedingEdit.vue";
 import Products from "@/views/products/ProductView.vue";
-import ProductsCreate from "@/views/products/ProductsCreate.vue";
+import ProductCreate from "@/views/products/ProductCreate.vue";
+import ProductDetails from "@/views/products/ProductDetails.vue"
+import ProductEdit from "@/views/products/ProductEdit.vue";
 import Horses from "@/views/horses/HorseView.vue";
 import HorseForm from "@/views/horses/HorseForm.vue";
 import HorseDetails from "@/views/horses/HorseDetails.vue";
-import MaterialDetails from "@/views/materials/MaterialView.vue";
-import MaterialEdit from "@/views/materials/MaterialEdit.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -136,13 +136,23 @@ const router = createRouter({
         },
         {
             path: "/horses/:id/products",
-            name: "HorseProducts",
+            name: "Products",
             component: Products,
         },
         {
             path: "/horses/:id/products/new",
-            name: "HorseProductCreate",
-            component: ProductsCreate,
+            name: "ProductCreate",
+            component: ProductCreate,
+        },
+        {
+            path: "/materials/:id",
+            name: "ProductDetails",
+            component: ProductDetails,
+        },
+        {
+            path: "/materials/:id/edit",
+            name: "ProductEdit",
+            component: ProductEdit,
         },
         {
             path: "/events/:id",
@@ -153,16 +163,6 @@ const router = createRouter({
             path: "/events/:id/edit",
             name: "EventEdit",
             component: EventEdit,
-        },
-        {
-            path: "/materials/:id",
-            name: "MaterialDetails",
-            component: MaterialDetails,
-        },
-        {
-            path: "/materials/:id/edit",
-            name: "MaterialEdit",
-            component: MaterialEdit,
         },
     ],
 });

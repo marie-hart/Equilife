@@ -1,5 +1,5 @@
 <template>
-    <v-form class="product-form" @submit.prevent="emit('submit')">
+    <v-form @submit.prevent="emit('submit')">
         <v-row dense>
             <v-col cols="12" md="6">
                 <v-text-field v-model="name" label="Nom" density="compact" />
@@ -70,19 +70,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { RecurrenceFields } from "@/components";
-
-type RecurrenceUnit = "months" | "years";
-
-type ProductFormValue = {
-    name: string;
-    category: string;
-    brand: string;
-    note: string;
-    isRecurring: boolean;
-    recurrenceInterval: number;
-    recurrenceUnit: RecurrenceUnit;
-    needs_repurchase?: boolean;
-};
+import { ProductFormValue } from "@/types";
 
 const props = withDefaults(
     defineProps<{
@@ -166,9 +154,3 @@ const recurrenceUnits = [
     { title: "Ans", value: "years" },
 ];
 </script>
-
-<style scoped>
-.product-form {
-    margin: 0;
-}
-</style>

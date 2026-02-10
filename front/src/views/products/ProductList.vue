@@ -1,92 +1,97 @@
 <template>
-    <div>
-        <div class="text-subtitle-1 mb-2">Liste des produits</div>
+    <div :style="{ color: '#554338' }">
+        <div class="text-h6 font-weight-bold mb-4" :style="{ color: '#3c3226' }">
+            Liste des produits
+        </div>
+        
         <div class="pt-2">
             <v-list
-                v-if="materials.length"
-                density="compact"
-                class="d-flex flex-column ga-2"
+                v-if="products.length"
+                density="comfortable"
+                class="bg-transparent d-flex flex-column ga-2"
             >
                 <v-list-item
-                    v-for="material in materials"
-                    :key="material.id"
-                    class="rounded-lg bg-grey-lighten-4"
+                    v-for="product in products"
+                    :key="product.id"
+                    class="rounded-lg mb-2"
+                    :style="{ 
+                        backgroundColor: '#ffffff', 
+                        border: '1px solid #efe5d9',
+                        boxShadow: 'none'
+                    }"
                 >
                     <v-row class="w-100 align-center" dense>
-                        <v-col cols="auto">
+                        <v-col cols="auto" class="pa-0">
                             <v-checkbox
-                                v-model="material.needs_repurchase"
+                                v-model="product.needs_repurchase"
                                 density="compact"
                                 hide-details
-                                @update:model-value="toggleRepurchase(material)"
+                                color="primary"
+                                @update:model-value="toggleRepurchase(product)"
+                                class="ma-0 pa-0"
                             />
                         </v-col>
-                        <v-col>
-                            <div class="text-subtitle-2">
-                                {{ material.name }}
+                        
+                        <v-col class="pa-2">
+                            <div class="text-subtitle-1 font-weight-medium" :style="{ color: '#3c3226' }">
+                                {{ product.name }}
                             </div>
-                            <div class="text-body-2 text-grey-darken-1">
-                                <span v-if="material.category">{{
-                                    material.category
-                                }}</span>
-                                <span v-if="material.brand"
-                                    >• {{ material.brand }}</span
-                                >
-                                <span v-if="material.used_for_horses?.length">
-                                    •
-                                    {{
-                                        material.used_for_horses
-                                            .map(getHorseName)
-                                            .filter(Boolean)
-                                            .join(", ")
-                                    }}
+                            
+                            <div class="text-caption text-grey-darken-2 d-flex flex-wrap align-center ga-1">
+                                <v-chip v-if="product.category" size="x-small" variant="tonal" color="brown-darken-2">
+                                    {{ product.category }}
+                                </v-chip>
+                                
+                                <span v-if="product.brand" class="text-grey-darken-1">
+                                    • {{ product.brand }}
                                 </span>
-                                <span v-if="recurrenceLabel(material)"
-                                    >• {{ recurrenceLabel(material) }}</span
-                                >
+                                
+                                <span v-if="product.used_for_horses?.length" class="text-grey-darken-1">
+                                    • {{ product.used_for_horses.map(getHorseName).filter(Boolean).join(", ") }}
+                                </span>
+                                
+                                <span v-if="recurrenceLabel(product)" class="text-primary font-weight-medium">
+                                    • {{ recurrenceLabel(product) }}
+                                </span>
                             </div>
                         </v-col>
-                        <v-col cols="auto" class="text-right">
+                        
+                        <v-col cols="auto" class="text-right pa-0">
                             <ActionButtons
-                                class="d-none d-md-flex align-center ga-2"
+                                class="d-none d-md-flex align-center ga-1"
                                 mode="inline"
-                                button-size="x-small"
-                                :actions="getMaterialActions(material)"
+                                button-size="small"
+                                :actions="getProductActions(product)"
                             />
                             <ActionButtons
                                 class="d-md-none"
                                 mode="auto"
-                                button-size="x-small"
-                                menu-button-size="x-small"
-                                :actions="getMaterialActions(material)"
+                                button-size="small"
+                                menu-button-size="small"
+                                :actions="getProductActions(product)"
                             />
                         </v-col>
                     </v-row>
                 </v-list-item>
             </v-list>
-            <p v-else class="empty-state">Aucun produit pour le moment.</p>
+            
+            <p v-else class="empty-state text-center text-grey-darken-1 pa-4">
+                Aucun produit pour le moment.
+            </p>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ActionButtons } from "@/components";
-import type { Material } from "@/types";
-
-type MaterialAction = {
-    key: string;
-    title: string;
-    icon: string;
-    color?: string;
-    disabled: boolean;
-    onClick?: () => void;
-};
+import type { Product } from "@/types";
+import { ProductAction } from '../../types/product';
 
 defineProps<{
-    materials: Material[];
+    products: Product[];
     getHorseName: (horseId?: string) => string | undefined;
-    recurrenceLabel: (material: Material) => string;
-    getMaterialActions: (material: Material) => MaterialAction[];
-    toggleRepurchase: (material: Material) => void;
+    recurrenceLabel: (product: Product) => string;
+    getProductActions: (product: Product) => ProductAction[];
+    toggleRepurchase: (product: Product) => void;
 }>();
 </script>
