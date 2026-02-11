@@ -1,95 +1,118 @@
 <template>
-    <div class="page">
+    <div class="page" :style="{ minHeight: '100vh' }">
         <main class="pa-4">
             <div class="d-flex align-center justify-space-between ga-4 mb-6">
-                <v-card-title class="ma-0 text-h5"
-                    >Ajouter une activité</v-card-title
-                >
-                <v-btn variant="outlined" @click="goBack">Retour</v-btn>
+                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
+                    {{ isEditMode ? 'Modifier l\'activité' : 'Ajouter une activité' }}
+                </v-card-title>
             </div>
-            <v-card class="card" variant="outlined">
+            
+            <v-card 
+                class="pa-2" 
+                variant="flat" 
+                rounded="lg"
+                :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
+            >
                 <v-card-text>
                     <v-skeleton-loader
                         v-if="isLoading"
                         type="card, list-item-two-line"
                     />
+                    
                     <v-row v-else dense>
                         <v-col cols="12" md="6">
                             <v-select
                                 v-model="selectedHorseId"
                                 :items="horseOptions"
-                                label="Cheval"
-                                density="compact"
+                                label="Cheval *"
+                                density="comfortable"
                                 variant="outlined"
-                                :error-messages="
-                                    fieldErrors.horseId
-                                        ? [fieldErrors.horseId]
-                                        : undefined
-                                "
+                                bg-color="white"
+                                rounded="lg"
+                                :error-messages="fieldErrors.horseId ? [fieldErrors.horseId] : undefined"
                             />
                         </v-col>
+                        
                         <v-col cols="12" md="6">
                             <v-select
                                 v-model="form.activityType"
                                 :items="activityTypes"
-                                label="Type d'activité"
-                                density="compact"
+                                label="Type d'activité *"
+                                density="comfortable"
                                 variant="outlined"
-                                :error-messages="
-                                    fieldErrors.activityType
-                                        ? [fieldErrors.activityType]
-                                        : undefined
-                                "
+                                bg-color="white"
+                                rounded="lg"
+                                :error-messages="fieldErrors.activityType ? [fieldErrors.activityType] : undefined"
                             />
                         </v-col>
+                        
                         <v-col cols="12" md="3">
                             <DatePickerField
                                 v-model="form.date"
-                                label="Date"
-                                :error-messages="
-                                    fieldErrors.date
-                                        ? [fieldErrors.date]
-                                        : undefined
-                                "
+                                label="Date *"
+                                :error-messages="fieldErrors.date ? [fieldErrors.date] : undefined"
+                                class="rounded-lg"
                             />
                         </v-col>
+                        
                         <v-col cols="12" md="3">
                             <v-text-field
                                 v-model.number="form.duration"
                                 label="Durée (min)"
                                 type="number"
                                 min="0"
-                                density="compact"
+                                density="comfortable"
+                                variant="outlined"
+                                bg-color="white"
+                                rounded="lg"
                             />
                         </v-col>
-                        <v-col cols="12" md="4">
+                        
+                        <v-col cols="12" md="6">
                             <v-select
                                 v-model="form.intensity"
                                 :items="intensityOptions"
                                 label="Intensité"
-                                density="compact"
+                                density="comfortable"
                                 variant="outlined"
+                                bg-color="white"
+                                rounded="lg"
                             />
                         </v-col>
+                        
                         <v-col cols="12">
                             <v-textarea
                                 v-model="form.comment"
                                 label="Commentaire"
-                                density="compact"
+                                density="comfortable"
                                 variant="outlined"
+                                bg-color="white"
+                                rounded="lg"
                                 rows="3"
                             />
                         </v-col>
                     </v-row>
-                    <div class="d-flex justify-end">
+                    
+                    <div class="d-flex justify-end mt-4">
+                           
+                <v-btn 
+                    variant="outlined" 
+                    @click="goBack"
+                    rounded="lg"
+                    class="mr-2"
+                    :style="{ color: '#554338', borderColor: '#d1c7bc' }"
+                >
+                    Annuler
+                </v-btn>
                         <v-btn
-                            variant="elevated"
-                            color="primary"
-                            size="small"
+                            variant="flat"
+                            rounded="lg"
+                            :style="{ backgroundColor: '#554338', color: 'white' }"
+                            class="text-none"
                             :loading="isSubmitting"
-                            @click="createActivity"
+                            @click="submitForm"
                         >
-                            Ajouter
+                            {{ isEditMode ? 'Enregistrer' : 'Ajouter' }}
                         </v-btn>
                     </div>
                 </v-card-text>
@@ -107,25 +130,33 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { onMounted, ref, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
-import { fromDateInputValue } from "@/libs/date";
+import { fromDateInputValue, toDateInputValue } from "@/libs/date";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import { useHorseSelection } from "@/composables/useHorseSelection";
+import { IntensityValue } from "@/types";
 
-type IntensityValue = "legere" | "normale" | "soutenue";
-
+const route = useRoute();
 const router = useRouter();
+
+// Détection mode édition vs création
+const isEditMode = computed(() => Boolean(route.name === 'ActivityEdit'));
+const eventId = computed(() => route.params.id as string);
+
 const {
     horseOptions,
     selectedHorseId,
     loadHorses,
     setHorseFromParamsOrStored,
-} = useHorseSelection();
+} = useHorseSelection({
+    useRouteHorseId: !isEditMode.value, // Utilise l'ID du cheval dans l'URL si on crée
+});
+
 const isSubmitting = ref(false);
-const isLoading = ref(true);
+const isLoading = ref(isEditMode.value); // Load si mode édition
 const fieldErrors = ref<Record<string, string>>({});
 const form = ref({
     activityType: "",
@@ -160,53 +191,66 @@ const intensityOptions = [
     { title: "Soutenu", value: "soutenue" },
 ];
 
-const createActivity = async () => {
+// Chargement des données si mode édition
+const loadActivity = async () => {
+    if (!isEditMode.value) return;
+    try {
+        const event = await eventsApi.getById(eventId.value);
+        selectedHorseId.value = event.horse_id || "";
+        form.value = {
+            activityType: event.activity_type || event.name || "",
+            date: toDateInputValue(event.event_date),
+            duration: event.activity_duration_minutes || 0,
+            intensity: (event.activity_intensity as IntensityValue) || "normale",
+            comment: event.activity_comment || event.description || "",
+        };
+    } catch (error) {
+        console.error("Error loading activity:", error);
+        snackbar.value = { show: true, message: "Impossible de charger l'activité.", color: "error" };
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+const submitForm = async () => {
     const { errors, firstError } = await validateRequiredFieldsMap([
         { key: "horseId", label: "un cheval", value: selectedHorseId.value },
-        {
-            key: "activityType",
-            label: "un type d'activité",
-            value: form.value.activityType,
-        },
+        { key: "activityType", label: "un type d'activité", value: form.value.activityType },
         { key: "date", label: "une date", value: form.value.date },
     ]);
+    
     fieldErrors.value = errors;
     if (firstError) {
-        snackbar.value = {
-            show: true,
-            message: firstError,
-            color: "error",
-        };
+        snackbar.value = { show: true, message: firstError, color: "error" };
         return;
     }
 
     try {
         isSubmitting.value = true;
-        await eventsApi.create({
+        const payload = {
             name: form.value.activityType,
             description: form.value.comment || undefined,
             event_date: fromDateInputValue(form.value.date),
             horse_id: selectedHorseId.value,
             reminder_enabled: false,
-            reminder_type: "activité",
+            reminder_type: "activité" as const,
             activity_type: form.value.activityType,
             activity_duration_minutes: form.value.duration || undefined,
             activity_intensity: form.value.intensity,
             activity_comment: form.value.comment || undefined,
-        });
-        snackbar.value = {
-            show: true,
-            message: "Activité ajoutée.",
-            color: "success",
         };
+
+        if (isEditMode.value) {
+            await eventsApi.update(eventId.value, payload);
+            snackbar.value = { show: true, message: "Activité mise à jour.", color: "success" };
+        } else {
+            await eventsApi.create(payload);
+            snackbar.value = { show: true, message: "Activité ajoutée.", color: "success" };
+        }
         goBack();
     } catch (error) {
-        console.error("Error creating activity:", error);
-        snackbar.value = {
-            show: true,
-            message: "Création impossible.",
-            color: "error",
-        };
+        console.error("Error saving activity:", error);
+        snackbar.value = { show: true, message: "Action impossible.", color: "error" };
     } finally {
         isSubmitting.value = false;
     }
@@ -214,21 +258,18 @@ const createActivity = async () => {
 
 const goBack = () => {
     if (selectedHorseId.value) {
-        router.push({
-            name: "HorseActivities",
-            params: { id: selectedHorseId.value },
-        });
+        router.push({ name: "HorseActivities", params: { id: selectedHorseId.value } });
         return;
     }
     router.push("/horses");
 };
 
 onMounted(async () => {
-    isLoading.value = true;
-    try {
-        await loadHorses();
-        setHorseFromParamsOrStored("");
-    } finally {
+    await loadHorses();
+    if (isEditMode.value) {
+        await loadActivity();
+    } else {
+        setHorseFromParamsOrStored("all");
         isLoading.value = false;
     }
 });

@@ -9,7 +9,7 @@ export const useHorseSelection = (options?: { useRouteHorseId?: boolean }) => {
     const useRouteHorseId = options?.useRouteHorseId !== false;
 
     const horses = ref<Horse[]>([]);
-    const selectedHorseId = ref<string>("all");
+    const selectedHorseId = ref<string>("");
     const horseId = computed(() =>
         useRouteHorseId ? (route.params.id as string | undefined) : undefined,
     );

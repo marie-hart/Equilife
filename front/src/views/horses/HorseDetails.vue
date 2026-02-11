@@ -1,5 +1,5 @@
 <template>
-    <div class="page" :style="{ backgroundColor: '#fdfaf6', minHeight: '100vh' }">
+    <div class="page" :style="{ minHeight: '100vh' }">
         <main class="pa-4">
             <div
                 class="d-flex flex-column flex-md-row align-start align-md-center justify-space-between ga-4 mb-6"
@@ -26,7 +26,7 @@
                         :to="{ name: 'HorseEdit', params: { id: horse?.id } }"
                         rounded="lg"
                         class="text-none"
-                        :style="{ backgroundColor: '#554338', color: 'white' }"
+                        :style="{ color: 'white',  backgroundColor: '#554338',  }"
                     >
                         <v-icon start icon="mdi-pencil" />
                         Modifier

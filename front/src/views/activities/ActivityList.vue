@@ -93,22 +93,7 @@
 <script setup lang="ts">
 import { ActionButtons } from "@/components";
 import { formatDateLong, formatDateMobile } from "@/libs/date";
-import type { Event } from "@/types";
-
-type ActivityAction = {
-    key: string;
-    title: string;
-    icon: string;
-    color?: string;
-    disabled: boolean;
-    onClick?: () => void;
-};
-
-type ActivityGroup = {
-    key: string;
-    label: string;
-    items: Event[];
-};
+import type { ActivityAction, ActivityGroup, Event } from "@/types";
 
 defineProps<{
     groupedActivities: ActivityGroup[];

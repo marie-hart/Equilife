@@ -1,28 +1,45 @@
 <template>
-    <div class="page">
+    <div class="page" :style="{ minHeight: '100vh' }">
         <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-4">
-                <v-card-title class="ma-0 text-h5">Activités</v-card-title>
+            <div class="d-flex align-center justify-space-between ga-4 mb-6">
+                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
+                    Activités
+                </v-card-title>
             </div>
+            
             <div class="d-flex flex-column ga-4">
                 <div class="d-flex align-center justify-space-between ga-4">
-                    <v-btn variant="outlined" @click="goToDashboard">
+                    <v-btn 
+                        variant="outlined" 
+                        :to="{ name: 'Dashboard' }"
+                        rounded="lg"
+                        class="text-none"
+                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
+                    >
                         <v-icon icon="mdi-arrow-left" class="me-2" />
                         Retour
                     </v-btn>
                     <v-btn
-                        class="primary-btn"
-                        color="primary"
                         variant="flat"
-                        @click="goToActivityCreate"
+                        rounded="lg"
+                        :to="{ name: 'ActivityCreate', params: { id: horseId} }"
+                        :style="{ backgroundColor: '#554338', color: 'white' }"
+                        class="text-none"
                     >
-                        <v-icon icon="mdi-plus" class="me-2" />
+                        <v-icon start icon="mdi-plus" />
                         Ajouter
                     </v-btn>
                 </div>
 
-                <v-card class="section-card" variant="outlined">
-                    <v-card-title class="text-subtitle-1">Filtres</v-card-title>
+                <v-card 
+                    class="pa-2" 
+                    variant="flat" 
+                    rounded="lg"
+                    :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
+                >
+                    <v-card-title class="text-subtitle-1 font-weight-bold" :style="{ color: '#3c3226' }">
+                        Filtres
+                    </v-card-title>
                     <v-card-text class="pt-3">
                         <v-row dense>
                             <v-col cols="12" md="6">
@@ -30,8 +47,10 @@
                                     v-model="selectedHorseId"
                                     :items="horseFilterOptions"
                                     label="Cheval"
-                                    density="compact"
+                                    density="comfortable"
                                     variant="outlined"
+                                    bg-color="white"
+                                    rounded="lg"
                                 />
                             </v-col>
                         </v-row>
@@ -42,6 +61,7 @@
                     v-if="isLoading"
                     type="list-item-two-line, list-item-two-line, list-item-two-line"
                 />
+                
                 <ActivityList
                     v-else
                     :grouped-activities="groupedActivities"
@@ -71,36 +91,20 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { useDisplay } from "vuetify";
 import { eventsApi } from "@/api/events";
 import { ConfirmDeleteDialog } from "@/components";
 import { useHorseSelection } from "@/composables/useHorseSelection";
 import { formatMonthLabel, sortByDateAsc, toMonthKey } from "@/libs/date";
-import type { Event } from "@/types";
+import type { ActivityAction, ActivityGroup, Event } from "@/types";
 import { ActivityList } from "@/views/activities";
 
-type ActivityAction = {
-    key: string;
-    title: string;
-    icon: string;
-    color?: string;
-    disabled: boolean;
-    onClick?: () => void;
-};
-
-type ActivityGroup = {
-    key: string;
-    label: string;
-    items: Event[];
-};
-
 const route = useRoute();
-const router = useRouter();
 const { mdAndUp } = useDisplay();
-
 const { horseFilterOptions, selectedHorseId, setHorseFromParamsOrStored } =
     useHorseSelection();
+    
 const activities = ref<Event[]>([]);
 const isLoading = ref(true);
 const isDeleteOpen = ref(false);
@@ -112,6 +116,8 @@ const snackbar = ref({
 });
 
 const cardMaxWidth = computed(() => (mdAndUp.value ? "520px" : "100%"));
+
+const horseId = computed(() => route.params.id as string | undefined);
 
 const isActivity = (event: Event): boolean =>
     event.reminder_type === "activité" || Boolean(event.activity_type);
@@ -130,9 +136,9 @@ const groupedActivities = computed<ActivityGroup[]>(() => {
         groups.get(key)?.push(activity);
     });
 
-    return Array.from(groups.entries())
+    return Array.from(groups.entries() as IterableIterator<[string, Event[]]>)
         .sort(([a], [b]) => b.localeCompare(a))
-        .map(([key, items]) => ({
+        .map(([key, items]): ActivityGroup => ({
             key,
             label: formatMonthLabel(key),
             items: sortByDateAsc(items),
@@ -151,14 +157,6 @@ const intensityLabel = (value?: string): string => {
     }
 };
 
-const openView = (activity: Event) => {
-    router.push({ name: "EventDetails", params: { id: activity.id } });
-};
-
-const openEdit = (activity: Event) => {
-    router.push({ name: "ActivityEdit", params: { id: activity.id } });
-};
-
 const openDelete = (activity: Event) => {
     selectedActivity.value = activity;
     isDeleteOpen.value = true;
@@ -170,14 +168,14 @@ const getActivityActions = (activity: Event): ActivityAction[] => [
         title: "Voir",
         icon: "mdi-eye",
         disabled: false,
-        onClick: () => openView(activity),
+        to:{ name: "EventDetails", params: { id: activity.id } },
     },
     {
         key: "edit",
         title: "Éditer",
         icon: "mdi-pencil",
         disabled: false,
-        onClick: () => openEdit(activity),
+        to: { name: "ActivityEdit", params: { id: activity.id } },
     },
     {
         key: "delete",
@@ -233,21 +231,9 @@ const loadActivities = async () => {
     }
 };
 
-const goToDashboard = () => {
-    router.push({ name: "Dashboard" });
-};
-
-const goToActivityCreate = () => {
-    const horseId = route.params.id as string | undefined;
-    if (horseId) {
-        router.push({ name: "HorseActivityCreate", params: { id: horseId } });
-        return;
-    }
-    router.push("/horses");
-};
 
 onMounted(() => {
-    setHorseFromParamsOrStored("all");
+    setHorseFromParamsOrStored("");
     loadActivities();
 });
 

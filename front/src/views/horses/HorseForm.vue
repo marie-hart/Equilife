@@ -5,15 +5,6 @@
                 <font-awesome-icon icon="horse" class="fa-icon me-2" />
                 {{ isEdit ? "Modifier un cheval" : "Ajouter un cheval" }}
             </v-card-title>
-            <v-btn 
-                variant="outlined" 
-                @click="goBack"
-                rounded="lg"
-                class="text-none"
-                :style="{ color: '#554338', borderColor: '#d1c7bc' }"
-            >
-                Retour
-            </v-btn>
         </div>
 
         <v-card 

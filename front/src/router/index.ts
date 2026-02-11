@@ -1,26 +1,24 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Dashboard from "@/views/TheDashboard.vue";
-import Reminders from "@/views/reminders/ReminderView.vue";
-import ReminderCreate from "@/views/reminders/ReminderCreate.vue";
-import EventDetails from "@/views/events/EventView.vue";
-import EventEdit from "@/views/events/EventEdit.vue";
-import Health from "@/views/health/HealthView.vue";
-import HealthForm from "@/views/health/HealthForm.vue";
 import Activities from "@/views/activities/ActivityView.vue";
-import ActivityCreate from "@/views/activities/ActivityCreate.vue";
-import ActivityEdit from "@/views/activities/ActivityEdit.vue";
+import ActivityForm from "@/views/activities/ActivityForm.vue";
+import ActivityDetails from "@/views/activities/ActivityDetails.vue";
+import Dashboard from "@/views/TheDashboard.vue";
 import Documents from "@/views/documents/DocumentView.vue";
 import DocumentCreate from "@/views/documents/DocumentCreate.vue";
 import Feeding from "@/views/feeding/FeedingView.vue";
 import FeedingCreate from "@/views/feeding/FeedingCreate.vue";
 import FeedingEdit from "@/views/feeding/FeedingEdit.vue";
+import Horses from "@/views/horses/HorseView.vue";
+import HorseForm from "@/views/horses/HorseForm.vue";
+import HorseDetails from "@/views/horses/HorseDetails.vue";
+import Health from "@/views/health/HealthView.vue";
+import HealthForm from "@/views/health/HealthForm.vue";
 import Products from "@/views/products/ProductView.vue";
 import ProductCreate from "@/views/products/ProductCreate.vue";
 import ProductDetails from "@/views/products/ProductDetails.vue"
 import ProductEdit from "@/views/products/ProductEdit.vue";
-import Horses from "@/views/horses/HorseView.vue";
-import HorseForm from "@/views/horses/HorseForm.vue";
-import HorseDetails from "@/views/horses/HorseDetails.vue";
+import Reminders from "@/views/reminders/ReminderView.vue";
+import ReminderCreate from "@/views/reminders/ReminderCreate.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -101,13 +99,18 @@ const router = createRouter({
         },
         {
             path: "/horses/:id/activities/new",
-            name: "HorseActivityCreate",
-            component: ActivityCreate,
+            name: "ActivityCreate",
+            component: ActivityForm,
         },
         {
             path: "/activities/:id/edit",
             name: "ActivityEdit",
-            component: ActivityEdit,
+            component: ActivityForm,
+        },
+         {
+            path: "/events/:id",
+            name: "ActivityDetails",
+            component: ActivityDetails,
         },
         {
             path: "/horses/:id/documents",
@@ -153,16 +156,6 @@ const router = createRouter({
             path: "/materials/:id/edit",
             name: "ProductEdit",
             component: ProductEdit,
-        },
-        {
-            path: "/events/:id",
-            name: "EventDetails",
-            component: EventDetails,
-        },
-        {
-            path: "/events/:id/edit",
-            name: "EventEdit",
-            component: EventEdit,
         },
     ],
 });
