@@ -89,12 +89,12 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { horsesApi } from "../../api/horses";
+import { useRoute } from "vue-router";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import type { Horse } from "../../types";
 
 const route = useRoute();
-const router = useRouter();
+const horsesStore = useHorsesStore(); // Initialisation du Store
 const horse = ref<Horse | null>(null);
 const isLoading = ref(true);
 const snackbar = ref({
@@ -132,9 +132,19 @@ const horseInfo = computed(() => {
 });
 
 const loadHorse = async () => {
+    isLoading.value = true;
     try {
         const id = route.params.id as string;
-        horse.value = await horsesApi.getById(id);
+        
+        // Optimisation : chercher d'abord dans le store
+        let foundHorse = horsesStore.horses.find(h => h.id === id);
+        
+        if (!foundHorse) {
+            // Si absent, charger via le store (qui appelle l'API)
+            foundHorse = await horsesStore.loadHorseById(id);
+        }
+        
+        horse.value = foundHorse || null;
     } catch (error) {
         console.error("Error loading horse details:", error);
         snackbar.value = {
@@ -146,7 +156,6 @@ const loadHorse = async () => {
         isLoading.value = false;
     }
 };
-
 
 onMounted(() => {
     loadHorse();

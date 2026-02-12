@@ -28,6 +28,8 @@ import "vuetify/styles";
 import App from "@/App.vue";
 import router from "@/router";
 import { UI_BREAKPOINTS, VUETIFY_THRESHOLDS } from "@/ui/breakpoints";
+import { createPinia } from "pinia";
+import { useHorsesStore } from "./stores/HorsesStore";
 
 library.add(
     faClock,
@@ -72,5 +74,10 @@ const vuetify = createVuetify({
 createApp(App)
     .component("font-awesome-icon", FontAwesomeIcon)
     .use(router)
+    .use(createPinia())
     .use(vuetify)
     .mount("#app");
+
+const { loadHorses } = useHorsesStore();
+
+loadHorses()

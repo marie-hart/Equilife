@@ -1,5 +1,5 @@
 <template>
-    <div class="page" :style="{ minHeight: '100vh' }">
+    <div class="page" :style="{ minHeight: '100vh', backgroundColor: '#fdfaf6' }">
         <main class="pa-4">
             <div class="d-flex align-center justify-space-between ga-4 mb-6">
                 <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
@@ -22,7 +22,7 @@
                     <v-btn
                         variant="flat"
                         rounded="lg"
-                        :to="{ name: 'ActivityCreate', params: { id: horseId} }"
+                        :to="{ name: 'ActivityCreate', params: { id: horsesStore.horseId} }"
                         :style="{ backgroundColor: '#554338', color: 'white' }"
                         class="text-none"
                     >
@@ -44,8 +44,8 @@
                         <v-row dense>
                             <v-col cols="12" md="6">
                                 <v-select
-                                    v-model="selectedHorseId"
-                                    :items="horseFilterOptions"
+                                    v-model="horsesStore.horseId"
+                                    :items="horsesStore.horseFilterOptions"
                                     label="Cheval"
                                     density="comfortable"
                                     variant="outlined"
@@ -95,15 +95,14 @@ import { useRoute } from "vue-router";
 import { useDisplay } from "vuetify";
 import { eventsApi } from "@/api/events";
 import { ConfirmDeleteDialog } from "@/components";
-import { useHorseSelection } from "@/composables/useHorseSelection";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import { formatMonthLabel, sortByDateAsc, toMonthKey } from "@/libs/date";
 import type { ActivityAction, ActivityGroup, Event } from "@/types";
 import { ActivityList } from "@/views/activities";
 
 const route = useRoute();
 const { mdAndUp } = useDisplay();
-const { horseFilterOptions, selectedHorseId, setHorseFromParamsOrStored } =
-    useHorseSelection();
+const horsesStore = useHorsesStore(); // Initialisation du Store
     
 const activities = ref<Event[]>([]);
 const isLoading = ref(true);
@@ -116,8 +115,6 @@ const snackbar = ref({
 });
 
 const cardMaxWidth = computed(() => (mdAndUp.value ? "520px" : "100%"));
-
-const horseId = computed(() => route.params.id as string | undefined);
 
 const isActivity = (event: Event): boolean =>
     event.reminder_type === "activité" || Boolean(event.activity_type);
@@ -168,7 +165,7 @@ const getActivityActions = (activity: Event): ActivityAction[] => [
         title: "Voir",
         icon: "mdi-eye",
         disabled: false,
-        to:{ name: "EventDetails", params: { id: activity.id } },
+        to:{ name: "ActivityDetails", params: { id: activity.id } },
     },
     {
         key: "edit",
@@ -219,11 +216,12 @@ const confirmDelete = async () => {
 const loadActivities = async () => {
     isLoading.value = true;
     try {
-        const horseId =
-            selectedHorseId.value !== "all"
-                ? selectedHorseId.value
-                : (route.params.id as string | undefined);
-        activities.value = await eventsApi.getAll(horseId);
+        // Utilisation de la valeur du store pour filtrer
+        const horseFilter =
+            horsesStore.horseId !== "all"
+                ? horsesStore.horseId
+                : undefined;
+        activities.value = await eventsApi.getAll(horseFilter as string);
     } catch (error) {
         console.error("Error loading activities:", error);
     } finally {
@@ -232,20 +230,16 @@ const loadActivities = async () => {
 };
 
 
-onMounted(() => {
-    setHorseFromParamsOrStored("");
-    loadActivities();
+onMounted(async () => {
+    const horseIdFromUrl = route.params.id as string;
+    if (horseIdFromUrl) horsesStore.sethorseId(horseIdFromUrl);
+    
+    await loadActivities();
 });
 
+// Réaction au changement de cheval dans le filtre
 watch(
-    () => route.params.id,
-    () => {
-        loadActivities();
-    },
-);
-
-watch(
-    () => selectedHorseId.value,
+    () => horsesStore.horseId,
     () => {
         loadActivities();
     },

@@ -4,4 +4,4 @@ export { default as ActionButtons } from "@/components/ui/ActionButtons.vue";
 export { default as DatePickerField } from "@/components/ui/DatePickerField.vue";
 export { default as ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDialog.vue";
 export { default as FiltersPanel } from "@/components/FiltersPanel.vue";
-export { default as RationCard } from "@/views/feeding/RationCard.vue";
+export { default as FeedingForm } from "@/components/FeedingForm.vue"

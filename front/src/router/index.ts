@@ -6,8 +6,8 @@ import Dashboard from "@/views/TheDashboard.vue";
 import Documents from "@/views/documents/DocumentView.vue";
 import DocumentCreate from "@/views/documents/DocumentCreate.vue";
 import Feeding from "@/views/feeding/FeedingView.vue";
+import FeedingEdit from "@/views/feeding/FeedingEdit.vue"
 import FeedingCreate from "@/views/feeding/FeedingCreate.vue";
-import FeedingEdit from "@/views/feeding/FeedingEdit.vue";
 import Horses from "@/views/horses/HorseView.vue";
 import HorseForm from "@/views/horses/HorseForm.vue";
 import HorseDetails from "@/views/horses/HorseDetails.vue";
@@ -124,17 +124,17 @@ const router = createRouter({
         },
         {
             path: "/horses/:id/feeding",
-            name: "HorseFeeding",
+            name: "FeedingView",
             component: Feeding,
         },
         {
             path: "/horses/:id/feeding/new",
-            name: "HorseFeedingCreate",
+            name: "FeedingCreate",
             component: FeedingCreate,
         },
         {
-            path: "/rations/:id/edit",
-            name: "RationEdit",
+            path: "/horses/:id/rations/:id/edit",
+            name: "FeedingEdit",
             component: FeedingEdit,
         },
         {

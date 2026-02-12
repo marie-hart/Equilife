@@ -23,7 +23,7 @@
                         <v-col cols="6" class="d-md-none">
                             <div class="text-subtitle-2 font-weight-medium">{{ care.name }}</div>
                             <div class="text-body-2" :style="{ color: '#7a6e61' }">
-                                {{ getHorseName(care) }}
+                                {{ getHorseName(care.id) }}
                             </div>
                             <div class="text-caption" v-if="recurrenceLabel(care) !== '-'" :style="{ color: '#7a6e61' }">
                                 {{ recurrenceLabel(care) }}
@@ -45,7 +45,7 @@
                             {{ care.name }}
                         </v-col>
                         <v-col cols="3" class="text-body-2 d-none d-md-block" :style="{ color: '#7a6e61' }">
-                            {{ getHorseName(care) }}
+                            {{ getHorseName(care.id) }}
                         </v-col>
                         <v-col cols="2" class="text-body-2 d-none d-md-block" :style="{ color: '#7a6e61' }">
                             {{ recurrenceLabel(care) }}
@@ -83,7 +83,7 @@ defineProps<{
     items: Event[];
     formatDate: (dateString: string) => string;
     formatDateMobile: (dateString: string) => string;
-    getHorseName: (care: Event) => string;
+    getHorseName: (id: string) => string;
     recurrenceLabel: (care: Event) => string;
     getCareActions: (care: Event) => CareAction[];
 }>();

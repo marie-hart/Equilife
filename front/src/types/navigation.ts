@@ -17,7 +17,7 @@ export type NavItem = {
         | "HorseHealth"
         | "HorseActivities"
         // | "HorseDocuments"
-        | "HorseFeeding"
+        | "FeedingView"
         | "Products"
         | "Horses";
     icon: string;

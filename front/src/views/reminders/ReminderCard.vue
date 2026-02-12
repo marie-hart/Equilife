@@ -43,7 +43,7 @@
             class="mb-2"
           >
             <v-card
-                :to="{ name: 'EventDetails', params: { id: reminder.id } }"
+                :to="{ name: 'ActivityDetails', params: { id: reminder.id } }"
                 variant="tonal"
                 rounded="lg"
                 class="pa-3 d-flex align-center justify-space-between"
@@ -141,11 +141,6 @@
       getReminderDate,
     );
   });
-  
-  
-  const openEventDetails = (event: Event) => {
-    router.push({ name: "EventDetails", params: { id: event.id } });
-  };
   
   onMounted(loadReminders);
   

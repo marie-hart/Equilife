@@ -6,7 +6,6 @@
   >
     <div class="d-flex align-start ga-4">
 
-      <!-- Avatar -->
       <v-avatar size="56">
         <v-img
           v-if="horseAvatar"
@@ -16,13 +15,11 @@
         <v-icon v-else size="32">mdi-horse</v-icon>
       </v-avatar>
 
-      <!-- Infos cheval -->
       <div class="flex-grow-1">
 
-        <!-- Nom + switcher -->
         <div class="d-flex align-center ga-2">
           <h3 class="text-h6 font-weight-medium">
-            {{ horseProfile?.name || "Mon cheval" }}
+            {{ selectedHorse?.name || "Mon cheval" }}
           </h3>
 
           <v-menu v-if="showHorseSwitcher" location="bottom">
@@ -39,9 +36,9 @@
 
             <v-list density="compact">
               <v-list-item
-                v-for="horse in horses"
+                v-for="horse in horsesStore.horses"
                 :key="horse.id"
-                @click="emit('select', horse)"
+                @click="horsesStore.sethorseId(horse.id)"
               >
                 <v-list-item-title>
                   {{ horse.name }}
@@ -49,7 +46,7 @@
 
                 <template #append>
                   <v-icon
-                    v-if="horse.id === selectedHorseId"
+                    v-if="horse.id === horsesStore.horseId"
                     size="16"
                     color="primary"
                   >
@@ -61,22 +58,21 @@
           </v-menu>
         </div>
 
-        <!-- Chips -->
         <div class="d-flex ga-2 mt-2 flex-wrap">
           <v-chip
-            v-if="horseProfile?.age"
+            v-if="selectedHorse?.age"
             size="small"
             variant="tonal"
           >
-            {{ horseProfile.age }} ans
+            {{ selectedHorse.age }} ans
           </v-chip>
 
           <v-chip
-            v-if="horseProfile?.breed"
+            v-if="selectedHorse?.breed"
             size="small"
             variant="tonal"
           >
-            {{ horseProfile.breed }}
+            {{ selectedHorse.breed }}
           </v-chip>
         </div>
 
@@ -85,36 +81,31 @@
   </v-card>
 </template>
 
-  
-
 <script setup lang="ts">
-import { computed } from "vue";
-import type { Horse } from "@/types";
+import { computed, onMounted } from "vue";
+import { useHorsesStore } from "@/stores/HorsesStore";
 
-const props = defineProps<{
-  horseProfile: Horse | null;
-  horses: Horse[];
-}>();
+const horsesStore = useHorsesStore();
 
-const emit = defineEmits<{
-  (event: "select", horse: Horse): void;
-}>();
+onMounted(() => {
+  if (horsesStore.horses.length === 0) {
+    horsesStore.loadHorses();
+  }
+});
 
 const normalizePhotoUrl = (path?: string): string | null => {
   if (!path) return null;
   if (path.startsWith("http")) return path;
-  
   if (path.startsWith("/")) return path;
-  
   return path;
 };
 
+const selectedHorse = computed(() => horsesStore.selectedHorse);
+
 const horseAvatar = computed(() =>
-  normalizePhotoUrl(props.horseProfile?.photo_path)
+  normalizePhotoUrl(selectedHorse.value?.photo_path)
 );
 
-const showHorseSwitcher = computed(() => props.horses.length > 1);
-const selectedHorseId = computed(() => props.horseProfile?.id ?? null);
-</script>
+const showHorseSwitcher = computed(() => horsesStore.horses.length > 1);
 
-  
+</script>

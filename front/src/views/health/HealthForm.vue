@@ -133,11 +133,11 @@ import { materialsApi } from "@/api/materials";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { Product, Event, RecurrenceUnit, CreateEventDto } from "@/types";
 import { fromDateInputValue, toDateInputValue } from "@/libs/date";
-import { useHorseSelection } from "@/composables/useHorseSelection";
+import { useHorsesStore } from "@/stores/HorsesStore";
 
 const route = useRoute();
 const router = useRouter();
-const { horses, getHorseIdsFromParamsOrStored } = useHorseSelection();
+const horsesStore = useHorsesStore(); // Initialisation du Store
 
 // État
 const isLoading = ref(true);
@@ -145,14 +145,13 @@ const isSubmitting = ref(false);
 const products = ref<Product[]>([]);
 const fieldErrors = ref<Record<string, string>>({});
 const snackbar = ref({ show: false, message: "", color: "success" });
-const horseId = computed(() => route.params.id as string | undefined);
 
 const eventId = computed(() => route.params.id as string | undefined);
-const isEdit = computed(() => Boolean(route.name === 'HealthEdit')); // Ajuster selon le nom de la route
+const isEdit = computed(() => Boolean(route.name === 'HealthEdit'));
 
 // Formulaire
 const form = ref({
-    horseIds: [] as string[], // Pour la création (multiple), stockera le seul ID en édition
+    horseIds: [] as string[],
     productId: "",
     careDescription: "",
     date: "",
@@ -164,7 +163,7 @@ const form = ref({
 
 // Options
 const horseOptions = computed(() =>
-    horses.value.map((horse) => ({ title: horse.name, value: horse.id })),
+    horsesStore.horses.map((horse) => ({ title: horse.name, value: horse.id })),
 );
 
 const productOptions = computed(() => {
@@ -201,14 +200,20 @@ const recurrence = computed({
 const loadData = async () => {
     isLoading.value = true;
     try {
+        await horsesStore.loadHorses(); // Chargement via le store
         await materialsApi.getAll(false).then(res => products.value = res);
         
         if (isEdit.value && eventId.value) {
             const event = await eventsApi.getById(eventId.value);
             fillForm(event);
         } else {
-            // Initialisation création
-            form.value.horseIds = getHorseIdsFromParamsOrStored();
+            // Initialisation création: logique du composable répliquée
+            const horseIdFromUrl = route.params.id as string;
+            if (horseIdFromUrl) {
+                form.value.horseIds = [horseIdFromUrl];
+            } else if (horsesStore.horseId && horsesStore.horseId !== "all") {
+                form.value.horseIds = [horsesStore.horseId];
+            }
         }
     } catch (error) {
         console.error("Error loading data:", error);
@@ -230,7 +235,7 @@ const fillForm = (event: Event) => {
         : event.reminder_interval_days || 1;
 
     form.value = {
-        horseIds: [event.horse_id || ""], // En édition, un seul cheval
+        horseIds: [event.horse_id || ""],
         productId: event.product_id || "",
         careDescription: event.name || "",
         date: toDateInputValue(event.event_date),
@@ -260,7 +265,7 @@ const handleSubmit = async () => {
     isSubmitting.value = true;
     try {
         const payload: CreateEventDto = {
-            horse_id: horseId.value,
+            horse_id: "", // Sera mis à jour dans la boucle ou l'update
             name: careName,
             description: form.value.note || "",
             event_date: fromDateInputValue(form.value.date),

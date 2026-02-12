@@ -1,10 +1,28 @@
 <template>
-    <v-card variant="outlined" class="pa-3">
-        <div class="d-flex align-center justify-space-between mb-3">
+    <v-card 
+        variant="flat" 
+        rounded="lg"
+        class="pa-4 mb-4"
+        :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
+    >
+        <div class="d-flex align-start justify-space-between mb-4">
             <div>
-                <div class="text-h6">{{ ration.name }}</div>
-                <div class="text-caption text-grey">
-                    Cheval : {{ horseName }}
+                <div class="d-flex align-center ga-2">
+                    <div class="text-h6 font-weight-bold" :style="{ color: '#3c3226' }">
+                        {{ ration.name }}
+                    </div>
+                    <v-chip 
+                        :color="ration.is_active ? 'green' : 'grey'" 
+                        size="x-small" 
+                        variant="tonal"
+                        label
+                        class="font-weight-bold"
+                    >
+                        {{ ration.is_active ? 'Active' : 'Inactive' }}
+                    </v-chip>
+                </div>
+                <div class="text-body-2 text-grey-darken-1">
+                    {{ horseName }}
                 </div>
             </div>
 
@@ -14,44 +32,54 @@
                         icon="mdi-dots-vertical"
                         v-bind="menuProps"
                         variant="text"
+                        :style="{ color: '#554338' }"
                     />
                 </template>
-                <v-list density="compact">
+                <v-list density="compact" rounded="lg">
                     <v-list-item @click="emit('share', ration)">
+                        <template #prepend><v-icon icon="mdi-share-variant" class="me-2" /></template>
                         <v-list-item-title>Partager</v-list-item-title>
                     </v-list-item>
                     <v-list-item @click="emit('edit', ration)">
+                        <template #prepend><v-icon icon="mdi-pencil" class="me-2" /></template>
                         <v-list-item-title>Modifier</v-list-item-title>
                     </v-list-item>
                     <v-divider />
-                    <v-list-item class="text-red" @click="confirmDelete = true">
+                    <v-list-item class="text-error" @click="confirmDelete = true">
+                        <template #prepend><v-icon icon="mdi-delete" class="me-2" /></template>
                         <v-list-item-title>Supprimer</v-list-item-title>
                     </v-list-item>
                 </v-list>
             </v-menu>
         </div>
 
-        <v-expansion-panels variant="accordion">
+        <v-expansion-panels variant="accordion" flat>
             <v-expansion-panel
                 v-for="meal in meals"
-                v-show="meal.items.length"
                 :key="meal.key"
+                :style="{ backgroundColor: '#fdfaf6' }"
+                rounded="lg"
+                class="mb-2"
+                v-show="meal.items.length"
             >
-                <v-expansion-panel-title>
+                <v-expansion-panel-title class="font-weight-bold" :style="{ color: '#554338' }">
                     {{ meal.label }}
+                    <template #actions>
+                        <v-icon color="brown-darken-3" icon="mdi-chevron-down" />
+                    </template>
                 </v-expansion-panel-title>
                 <v-expansion-panel-text>
-                    <v-list v-if="meal.items.length" density="compact">
-                        <v-list-item v-for="item in meal.items" :key="item.id">
-                            <v-list-item-title>{{
-                                item.name
-                            }}</v-list-item-title>
-                            <v-list-item-subtitle>
+                    <v-list v-if="meal.items.length" density="compact" class="bg-transparent">
+                        <v-list-item v-for="item in meal.items" :key="item.id" class="px-0">
+                            <v-list-item-title class="font-weight-medium" :style="{ color: '#3c3226' }">
+                                {{ item.name }}
+                            </v-list-item-title>
+                            <v-list-item-subtitle class="text-caption">
                                 {{ item.subtitle }}
                             </v-list-item-subtitle>
                         </v-list-item>
                     </v-list>
-                    <div v-else class="text-caption text-grey">
+                    <div v-else class="text-caption text-grey pa-2">
                         Aucun aliment
                     </div>
                 </v-expansion-panel-text>
@@ -59,19 +87,17 @@
         </v-expansion-panels>
 
         <v-dialog v-model="confirmDelete" max-width="360">
-            <v-card>
-                <v-card-title>Supprimer la ration</v-card-title>
-                <v-card-text>Cette action est définitive.</v-card-text>
-                <v-card-actions>
+            <v-card rounded="lg">
+                <v-card-title class="font-weight-bold" :style="{ color: '#3c3226' }">
+                    Supprimer la ration ?
+                </v-card-title>
+                <v-card-text>Cette action est définitive et ne peut pas être annulée.</v-card-text>
+                <v-card-actions class="pa-4">
                     <v-spacer />
-                    <v-btn variant="outlined" @click="confirmDelete = false"
-                        >Annuler</v-btn
-                    >
-                    <v-btn
-                        color="error"
-                        variant="elevated"
-                        @click="confirmAndDelete"
-                    >
+                    <v-btn variant="outlined" rounded="lg" @click="confirmDelete = false">
+                        Annuler
+                    </v-btn>
+                    <v-btn color="error" variant="flat" rounded="lg" @click="confirmAndDelete">
                         Supprimer
                     </v-btn>
                 </v-card-actions>
@@ -82,21 +108,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { Ration, RationItem } from "@/types";
-
-type MealKey = "matin" | "midi" | "soir";
-
-type MealItem = {
-    id: string;
-    name: string;
-    subtitle: string;
-};
-
-type MealGroup = {
-    key: MealKey;
-    label: string;
-    items: MealItem[];
-};
+import type { MealGroup, MealItem, MealKey, Ration, RationItem } from "@/types";
 
 const props = defineProps<{
     ration: Ration;

@@ -65,7 +65,7 @@
     { tab: "reminders", label: "Rappels", routeName: "Reminders", icon: "bell" },
     { tab: "health", label: "Soins", routeName: "HorseHealth", icon: "house-chimney-medical" },
     { tab: "activities", label: "Activités", routeName: "HorseActivities", icon: "heart-pulse" },
-    { tab: "feeding", label: "Alimentation", routeName: "HorseFeeding", icon: "bowl-food" },
+    { tab: "feeding", label: "Alimentation", routeName: "FeedingView", icon: "bowl-food" },
     // { tab: "documents", label: "Documents", routeName: "HorseDocuments", icon: "file-lines", },
     { tab: "products", label: "Produits", routeName: "Products", icon: "box-open" },
     { tab: "horses", label: "Chevaux", routeName: "Horses", icon: "horse" },

@@ -1,53 +1,62 @@
 <template>
-    <div class="page">
+    <div class="page" :style="{ minHeight: '100vh', backgroundColor: '#fdfaf6' }">
         <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-4">
-                <v-card-title class="ma-0 text-h5">Alimentation</v-card-title>
+            <div class="d-flex align-center justify-space-between ga-4 mb-6">
+                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
+                    Alimentation
+                </v-card-title>
+                
+                <v-btn
+                    color="#554338"
+                    variant="flat"
+                    rounded="lg"
+                    :to="{ name: 'FeedingCreate', params: { id: horsesStore.horseId } }"
+                    class="text-none"
+                >
+                    <v-icon icon="mdi-plus" class="me-2" />
+                    Ajouter une ration
+                </v-btn>
             </div>
-            <div class="d-flex flex-column ga-4">
-                <div class="d-flex align-center justify-space-between ga-4">
-                    <v-btn variant="outlined" @click="goToDashboard">
-                        <v-icon icon="mdi-arrow-left" class="me-2" />
-                        Retour
-                    </v-btn>
-                    <v-btn
-                        class="primary-btn"
-                        color="primary"
-                        variant="flat"
-                        @click="goToFeedingCreate"
-                    >
-                        <v-icon icon="mdi-plus" class="me-2" />
-                        Ajouter
-                    </v-btn>
-                </div>
 
-                <v-card class="section-card" variant="outlined">
-                    <v-card-title class="text-subtitle-1">Filtres</v-card-title>
-                    <v-card-text class="pt-3">
-                        <v-row dense>
-                            <v-col cols="12" md="6">
+            <div class="d-flex flex-column ga-4">
+                <v-card 
+                    variant="flat" 
+                    rounded="lg"
+                    class="pa-2"
+                    :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
+                >
+                    <v-card-text class="pa-2">
+                        <v-row dense align="center">
+                            <v-col cols="12" md="4">
+                                <div class="text-caption font-weight-bold mb-1" :style="{ color: '#554338' }">
+                                    FILTRER PAR CHEVAL
+                                </div>
                                 <v-select
-                                    v-model="selectedHorseId"
-                                    :items="horseFilterOptions"
-                                    label="Cheval"
-                                    density="compact"
+                                    v-model="horsesStore.horseId"
+                                    :items="horsesStore.horseFilterOptions"
+                                    density="comfortable"
                                     variant="outlined"
+                                    bg-color="white"
+                                    rounded="lg"
+                                    hide-details
                                 />
                             </v-col>
                         </v-row>
                     </v-card-text>
                 </v-card>
+
                 <v-skeleton-loader
                     v-if="isLoading"
                     type="list-item-two-line, list-item-two-line, list-item-two-line"
                 />
+                
                 <FeedingList
                     v-else
                     :rations="rations"
-                    :get-horse-name="getHorseName"
+                    :get-horse-name="horsesStore.getHorseNameById"
                     :get-product-name="getProductName"
                     :item-type-label="itemTypeLabel"
-                    @edit="openRationEdit"
+                    @edit="openFeedingEdit"
                     @share="shareRation"
                     @delete="deleteRation"
                 />
@@ -65,23 +74,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { rationsApi } from "@/api/rations";
 import { materialsApi } from "@/api/materials";
 import type { Product, Ration } from "@/types";
-import { useHorseSelection } from "@/composables/useHorseSelection";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import { FeedingList } from "@/views/feeding";
 
-const route = useRoute();
 const router = useRouter();
-const {
-    horses,
-    horseFilterOptions,
-    selectedHorseId,
-    setHorseFromParamsOrStored,
-    getHorseName,
-} = useHorseSelection();
+const route = useRoute();
+const horsesStore = useHorsesStore(); // Initialisation du Store
+
 const products = ref<Product[]>([]);
 const rations = ref<Ration[]>([]);
 const isLoading = ref(true);
@@ -90,10 +94,6 @@ const snackbar = ref({
     message: "",
     color: "success",
 });
-
-const horseById = computed(
-    () => new Map(horses.value.map((horse) => [horse.id, horse])),
-);
 
 const itemTypeLabel = (value?: string): string => {
     switch (value) {
@@ -120,8 +120,10 @@ const loadProducts = async () => {
 const loadRations = async () => {
     isLoading.value = true;
     try {
-        const horseFilter =
-            selectedHorseId.value !== "all" ? selectedHorseId.value : undefined;
+        const horseFilter= horsesStore.horseId && horsesStore.horseId !== "all" 
+            ? horsesStore.horseId 
+            : undefined;
+        
         rations.value = await rationsApi.getAll(horseFilter);
     } catch (error) {
         console.error("Error loading rations:", error);
@@ -130,30 +132,30 @@ const loadRations = async () => {
     }
 };
 
-watch(selectedHorseId, () => {
+// --- Logique de chargement réactif ---
+watch(() => horsesStore.horseId, () => {
     loadProducts();
     loadRations();
 });
 
 onMounted(async () => {
-    setHorseFromParamsOrStored("all");
+    // Synchronisation store avec l'url au chargement si nécessaire
+    const horseIdFromUrl = route.params.id as string;
+    if (horseIdFromUrl) horsesStore.sethorseId(horseIdFromUrl);
+
     await loadProducts();
     await loadRations();
 });
 
-const goToFeedingCreate = () => {
-    const horseId = route.params.id as string | undefined;
-    if (horseId) {
-        router.push({ name: "HorseFeedingCreate", params: { id: horseId } });
-        return;
-    }
-    router.push("/horses");
+const openFeedingEdit = (ration: Ration) => {
+    router.push({
+        name: "FeedingEdit",
+        params: { id: ration.id },
+        query: { horseId: ration.horse_id },
+    });
 };
 
-const goToDashboard = () => {
-    router.push({ name: "Dashboard" });
-};
-
+// --- Actions ---
 const shareRation = async (ration: Ration) => {
     const items = ration.items
         .map((item) => {
@@ -167,7 +169,9 @@ const shareRation = async (ration: Ration) => {
             return `• ${parts.join(" • ")}`;
         })
         .join("\n");
-    const horseName = getHorseName();
+    
+    // Utilisation du store pour obtenir le nom du cheval de la ration spécifique
+    const horseName = horsesStore.getHorseNameById(ration.horse_id) || "Cheval inconnu";
     const text = `Ration: ${ration.name}\nCheval: ${horseName}\n${items}`;
     try {
         if (navigator.share) {
@@ -193,14 +197,6 @@ const shareRation = async (ration: Ration) => {
             color: "error",
         };
     }
-};
-
-const openRationEdit = (ration: Ration) => {
-    router.push({
-        name: "RationEdit",
-        params: { id: ration.id },
-        query: { horseId: ration.horse_id },
-    });
 };
 
 const deleteRation = async (ration: Ration) => {

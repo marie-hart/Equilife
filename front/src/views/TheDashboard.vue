@@ -133,6 +133,8 @@ import { useDisplay } from "vuetify";
 import { HorseProfileCard } from "./horses";
 import { useHorseSelection } from "@/composables/useHorseSelection";
 import type { Horse } from "@/types";
+import { storeToRefs } from "pinia";
+import { useHorsesStore } from "@/stores/HorsesStore";
 
 const events = ref<Event[]>([]);
 const reminders = ref<Event[]>([]);
@@ -140,6 +142,7 @@ const isLoading = ref(true);
 
 const route = useRoute();
 const { smAndDown } = useDisplay();
+const { horseId } = storeToRefs(useHorsesStore())
 
 const {
     horses,
@@ -156,12 +159,8 @@ const horseProfile = computed(() =>
 
 
 const onHorseSelect = (horse: Horse) => {
-    selectedHorseId.value = horse.id;
+    horseId.value = horse.id;
 };
-
-const routeHorseId = computed(() => route.params.id as string | undefined);
-
-const horseId = getActiveHorseId(routeHorseId.value);
 
 const snackbar = ref({
     show: false,
@@ -221,7 +220,7 @@ const getActivitiesRoute = () => {
 
 const goToFeeding = () => {
     if (horseId) {
-        return { name: "HorseFeeding", params: { id: horseId } };
+        return { name: "FeedingView", params: { id: horseId } };
     }
     return "/horses/:id/feeding";
 };

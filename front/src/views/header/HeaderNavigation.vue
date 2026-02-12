@@ -1,6 +1,5 @@
 <template>
     <div>
-      <!-- BOTTOM NAV : < lg -->
       <v-bottom-navigation
         v-if="!lgAndUp"
         class="rounded-t-xl"
@@ -18,7 +17,6 @@
         </v-btn>
       </v-bottom-navigation>
   
-      <!-- DRAWER : ≥ lg -->
       <v-navigation-drawer
         v-else
         app
@@ -46,9 +44,9 @@
   import { computed } from "vue";
   import { useDisplay } from "vuetify";
   import type { NavItem, NavTab } from "@/types";
-  import { useHorseSelection } from "@/composables/useHorseSelection";
+  import { useHorsesStore } from "@/stores/HorsesStore";
 
-  const { selectedHorseId } = useHorseSelection();
+  const horsesStore = useHorsesStore();
   
   const props = defineProps<{
     navItems: NavItem[];
@@ -84,18 +82,17 @@
   });
 
   const isHorseIdReady = computed(() => {
-  return selectedHorseId.value && selectedHorseId.value !== "all";
-});
+    return horsesStore.horseId && horsesStore.horseId !== "all";
+  });
 
   const getRoute = (item: NavItem) => {
-  if (item.tab === "horses") {
-    return {name: item.routeName }
-  } else {
-    if (!isHorseIdReady.value) {
-      return;
+    if (item.tab === "horses") {
+      return {name: item.routeName }
+    } else {
+      if (!isHorseIdReady.value) {
+        return;
+      }
+      return {name: item.routeName, params: { id: horsesStore.horseId }}
     }
-    return {name: item.routeName, params: { id: selectedHorseId.value }}
-  }
-};
+  };
 </script>
-  

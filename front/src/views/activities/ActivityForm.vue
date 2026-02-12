@@ -22,8 +22,8 @@
                     <v-row v-else dense>
                         <v-col cols="12" md="6">
                             <v-select
-                                v-model="selectedHorseId"
-                                :items="horseOptions"
+                                v-model="horsesStore.horseId"
+                                :items="horsesStore.horseOptions"
                                 label="Cheval *"
                                 density="comfortable"
                                 variant="outlined"
@@ -136,24 +136,16 @@ import { eventsApi } from "@/api/events";
 import { fromDateInputValue, toDateInputValue } from "@/libs/date";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
-import { useHorseSelection } from "@/composables/useHorseSelection";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import { IntensityValue } from "@/types";
 
 const route = useRoute();
 const router = useRouter();
+const horsesStore = useHorsesStore(); 
 
 // Détection mode édition vs création
 const isEditMode = computed(() => Boolean(route.name === 'ActivityEdit'));
 const eventId = computed(() => route.params.id as string);
-
-const {
-    horseOptions,
-    selectedHorseId,
-    loadHorses,
-    setHorseFromParamsOrStored,
-} = useHorseSelection({
-    useRouteHorseId: !isEditMode.value, // Utilise l'ID du cheval dans l'URL si on crée
-});
 
 const isSubmitting = ref(false);
 const isLoading = ref(isEditMode.value); // Load si mode édition
@@ -196,7 +188,9 @@ const loadActivity = async () => {
     if (!isEditMode.value) return;
     try {
         const event = await eventsApi.getById(eventId.value);
-        selectedHorseId.value = event.horse_id || "";
+        // Mise à jour du store avec le cheval de l'activité
+        if (event.horse_id) horsesStore.sethorseId(event.horse_id);                
+        
         form.value = {
             activityType: event.activity_type || event.name || "",
             date: toDateInputValue(event.event_date),
@@ -214,7 +208,7 @@ const loadActivity = async () => {
 
 const submitForm = async () => {
     const { errors, firstError } = await validateRequiredFieldsMap([
-        { key: "horseId", label: "un cheval", value: selectedHorseId.value },
+        { key: "horseId", label: "un cheval", value: horsesStore.horseId },
         { key: "activityType", label: "un type d'activité", value: form.value.activityType },
         { key: "date", label: "une date", value: form.value.date },
     ]);
@@ -229,15 +223,15 @@ const submitForm = async () => {
         isSubmitting.value = true;
         const payload = {
             name: form.value.activityType,
-            description: form.value.comment || undefined,
+            description: form.value.comment,
             event_date: fromDateInputValue(form.value.date),
-            horse_id: selectedHorseId.value,
+            horse_id: horsesStore.horseId || "",
             reminder_enabled: false,
             reminder_type: "activité" as const,
             activity_type: form.value.activityType,
-            activity_duration_minutes: form.value.duration || undefined,
+            activity_duration_minutes: form.value.duration,
             activity_intensity: form.value.intensity,
-            activity_comment: form.value.comment || undefined,
+            activity_comment: form.value.comment,
         };
 
         if (isEditMode.value) {
@@ -257,19 +251,20 @@ const submitForm = async () => {
 };
 
 const goBack = () => {
-    if (selectedHorseId.value) {
-        router.push({ name: "HorseActivities", params: { id: selectedHorseId.value } });
+    if (horsesStore.horseId) {
+        router.push({ name: "HorseActivities", params: { id: horsesStore.horseId } });
         return;
     }
     router.push("/horses");
 };
 
 onMounted(async () => {
-    await loadHorses();
     if (isEditMode.value) {
         await loadActivity();
     } else {
-        setHorseFromParamsOrStored("all");
+        // En création, si un ID est dans l'URL, on l'utilise
+        const horseIdFromUrl = route.query.horseId as string;
+        if (horseIdFromUrl) horsesStore.sethorseId(horseIdFromUrl);                
         isLoading.value = false;
     }
 });

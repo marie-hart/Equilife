@@ -20,7 +20,7 @@
                         class="text-none"
                         variant="flat"
                         rounded="lg"
-                        :to="{ name: 'HorseCareCreate', params: { id: horseId } }"
+                        :to="{ name: 'HorseCareCreate', params: { id: horsesStore.horseId !== 'all' ? horsesStore.horseId : undefined } }"
                         :style="{ backgroundColor: '#554338', color: 'white' }"
                     >
                         <v-icon start icon="mdi-plus" />
@@ -41,12 +41,12 @@
                     :items="filteredCares"
                     :format-date="formatDateLong"
                     :format-date-mobile="formatDateMobile"
-                    :get-horse-name="getHorseName"
+                    :get-horse-name="horsesStore.getHorseNameById"
                     :recurrence-label="recurrenceLabel"
                     :get-care-actions="getCareActions"
                 />
             </div>
-            </main>
+        </main>
     </div>
     <div class="page">
         <main class="pa-4">
@@ -56,32 +56,26 @@
                 :message="deleteMessage"
                 @confirm="confirmDelete"
             />
-            
-            </main>
+        </main>
     </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { useFilters } from "@/composables/useFilters";
-import { useHorseSelection } from "@/composables/useHorseSelection";
+import { useHorsesStore } from "@/stores/HorsesStore"; 
 import type { CareAction, CareStatus, Event,  } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import {
     formatDateLong,
     formatDateMobile,
-    fromDateInputValue,
     isSameDay,
     startOfDay,
     toDateInputValue,
 } from "@/libs/date";
 import { ConfirmDeleteDialog, FiltersPanel } from "@/components";
 import { HealthList } from "@/views/health";
-
-const route = useRoute();
-
 
 const cares = ref<Event[]>([]);
 const isLoading = ref(true);
@@ -95,14 +89,7 @@ const snackbar = ref({
     color: "success",
 });
 
-const horseId = computed(() => route.params.id as string | undefined);
-
-const {
-    horses,
-    horseFilterOptions,
-    selectedHorseId: horseSelectionId,
-    getHorseName,
-} = useHorseSelection();
+const horsesStore = useHorsesStore();
 
 const statusOptions = [
     { title: "Tous", value: "all" },
@@ -125,17 +112,13 @@ const careTypeOptions = computed(() => {
     ];
 });
 
-const horseById = computed(
-    () => new Map(horses.value.map((horse) => [horse.id, horse])),
-);
-
 const filters: readonly FilterDefinition<string>[] = [
     {
         key: "horseId",
         type: "select",
         label: "Cheval",
         defaultValue: "all",
-        options: horseFilterOptions.value,
+        options: horsesStore.horseFilterOptions, // UPDATED
     },
     {
         key: "status",
@@ -162,7 +145,6 @@ const deleteMessage = computed(() =>
         ? `Confirmer la suppression du soin "${selectedCare.value.name}" ?`
         : "Confirmer la suppression ?"
 );
-
 
 const applyCareFilters = (
     items: Event[],
@@ -196,7 +178,7 @@ const availableHorseOptions = computed(() => {
             .map((care) => care.horse_id)
             .filter((id): id is string => Boolean(id)),
     );
-    const base = horseFilterOptions.value;
+    const base = horsesStore.horseFilterOptions; // UPDATED
     let options = base.filter(
         (option) => option.value === "all" || ids.has(option.value),
     );
@@ -382,7 +364,7 @@ onMounted(() => {
 });
 
 watch(
-    () => horseSelectionId.value,
+    () => horsesStore.horseId,
     (value) => {
         if (value && filterValues.horseId !== value) {
             filterValues.horseId = value;

@@ -183,14 +183,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { horsesApi } from "@/api/horses";
+import { useRouter } from "vue-router";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
-import type { CreateHorseDto, Horse } from "@/types";
+import type { CreateHorseDto } from "@/types";
+import { storeToRefs } from 'pinia';
 
-const route = useRoute();
 const router = useRouter();
+const horsesStore = useHorsesStore();
 const isSubmitting = ref(false);
 const isLoading = ref(true);
 const formError = ref("");
@@ -202,7 +203,8 @@ const snackbar = ref({
     color: "success",
 });
 
-const horseId = computed(() => route.params.id as string | undefined);
+const { horseId } = storeToRefs(useHorsesStore())
+
 const isEdit = computed(() => Boolean(horseId.value));
 
 const form = ref<CreateHorseDto>({
@@ -267,18 +269,21 @@ const loadHorse = async () => {
         return;
     }
     try {
-        const horse = await horsesApi.getById(horseId.value);
-        form.value = {
-            name: horse.name,
-            nickname: horse.nickname || "",
-            sex: horse.sex,
-            breed: horse.breed || "",
-            coat: horse.coat || "",
-            birth_date: horse.birth_date || "",
-            stable_location: horse.stable_location || "",
-            feed: horse.feed || "",
-            additional_info: horse.additional_info || "",
-        };
+        // Chargement via le store
+        const horse = await horsesStore.loadHorseById(horseId.value);
+        if (horse) {
+            form.value = {
+                name: horse.name,
+                nickname: horse.nickname || "",
+                sex: horse.sex,
+                breed: horse.breed || "",
+                coat: horse.coat || "",
+                birth_date: horse.birth_date || "",
+                stable_location: horse.stable_location || "",
+                feed: horse.feed || "",
+                additional_info: horse.additional_info || "",
+            };
+        }
     } catch (error) {
         console.error("Error loading horse:", error);
     } finally {
@@ -299,7 +304,7 @@ const handleSubmit = async () => {
 
     try {
         isSubmitting.value = true;
-        let savedHorse: Horse;
+        
         const payload = {
             name: form.value.name.trim(),
             nickname: form.value.nickname?.trim() || undefined,
@@ -312,14 +317,21 @@ const handleSubmit = async () => {
             additional_info: form.value.additional_info?.trim() || undefined,
         };
 
+        let savedHorseId: string;
+
         if (horseId.value) {
-            savedHorse = await horsesApi.update(horseId.value, payload);
+            // Mise à jour via le store
+            await horsesStore.updateHorse(horseId.value, payload);
+            savedHorseId = horseId.value;
         } else {
-            savedHorse = await horsesApi.create(payload);
+            // Création via le store
+            const newHorse = await horsesStore.createHorse(payload);
+            savedHorseId = newHorse.id;
         }
 
         if (selectedPhoto.value) {
-            await horsesApi.uploadPhoto(savedHorse.id, selectedPhoto.value);
+            // Upload photo via le store
+            await horsesStore.uploadHorsePhoto(savedHorseId, selectedPhoto.value);
         }
 
         snackbar.value = {
@@ -329,7 +341,8 @@ const handleSubmit = async () => {
         };
 
         setTimeout(() => {
-            router.push("/horses");
+            // Navigation vers les détails après enregistrement
+            router.push({ name: "HorseDetails", params: { id: savedHorseId } });
         }, 800);
     } catch (error) {
         console.error("Error saving horse:", error);
@@ -345,7 +358,11 @@ const handleSubmit = async () => {
 };
 
 const goBack = () => {
-    router.push("/horses");
+    if (horseId.value) {
+        router.push({ name: "HorseDetails", params: { id: horseId.value } });
+    } else {
+        router.push("/horses");
+    }
 };
 
 onMounted(async () => {

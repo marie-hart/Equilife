@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { RationCard } from "@/components";
+import RationCard  from "@/views/feeding/RationCard.vue";
 import type { Ration } from "@/types";
 
 defineProps<{

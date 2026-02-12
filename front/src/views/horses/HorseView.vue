@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useDisplay } from "vuetify";
-import { horsesApi } from "@/api/horses";
-import type { Horse } from "@/types";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import { HorseList } from "./";
 
-const horses = ref<Horse[]>([]);
+const horsesStore = useHorsesStore();
 const isLoading = ref(true);
-
 const { xs } = useDisplay();
 
 const cardHeight = computed(() => (xs.value ? 200 : 230));
@@ -17,14 +15,7 @@ const photoHeight = computed(() => (xs.value ? 90 : 110));
 
 
 const loadHorses = async () => {
-    isLoading.value = true;
-    try {
-        horses.value = await horsesApi.getAll();
-    } catch (error) {
-        console.error("Error loading horses:", error);
-    } finally {
-        isLoading.value = false;
-    }
+    await horsesStore.loadHorses();
 };
 
 onMounted(loadHorses);
@@ -56,13 +47,12 @@ onMounted(loadHorses);
 
         <HorseList
             v-else
-            :horses="horses"
+            :horses="horsesStore.horses"
             :card-height="cardHeight"
             :card-max-width="cardMaxWidth"
             :photo-width="photoWidth"
             :photo-height="photoHeight"
             @deleted="loadHorses"
         />
-
         </v-container>
 </template>
