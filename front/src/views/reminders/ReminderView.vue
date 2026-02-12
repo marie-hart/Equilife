@@ -1,19 +1,29 @@
 <template>
-    <div class="page">
+    <div class="page" :style="{ minHeight: '100vh' }">
         <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-4">
-                <v-card-title class="ma-0 text-h5">Rappels</v-card-title>
+            <div class="d-flex align-center justify-space-between ga-4 mb-6">
+                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
+                    Rappels
+                </v-card-title>
             </div>
+            
             <div class="d-flex flex-column ga-4">
                 <div class="d-flex align-center justify-space-between ga-4">
-                    <v-btn variant="outlined" @click="goToDashboard">
+                    <v-btn 
+                        variant="outlined" 
+                        @click="goToDashboard"
+                        rounded="lg"
+                        class="text-none"
+                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
+                    >
                         <v-icon icon="mdi-arrow-left" class="me-2" />
                         Retour
                     </v-btn>
                     <v-btn
-                        class="primary-btn"
-                        color="primary"
+                        class="text-none"
                         variant="flat"
+                        rounded="lg"
+                        :style="{ backgroundColor: '#554338', color: 'white' }"
                         @click="goToReminderCreate"
                     >
                         <v-icon icon="mdi-plus" class="me-2" />
@@ -24,11 +34,19 @@
                 <FiltersPanel
                     :filters="filterDefinitions"
                     v-model="filterValues"
+                    class="border-md rounded-lg"
+                    :style="{ borderColor: '#efe5d9', backgroundColor: '#ffffff' }"
                 />
-                <v-card class="section-card" variant="outlined">
-                    <v-card-title class="text-subtitle-1"
-                        >Liste des rappels</v-card-title
-                    >
+                
+                <v-card 
+                    class="pa-2" 
+                    variant="flat" 
+                    rounded="lg"
+                    :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
+                >
+                    <v-card-title class="text-subtitle-1 font-weight-bold" :style="{ color: '#3c3226' }">
+                        Liste des rappels
+                    </v-card-title>
                     <v-card-text class="pt-3">
                         <v-skeleton-loader
                             v-if="isLoading"
@@ -39,7 +57,7 @@
                             :items="filteredReminders"
                             :get-status-color="getStatusColor"
                             :get-reminder-title="getReminderTitle"
-                            :get-horse-name="getHorseName"
+                            :get-horse-name="horsesStore.getHorseNameById"
                             :reminder-type-label="reminderTypeLabel"
                             :get-reminder-actions="getReminderActions"
                         />
@@ -63,12 +81,18 @@
             />
 
             <v-dialog v-model="isCareDoneOpen" max-width="420">
-                <v-card>
-                    <v-card-title>Rendez-vous effectué</v-card-title>
+                <v-card rounded="lg" class="pa-2">
+                    <v-card-title class="text-h6 font-weight-bold" :style="{ color: '#3c3226' }">
+                        Rendez-vous effectué
+                    </v-card-title>
                     <v-card-text>
                         <DatePickerField
                             v-model="careDoneForm.date"
                             label="Date du rendez-vous"
+                            density="comfortable"
+                            variant="outlined"
+                            bg-color="white"
+                            rounded="lg"
                             :error-messages="
                                 careDoneErrors.date
                                     ? [careDoneErrors.date]
@@ -76,18 +100,26 @@
                             "
                         />
                     </v-card-text>
-                    <v-card-actions class="justify-end">
-                        <v-btn
-                            variant="outlined"
+                    <v-card-actions class="pa-4">
+                        <v-spacer></v-spacer>
+                        <v-btn 
+                            variant="outlined" 
+                            rounded="lg"
+                            class="text-none"
+                            :style="{ color: '#554338', borderColor: '#d1c7bc' }"
                             @click="isCareDoneOpen = false"
-                            >Annuler</v-btn
                         >
+                            Annuler
+                        </v-btn>
                         <v-btn
-                            variant="elevated"
-                            color="primary"
+                            variant="flat"
+                            rounded="lg"
+                            class="text-none"
+                            :style="{ backgroundColor: '#554338', color: 'white' }"
                             @click="saveCareDone"
-                            >Valider</v-btn
                         >
+                            Valider
+                        </v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
@@ -104,10 +136,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
-import { getStoredHorseId } from "@/libs/horseProfile";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import {
     toDateInputValue,
@@ -119,9 +151,7 @@ import type { Event, SelectOption, ReminderType } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import { getStatusKey, getStatusColor } from "@/libs/index";
 import { useFilters } from "@/composables/useFilters";
-import { useHorseSelection } from "@/composables/useHorseSelection";
 import { ReminderEdit, ReminderList } from "@/views/reminders";
-import { getActiveHorseId } from "@/libs/horseProfile";
 
 type ReminderAction = {
     key: string;
@@ -155,12 +185,7 @@ const careDoneForm = ref({ date: "" });
 const careDoneErrors = ref<Record<string, string>>({});
 
 const router = useRouter();
-const route = useRoute();
-const { horseFilterOptions, getHorseNameById, loadHorses } = useHorseSelection();
-
-const getHorseName = (horseId?: string): string =>
-    getHorseNameById(horseId) ?? "Cheval inconnu";
-
+const horsesStore = useHorsesStore(); // UPDATED
 
 type RecurrenceUnit = "days" | "months" | "years";
 type ReminderStatus = "overdue" | "today" | "upcoming";
@@ -192,7 +217,7 @@ const filters: readonly FilterDefinition<string>[] = [
         type: "select",
         label: "Cheval",
         defaultValue: "all",
-        options: horseFilterOptions.value,
+        options: [], // Will be updated in computed
     },
     {
         key: "status",
@@ -213,6 +238,7 @@ const filters: readonly FilterDefinition<string>[] = [
 const { filterValues } = useFilters(filters);
 const getReminderType = (reminder: Event): ReminderType =>
     reminder.reminder_type ?? "autres";
+
 const applyReminderFilters = (
     items: Event[],
     overrides: Partial<{ horseId: string; status: string; type: string }> = {},
@@ -232,27 +258,11 @@ const applyReminderFilters = (
     }
     return result;
 };
+
 const availableHorseOptions = computed(() => {
-    const filtered = applyReminderFilters(reminders.value, { horseId: "all" });
-    const ids = new Set(
-        filtered
-            .map((r) => r.horse_id)
-            .filter((id): id is string => Boolean(id)),
-    );
-    const base = horseFilterOptions.value;
-    let options = base.filter(
-        (option) => option.value === "all" || ids.has(option.value),
-    );
-    const selected = filterValues.horseId;
-    if (
-        selected !== "all" &&
-        !options.some((option) => option.value === selected)
-    ) {
-        const match = base.find((option) => option.value === selected);
-        if (match) options = [...options, match];
-    }
-    return options.length ? options : base;
+    return horsesStore.horseFilterOptions;
 });
+
 const availableStatusOptions = computed(() => {
     const filtered = applyReminderFilters(reminders.value, { status: "all" });
     const statuses = new Set(filtered.map((r) => getStatusKey(r)));
@@ -271,6 +281,7 @@ const availableStatusOptions = computed(() => {
     }
     return options.length ? options : statusOptions;
 });
+
 const availableTypeOptions = computed(() => {
     const filtered = applyReminderFilters(reminders.value, { type: "all" });
     const types = new Set(filtered.map(getReminderType));
@@ -289,6 +300,7 @@ const availableTypeOptions = computed(() => {
     }
     return options.length ? options : reminderTypeOptions;
 });
+
 const filterDefinitions = computed(() => [
     { ...filters[0], options: availableHorseOptions.value },
     { ...filters[1], options: availableStatusOptions.value },
@@ -303,9 +315,6 @@ const filteredReminders = computed(() => {
             new Date(getReminderDate(b)).getTime(),
     );
 });
-
-const routeHorseId = computed(() => route.params.id as string | undefined);
-const horseId = getActiveHorseId(routeHorseId.value);
 
 const getReminderTitle = (reminder: Event): string => {
     if (reminder.reminder_type === "alimentation" && reminder.name) {
@@ -333,13 +342,11 @@ const goToDashboard = () => {
 };
 
 const goToReminderCreate = () => {
-    router.push( horseId ? { path: `/horses/${horseId}/reminders/new`, query: { horseId } } : `/horses/${horseId}/reminders/new`);
-};
-
-const setHorseFromStorage = () => {
-    const storedHorseId = getStoredHorseId();
-    if (storedHorseId) {
-        filterValues.horseId = storedHorseId;
+    const id = horsesStore.horseId !== "all" ? horsesStore.horseId : undefined;
+    if (id) {
+        router.push({ name: "ReminderCreate", params: { id } });
+    } else {
+        router.push({ name: "ReminderCreate" });
     }
 };
 
@@ -593,7 +600,7 @@ const loadReminders = async () => {
     try {
         const [remindersResponse] = await Promise.all([
             eventsApi.getReminders(),
-            loadHorses(),
+            horsesStore.loadHorses(), // UPDATED
         ]);
         reminders.value = remindersResponse;
     } catch (error) {
@@ -603,8 +610,20 @@ const loadReminders = async () => {
     }
 };
 
+// UPDATED: Watch store horseId to update filter
+watch(() => horsesStore.horseId, (newHorseId) => {
+    if (newHorseId) {
+        filterValues.horseId = newHorseId;
+    }
+}, { immediate: true });
+
 onMounted(() => {
-    setHorseFromStorage();
     loadReminders();
 });
 </script>
+
+<style scoped>
+.page {
+    background-color: #fcfaf8;
+}
+</style>

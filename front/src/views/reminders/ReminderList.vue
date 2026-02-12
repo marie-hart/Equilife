@@ -1,104 +1,93 @@
 <template>
-    <div>
-        <v-table v-if="items.length" density="compact">
+    <v-card 
+        variant="flat" 
+        rounded="lg" 
+        class="border-md"
+        :style="{ borderColor: '#efe5d9' }"
+    >
+        <v-table v-if="items.length" density="comfortable">
             <thead>
-                <tr>
-                    <th class="d-none d-md-table-cell"></th>
-                    <th class="d-none d-md-table-cell">Date</th>
-                    <th class="d-none d-md-table-cell">Cheval</th>
-                    <th class="d-none d-md-table-cell">Type</th>
-                    <th class="d-none d-md-table-cell text-center">Actions</th>
+                <tr :style="{ backgroundColor: '#fdfaf6' }">
+                    <th class="text-left py-3 px-4">Statut</th>
+                    <th class="text-left py-3 px-4">Rappel</th>
+                    <th class="text-left py-3 px-4 d-none d-md-table-cell">Cheval</th>
+                    <th class="text-left py-3 px-4 d-none d-md-table-cell">Type</th>
+                    <th class="text-center py-3 px-4">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="reminder in items" :key="reminder.id">
-                    <td class="d-none d-md-table-cell py-3">
+                <tr v-for="reminder in items" :key="reminder.id" class="border-b-sm">
+                    <td class="py-3 px-4">
                         <v-avatar
-                            size="10"
+                            size="12"
                             :color="getStatusColor(reminder)"
-                            class="border border-white elevation-1"
+                            class="elevation-1"
                         />
                     </td>
-                    <td class="d-none d-md-table-cell py-3">
-                        <div>
-                            <div class="text-caption text-grey-darken-1">
-                                {{ formatDateLong(getReminderDate(reminder)) }}
-                            </div>
-                            <div class="text-subtitle-2">
-                                {{ getReminderTitle(reminder) }}
-                            </div>
+                    
+                    <td class="py-3 px-4 d-none d-md-table-cell">
+                        <div class="text-body-2 font-weight-medium" :style="{ color: '#3c3226' }">
+                            {{ getReminderTitle(reminder) }}
+                        </div>
+                        <div class="text-caption" :style="{ color: '#7a6e61' }">
+                            {{ formatDateLong(getReminderDate(reminder)) }}
                         </div>
                     </td>
-                    <td class="d-none d-md-table-cell py-3 text-body-2">
-                        {{ getHorseName(reminder.horse_id) }}
-                    </td>
-                    <td class="d-none d-md-table-cell py-3">
+
+                    <td class="d-table-cell d-md-none py-3 px-4">
+                        <div class="text-subtitle-2 font-weight-bold" :style="{ color: '#3c3226' }">
+                            {{ getReminderTitle(reminder) }}
+                        </div>
+                        <div class="text-caption mb-1" :style="{ color: '#7a6e61' }">
+                            {{ formatDateMobile(getReminderDate(reminder)) }}
+                        </div>
+                        <div class="text-body-2 mb-1" :style="{ color: '#554338' }">
+                            {{ getHorseName(reminder.horse_id) }}
+                        </div>
                         <v-chip
                             v-if="reminder.reminder_type"
                             size="x-small"
                             variant="flat"
-                            color="grey-lighten-3"
+                            :style="{ backgroundColor: '#f2e8dc', color: '#554338' }"
+                            class="font-weight-medium"
                         >
                             {{ reminderTypeLabel(reminder.reminder_type) }}
                         </v-chip>
                     </td>
-                    <td class="d-none d-md-table-cell py-3 text-center">
+
+                    <td class="py-3 px-4 d-none d-md-table-cell text-body-2" :style="{ color: '#554338' }">
+                        {{ getHorseName(reminder.horse_id) }}
+                    </td>
+                    
+                    <td class="py-3 px-4 d-none d-md-table-cell">
+                        <v-chip
+                            v-if="reminder.reminder_type"
+                            size="small"
+                            variant="flat"
+                            :style="{ backgroundColor: '#f2e8dc', color: '#554338' }"
+                            class="font-weight-medium"
+                        >
+                            {{ reminderTypeLabel(reminder.reminder_type) }}
+                        </v-chip>
+                    </td>
+
+                    <td class="py-3 px-4 text-center">
                         <ActionButtons
-                            class="d-flex align-center justify-center ga-3"
-                            mode="inline"
-                            button-size="x-small"
-                            :actions="getReminderActions(reminder)"
-                        />
-                    </td>
-                    <td class="d-table-cell d-md-none py-3">
-                        <v-avatar
-                            size="10"
-                            :color="getStatusColor(reminder)"
-                            class="border border-white elevation-1"
-                        />
-                    </td>
-                    <td class="d-table-cell d-md-none py-3 flex-grow-1">
-                        <div class="flex-1">
-                            <div class="text-caption text-grey-darken-1">
-                                {{
-                                    formatDateMobile(getReminderDate(reminder))
-                                }}
-                            </div>
-                            <div class="text-subtitle-2">
-                                {{ getReminderTitle(reminder) }}
-                            </div>
-                            <div class="text-body-2 text-grey-darken-1">
-                                {{ getHorseName(reminder.horse_id) }}
-                            </div>
-                            <div class="d-flex align-center ga-2 mt-2">
-                                <v-chip
-                                    v-if="reminder.reminder_type"
-                                    size="x-small"
-                                    variant="flat"
-                                    color="grey-lighten-3"
-                                >
-                                    {{
-                                        reminderTypeLabel(
-                                            reminder.reminder_type,
-                                        )
-                                    }}
-                                </v-chip>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="d-table-cell d-md-none py-3 px-2 text-no-wrap">
-                        <ActionButtons
+                            class="d-flex align-center justify-center ga-1"
                             mode="auto"
-                            button-size="x-small"
-                            menu-button-size="x-small"
+                            button-size="small"
                             :actions="getReminderActions(reminder)"
                         />
                     </td>
                 </tr>
             </tbody>
         </v-table>
-        <p v-else class="empty-state">Aucun rappel pour le moment.</p>
-    </div>
+        
+        <div v-else class="text-center pa-10" :style="{ color: '#7a6e61' }">
+            <v-icon size="40" class="mb-4">mdi-calendar-blank</v-icon>
+            <p class="text-body-1">Aucun rappel pour le moment.</p>
+        </div>
+    </v-card>
 </template>
 
 <script setup lang="ts">
@@ -113,6 +102,7 @@ type ReminderAction = {
     color?: string;
     disabled: boolean;
     onClick?: () => void;
+    to?: object; // Ajout pour la navigation
 };
 
 defineProps<{
@@ -124,3 +114,13 @@ defineProps<{
     getReminderActions: (reminder: Event) => ReminderAction[];
 }>();
 </script>
+
+<style scoped>
+/* Ajustement de la hauteur des lignes pour un design plus aéré */
+.v-table >>> tbody tr {
+    height: 60px !important;
+}
+.border-b-sm {
+    border-bottom: 1px solid #efe5d9;
+}
+</style>

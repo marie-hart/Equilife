@@ -11,7 +11,7 @@
                     <ReminderForm
                         v-else
                         v-model="createForm"
-                        :horses="horses"
+                        :horses="horsesStore.horses"
                         :loading="isCreating"
                         :errors="fieldErrors"
                         submit-label="Ajouter"
@@ -33,14 +33,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref } from "vue";
 import axios from "axios";
-import { useRouter, useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import { fromDateInputValue } from "@/libs/date";
 import { validateRequiredFieldsMap } from "@/utils/validation";
-import { useHorseSelection } from "@/composables/useHorseSelection";
-import { getActiveHorseId } from "@/libs/horseProfile";
 import { ReminderForm } from "@/views/reminders";
 
 type ReminderFormValue = {
@@ -55,9 +54,8 @@ type ReminderFormValue = {
 
 type RecurrenceUnit = "days" | "months" | "years";
 
-const route = useRoute();
 const router = useRouter();
-const { horses, getHorseIdsFromQuery, loadHorses } = useHorseSelection();
+const horsesStore = useHorsesStore();
 const isLoading = ref(true);
 const isCreating = ref(false);
 const fieldErrors = ref<Record<string, string>>({});
@@ -75,9 +73,6 @@ const snackbar = ref({
     message: "",
     color: "success",
 });
-
-const routeHorseId = computed(() => route.params.id as string | undefined);
-const horseId = getActiveHorseId(routeHorseId.value);
 
 const getErrorMessage = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
@@ -164,24 +159,28 @@ const createReminder = async () => {
                 }),
             ),
         );
+        
+        // Reset form
         const reminderType = createForm.value.reminderType;
-        createForm.value.horseIds = [];
-        createForm.value.description = "";
-        createForm.value.date = "";
-        createForm.value.reminderType = reminderType;
-        createForm.value.isRecurring = false;
-        createForm.value.recurrenceInterval = 1;
-        createForm.value.recurrenceUnit = "months";
-        const horseIds = getHorseIdsFromQuery();
-        if (horseIds.length && createForm.value.horseIds.length === 0) {
-            createForm.value.horseIds = horseIds;
-        }
+        createForm.value = {
+            horseIds: [],
+            description: "",
+            date: "",
+            reminderType: reminderType,
+            isRecurring: false,
+            recurrenceInterval: 1,
+            recurrenceUnit: "months",
+        };
+        
         snackbar.value = {
             show: true,
             message: "Rappel(s) créé(s).",
             color: "success",
         };
-        await router.push( horseId ? { path: `/horses/${horseId}/reminders`, query: { horseId } } : `/horses/${horseId}/reminders`);
+        
+        // Navigation back
+        goBack();
+        
     } catch (error) {
         console.error("Error creating reminder:", error);
         snackbar.value = {
@@ -195,16 +194,21 @@ const createReminder = async () => {
 };
 
 const goBack = () => {
-    router.push( horseId ? { path: `/horses/${horseId}/reminders`, query: { horseId } } : `/horses/${horseId}/reminders`);
+    const id = horsesStore.horseId !== "all" ? horsesStore.horseId : undefined;
+    if (id) {
+        router.push({ name: "HorseReminders", params: { id } });
+    } else {
+        router.push({ name: "Reminders" });
+    }
 };
 
 onMounted(async () => {
     isLoading.value = true;
     try {
-        await loadHorses();
-        const horseIds = getHorseIdsFromQuery();
-        if (horseIds.length && createForm.value.horseIds.length === 0) {
-            createForm.value = { ...createForm.value, horseIds };
+        await horsesStore.loadHorses();
+        // Pré-sélectionner le cheval actif du store si présent
+        if (horsesStore.horseId && horsesStore.horseId !== "all" && createForm.value.horseIds.length === 0) {
+            createForm.value.horseIds = [horsesStore.horseId];
         }
     } finally {
         isLoading.value = false;

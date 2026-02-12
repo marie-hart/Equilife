@@ -22,7 +22,7 @@
                     <v-btn
                         variant="flat"
                         rounded="lg"
-                        :to="{ name: 'ProductCreate', params: { id: horseId } }"
+                        :to="{ name: 'ProductCreate', params: { id: horsesStore.horseId } }"
                         :style="{ backgroundColor: '#554338', color: 'white' }"
                         class="text-none"
                     >
@@ -77,7 +77,7 @@
                 <ProductList
                     v-else
                     :products="filteredProducts"
-                    :get-horse-name="getHorseName"
+                    :get-horse-name="horsesStore.getHorseNameById"
                     :recurrence-label="recurrenceLabel"
                     :get-product-actions="getProductActions"
                     :toggle-repurchase="toggleRepurchase"
@@ -104,18 +104,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
 import { materialsApi } from "@/api/materials";
 import { eventsApi } from "@/api/events";
 import { ConfirmDeleteDialog } from "@/components";
-import { useHorseSelection } from "@/composables/useHorseSelection";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import type { Product, ProductAction } from "@/types";
 import type { Event } from "@/types";
 import { ProductList } from "@/views/products";
-
-const route = useRoute();
-const { getHorseNameById, getHorseIdsFromParamsOrStored } =
-    useHorseSelection();
+// REMOVED: import { storeToRefs } from 'pinia';
 
 const products = ref<Product[]>([]);
 const isLoading = ref(true);
@@ -129,7 +125,7 @@ const isDeleteOpen = ref(false);
 const selectedCategory = ref<string>("all");
 const searchQuery = ref<string>("");
 
-const horseId = route.params.id as string | undefined;
+const horsesStore = useHorsesStore(); // Initialisation du Store
 
 const categoryFilterOptions = [
     { title: "Toutes", value: "all" },
@@ -145,9 +141,6 @@ const deleteMessage = computed(() =>
         ? `Confirmer la suppression de ${selectedProduct.value.name} ?`
         : "Confirmer la suppression de ce produit ?",
 );
-
-const getHorseName = (horseId?: string): string | undefined =>
-    getHorseNameById(horseId);
 
 const recurrenceLabel = (product: Product): string => {
     if (product.purchase_interval_years) {
@@ -194,8 +187,9 @@ const normalizeText = (value: string): string =>
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
+// UPDATED: Use store horseId directly
 const getReminderHorseId = (): string | undefined =>
-    getHorseIdsFromParamsOrStored()[0];
+    horsesStore.horseId !== "all" ? horsesStore.horseId || undefined : undefined;
 
 const getProductReminder = (
     reminders: Event[],
@@ -209,6 +203,8 @@ const getProductReminder = (
 
 const syncRepurchaseReminder = async (product: Product) => {
     const horseId = getReminderHorseId();
+    if (!horseId) return; // Pas de cheval spécifique sélectionné
+    
     const reminders = await eventsApi.getReminders(horseId);
     const existing = getProductReminder(reminders, product.id);
 
@@ -289,5 +285,6 @@ const confirmDelete = async () => {
 
 onMounted(async () => {
     await loadProducts();
+    await horsesStore.loadHorses(); // Ensure horses are loaded for the getter
 });
 </script>

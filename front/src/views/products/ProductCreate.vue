@@ -143,17 +143,19 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import axios from "axios";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 import { materialsApi } from "@/api/materials";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { Product, RecurrenceUnit } from "@/types";
+import { storeToRefs } from 'pinia';
+import { useHorsesStore } from '@/stores/HorsesStore';
 
-const route = useRoute();
 const router = useRouter();
 const products = ref<Product[]>([]);
 const isSubmitting = ref(false);
 const isLoading = ref(true);
 const fieldErrors = ref<Record<string, string>>({});
+const { horseId } = storeToRefs(useHorsesStore())
 const snackbar = ref({
     show: false,
     message: "",
@@ -296,9 +298,8 @@ const createProduct = async () => {
 };
 
 const goBack = () => {
-    const horseId = route.params.id as string | undefined;
     if (horseId) {
-        router.push({ name: "Products", params: { id: horseId } });
+        router.push({ name: "Products", params: { id: String(horseId) } });
         return;
     }
     router.push("/horses");

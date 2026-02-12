@@ -7,12 +7,11 @@
             />
 
             <template v-else>
-                <!-- PROFIL  -->
-                 <div class="mb-4">
+                <div class="mb-4">
                     <v-card rounded="xl" height="100%">
                         <HorseProfileCard
-                            :horseProfile="horseProfile"
-                            :horses="horses"
+                            :horseProfile="horsesStore.selectedHorse"
+                            :horses="horsesStore.horses"
                             @select="onHorseSelect"
                         />
                     </v-card>
@@ -22,8 +21,7 @@
                     <QuickNoteView />
                  </div>
 
-               <!-- ACTIONS : < md -->
-                <v-row v-if="smAndDown" dense>
+               <v-row v-if="smAndDown" dense>
                     <v-col cols="12" sm="6">
                         <v-card
                             :to="getActivitiesRoute()"
@@ -79,14 +77,12 @@
                 </v-col>
                 </v-row>
 
-                <!-- RAPPELS + Notes -->
-               <div class="mt-4">
+                <div class="mt-4">
                     <ReminderCard />
                 </div>
             </template>
         </v-container>
 
-        <!-- DIALOG -->
         <v-dialog v-model="deleteDialogOpen" max-width="420">
             <v-card>
                 <v-card-title>Supprimer</v-card-title>
@@ -109,7 +105,6 @@
             </v-card>
         </v-dialog>
 
-        <!-- SNACKBAR -->
         <v-snackbar
             v-model="snackbar.show"
             :color="snackbar.color"
@@ -120,46 +115,26 @@
     </div>
 </template>
 
-
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from "vue";
-import { useRoute } from "vue-router";
 import { eventsApi } from "../api/events";
-import { getActiveHorseId } from "../libs/horseProfile.js";
 import type { Event, SelectedKind } from "../types";
 import { ReminderCard } from "./reminders";
 import { QuickNoteView } from "./quickNote";
 import { useDisplay } from "vuetify";
 import { HorseProfileCard } from "./horses";
-import { useHorseSelection } from "@/composables/useHorseSelection";
 import type { Horse } from "@/types";
-import { storeToRefs } from "pinia";
 import { useHorsesStore } from "@/stores/HorsesStore";
 
 const events = ref<Event[]>([]);
 const reminders = ref<Event[]>([]);
 const isLoading = ref(true);
 
-const route = useRoute();
 const { smAndDown } = useDisplay();
-const { horseId } = storeToRefs(useHorsesStore())
-
-const {
-    horses,
-    selectedHorseId,
-    horseById,
-} = useHorseSelection({ useRouteHorseId: true });
-
-
-const horseProfile = computed(() =>
-  selectedHorseId.value && selectedHorseId.value !== "all"
-    ? horseById.value.get(selectedHorseId.value) ?? null
-    : null
-);
-
+const horsesStore = useHorsesStore();
 
 const onHorseSelect = (horse: Horse) => {
-    horseId.value = horse.id;
+    horsesStore.sethorseId(horse.id);
 };
 
 const snackbar = ref({
@@ -175,9 +150,14 @@ const deleteDialogOpen = ref(false);
 const loadDashboard = async () => {
     isLoading.value = true;
     try {
+        await horsesStore.loadHorses(); // Chargement des chevaux
+
+        // Utilisation du store pour obtenir l'ID du cheval
+        const horseId = horsesStore.horseId !== "all" ? horsesStore.horseId : undefined;
+
         const [eventsResponse, remindersResponse] = await Promise.all([
-            eventsApi.getAll(horseId),
-            eventsApi.getReminders(horseId),
+            eventsApi.getAll(String(horseId)),
+            eventsApi.getReminders(String(horseId)),
         ]);
 
         events.value = eventsResponse;
@@ -212,15 +192,15 @@ const confirmDelete = async () => {
 };
 
 const getActivitiesRoute = () => {
-    if (horseId) {
-        return { name: "HorseActivities", params: { id: horseId } };
+    if (horsesStore.horseId && horsesStore.horseId !== "all") {
+        return { name: "HorseActivities", params: { id: horsesStore.horseId } };
     }
     return "/horses/:id/activities";
 };
 
 const goToFeeding = () => {
-    if (horseId) {
-        return { name: "FeedingView", params: { id: horseId } };
+    if (horsesStore.horseId && horsesStore.horseId !== "all") {
+        return { name: "FeedingView", params: { id: horsesStore.horseId } };
     }
     return "/horses/:id/feeding";
 };
@@ -236,10 +216,8 @@ onMounted(async () => {
     await loadDashboard();
 });
 
-watch(
-    () => route.params.id,
-    () => {
-        loadDashboard();
-    },
-);
+// UPDATED: Watch store horseId to reload data
+watch(() => horsesStore.horseId, () => {
+    loadDashboard();
+});
 </script>

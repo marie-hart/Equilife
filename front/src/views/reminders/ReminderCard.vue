@@ -12,7 +12,7 @@
               backgroundColor: '#f2e8dc',
               color: '#554338'
           }"
-          :to="{ name: 'ReminderCreate', params: { id: horseId } }"
+          :to="{ name: 'ReminderCreate', params: { id: horsesStore.horseId ?? undefined } }"
       />
     </template>
     <v-card
@@ -21,7 +21,6 @@
           class="pa-4 border-md"
     >
       <div class="d-flex flex-column ga-4">
-        <!-- Chip À prévoir -->
         <v-chip
           prepend-icon="mdi-alarm-light"
           size="small"
@@ -35,7 +34,6 @@
             À prévoir
         </v-chip>
   
-        <!-- Liste des rappels -->
         <div v-if="remindersUpcoming.length">
           <div
             v-for="reminder in remindersUpcoming.slice(0, 1)"
@@ -77,7 +75,6 @@
         />
       </div>
     </v-card>
-    <!-- Bouton voir tous -->
     <div class="d-flex justify-center">
           <v-btn
             rounded="lg"
@@ -98,31 +95,27 @@
   
   
   <script setup lang="ts">
-  import { computed, onMounted, ref, watch } from "vue";
+  import { computed, onMounted, watch } from "vue";
   import { SectionCard } from "@/components";
-  import { useRoute, useRouter } from "vue-router";
+  import { useHorsesStore } from "@/stores/HorsesStore";
   import { eventsApi } from "@/api/events";
-  import { getActiveHorseId } from "@/libs/horseProfile";
   import {
     sortByDateAsc,
     startOfDay,
     formatDateLong,
   } from "@/libs/date";
   import type { Event } from "@/types";
+  import { ref } from "vue";
   
-  const route = useRoute();
-  const router = useRouter();
-  
+  const horsesStore = useHorsesStore();
   const reminders = ref<Event[]>([]);
-  
-  const routeHorseId = computed(() => route.params.id as string | undefined);
-  const horseId = getActiveHorseId(routeHorseId.value);
   
   const getReminderDate = (reminder: Event): string =>
     reminder.next_reminder_date || reminder.event_date;
   
   const loadReminders = async () => {
     try {
+      const horseId = horsesStore.horseId !== "all" ? horsesStore.horseId : undefined;
       reminders.value = horseId
         ? await eventsApi.getReminders(horseId)
         : await eventsApi.getReminders();
@@ -144,12 +137,5 @@
   
   onMounted(loadReminders);
   
-  watch(() => route.params.id, loadReminders);
-  
-  // Styles partagés boutons
-  const actionBtnStyle = {
-    backgroundColor: "#f2e8dc",
-    color: "#554338",
-  };
+  watch(() => horsesStore.horseId, loadReminders);
   </script>
-  
