@@ -35,7 +35,8 @@
                             
                             <v-col cols="12" md="6">
                                 <v-select
-                                    v-model="horsesStore.horseId"
+                                    :model-value="horsesStore.horseId"
+                                    @update:model-value="horsesStore.sethorseId"
                                     :items="horsesStore.horseOptions"
                                     label="Cheval"
                                     density="comfortable"
@@ -216,14 +217,13 @@ import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { Product, Ration, RationFormItem } from "@/types";
 import { useHorsesStore } from '@/stores/HorsesStore'; 
 
-// Props pour définir le mode (création ou édition)
 const props = defineProps<{
-    rationId?: string; // Si présent, on est en mode édition
+    rationId?: string;
 }>();
 
 const router = useRouter();
 const route = useRoute()
-const horsesStore = useHorsesStore(); // Initialisation du Store
+const horsesStore = useHorsesStore();
 
 const isEditMode = computed(() => Boolean(props.rationId));
 const pageTitle = computed(() => isEditMode.value ? "Modifier la ration" : "Créer une ration");
@@ -247,7 +247,7 @@ const form = ref({
     items: [] as RationFormItem[],
 });
 
-// Options Selects
+// Options
 const activeOptions = [
     { title: "Active", value: true },
     { title: "Inactive", value: false },
@@ -305,7 +305,7 @@ const resetForm = () => {
     addItem();
 };
 
-// API calls
+// API
 const loadProducts = async () => {
     try {
         products.value = await materialsApi.getAll(false);
@@ -319,9 +319,9 @@ const loadRation = async () => {
     try {
         const ration: Ration = await rationsApi.getById(props.rationId);
         
-        // CORRECTION : On récupère le cheval depuis la query pour garder le contexte
-        const horseIdFromQuery = route.query.horseId as string;
-        horsesStore.sethorseId(horseIdFromQuery || ration.horse_id);
+        if (ration.horse_id && ration.horse_id !== horsesStore.horseId) {
+            horsesStore.sethorseId(ration.horse_id);
+        }
 
         form.value = {
             name: ration.name || "",
@@ -397,7 +397,6 @@ const saveRation = async () => {
 };
 
 const goBack = () => {
-    // CORRECTION : Retour à la bonne vue avec le bon ID
     if (horsesStore.horseId) {
         router.push({ name: "FeedingView", params: { id: horsesStore.horseId } });
         return;
@@ -410,10 +409,12 @@ onMounted(async () => {
     isLoading.value = true;
     try {
         await horsesStore.loadHorses();
+        
         if (!isEditMode.value) {
-            // En création, synchronise avec l'URL ou le store
             const horseIdFromUrl = route.query.horseId as string;
-            if(horseIdFromUrl) horsesStore.sethorseId(horseIdFromUrl);
+            if (horseIdFromUrl && horseIdFromUrl !== horsesStore.horseId) {
+                horsesStore.sethorseId(horseIdFromUrl);
+            }
             resetForm();
         } else {
             await loadRation();
@@ -422,9 +423,5 @@ onMounted(async () => {
     } finally {
         isLoading.value = false;
     }
-});
-
-watch(() => horsesStore.horseId, () => {
-    loadProducts();
 });
 </script>

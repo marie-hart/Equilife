@@ -18,13 +18,13 @@ export default defineConfig(({ mode }) => {
     vuetify({ autoImport: true }),
     VitePWA({
       registerType: "autoUpdate",
-      strategies: "injectManifest",
+      strategies: "generateSW",
       srcDir: "src/pwa",
-      filename: "sw.ts",
+      filename: "sw.js",
       injectRegister: "auto",
       manifest: {
-        name: "Horse Care",
-        short_name: "HorseCare",
+        name: "Equilife",
+        short_name: "Equilife",
         theme_color: "#2c4b29",
         background_color: "#ffffff",
         display: "standalone",

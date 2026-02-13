@@ -20,7 +20,7 @@
                         class="text-none"
                         variant="flat"
                         rounded="lg"
-                        :to="{ name: 'HorseCareCreate', params: { id: horsesStore.horseId !== 'all' ? horsesStore.horseId : undefined } }"
+                        :to="{ name: 'HealthCreate', params: { id: horsesStore.horseId !== 'all' ? horsesStore.horseId : undefined } }"
                         :style="{ backgroundColor: '#554338', color: 'white' }"
                     >
                         <v-icon start icon="mdi-plus" />

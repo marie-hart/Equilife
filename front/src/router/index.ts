@@ -3,13 +3,12 @@ import Activities from "@/views/activities/ActivityView.vue";
 import ActivityForm from "@/views/activities/ActivityForm.vue";
 import ActivityDetails from "@/views/activities/ActivityDetails.vue";
 import Dashboard from "@/views/TheDashboard.vue";
-import Documents from "@/views/documents/DocumentView.vue";
-import DocumentCreate from "@/views/documents/DocumentCreate.vue";
 import Feeding from "@/views/feeding/FeedingView.vue";
 import FeedingEdit from "@/views/feeding/FeedingEdit.vue"
 import FeedingCreate from "@/views/feeding/FeedingCreate.vue";
 import Horses from "@/views/horses/HorseView.vue";
-import HorseForm from "@/views/horses/HorseForm.vue";
+import HorseCreate from "@/views/horses/HorseCreate.vue";
+import HorseEdit from "@/views/horses/HorseEdit.vue";
 import HorseDetails from "@/views/horses/HorseDetails.vue";
 import Health from "@/views/health/HealthView.vue";
 import HealthForm from "@/views/health/HealthForm.vue";
@@ -19,6 +18,7 @@ import ProductDetails from "@/views/products/ProductDetails.vue"
 import ProductEdit from "@/views/products/ProductEdit.vue";
 import Reminders from "@/views/reminders/ReminderView.vue";
 import ReminderCreate from "@/views/reminders/ReminderCreate.vue";
+
 
 const router = createRouter({
     history: createWebHistory(),
@@ -55,12 +55,12 @@ const router = createRouter({
         {
             path: "/horses/new",
             name: "HorseCreate",
-            component: HorseForm,
+            component: HorseCreate,
         },
         {
             path: "/horses/:id/edit",
             name: "HorseEdit",
-            component: HorseForm,
+            component: HorseEdit,
         },
         {
             path: "/horses/:id/details",
@@ -84,7 +84,7 @@ const router = createRouter({
         },
         {
             path: "/horses/:id/health/new",
-            name: "HorseCareCreate",
+            name: "HealthCreate",
             component: HealthForm,
         },
         {
@@ -113,16 +113,6 @@ const router = createRouter({
             component: ActivityDetails,
         },
         {
-            path: "/horses/:id/documents",
-            name: "HorseDocuments",
-            component: Documents,
-        },
-        {
-            path: "/horses/:id/documents/new",
-            name: "HorseDocumentCreate",
-            component: DocumentCreate,
-        },
-        {
             path: "/horses/:id/feeding",
             name: "FeedingView",
             component: Feeding,
@@ -133,7 +123,7 @@ const router = createRouter({
             component: FeedingCreate,
         },
         {
-            path: "/horses/:id/rations/:id/edit",
+            path: "/horses/:id/rations/:rationId/edit",
             name: "FeedingEdit",
             component: FeedingEdit,
         },

@@ -77,7 +77,16 @@
                 </v-col>
             </v-row>
             
-            <div class="d-flex align-center ga-3 mt-6 flex-wrap">
+            <div class="d-flex align-center justify-end ga-3 mt-6 flex-wrap">
+                 <v-btn 
+                    variant="outlined" 
+                    @click="emit('cancel')"
+                    rounded="lg"
+                    class="text-none"
+                    :style="{ color: '#554338', borderColor: '#d1c7bc' }"
+                >
+                    Annuler
+                </v-btn>
                 <v-btn
                     class="text-none"
                     :style="{ backgroundColor: '#554338', color: 'white' }"
@@ -87,15 +96,6 @@
                     :loading="loading"
                 >
                     {{ submitLabel }}
-                </v-btn>
-                <v-btn 
-                    variant="outlined" 
-                    @click="emit('cancel')"
-                    rounded="lg"
-                    class="text-none"
-                    :style="{ color: '#554338', borderColor: '#d1c7bc' }"
-                >
-                    Annuler
                 </v-btn>
             </div>
         </form>

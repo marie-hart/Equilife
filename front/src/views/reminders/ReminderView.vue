@@ -39,15 +39,14 @@
                 />
                 
                 <v-card 
-                    class="pa-2" 
                     variant="flat" 
-                    rounded="lg"
-                    :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
+                    rounded="xl"
+                    :style="{ backgroundColor: '#f3eadf' }"
                 >
                     <v-card-title class="text-subtitle-1 font-weight-bold" :style="{ color: '#3c3226' }">
                         Liste des rappels
                     </v-card-title>
-                    <v-card-text class="pt-3">
+                    
                         <v-skeleton-loader
                             v-if="isLoading"
                             type="list-item-two-line, list-item-two-line, list-item-two-line"
@@ -61,7 +60,6 @@
                             :reminder-type-label="reminderTypeLabel"
                             :get-reminder-actions="getReminderActions"
                         />
-                    </v-card-text>
                 </v-card>
             </div>
 
@@ -621,9 +619,3 @@ onMounted(() => {
     loadReminders();
 });
 </script>
-
-<style scoped>
-.page {
-    background-color: #fcfaf8;
-}
-</style>

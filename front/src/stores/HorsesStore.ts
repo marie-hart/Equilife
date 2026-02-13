@@ -40,6 +40,7 @@ export const useHorsesStore = defineStore('horses', () => {
         updateHorse,
         uploadHorsePhoto,
         createHorse,
+        deleteHorse,
     }
 
  function getHorseNameById(id?: string): string {
@@ -84,6 +85,12 @@ async function updateHorse(id: string, data: CreateHorseDto): Promise<Horse> {
     const index = horses.value.findIndex(h => h.id === id);
     if (index !== -1) horses.value[index] = updatedHorse;
     return updatedHorse;
+}
+
+async function deleteHorse(horseId: string) {
+    await horsesApi.delete(horseId);
+
+    horses.value = horses.value.filter((h) => h.id !== horseId);
 }
 
 async function uploadHorsePhoto(id: string, file: File): Promise<void> {

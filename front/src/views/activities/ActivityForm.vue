@@ -22,13 +22,15 @@
                     <v-row v-else dense>
                         <v-col cols="12" md="6">
                             <v-select
-                                v-model="horsesStore.horseId"
+                                :model-value="horsesStore.horseId"
+                                @update:model-value="horsesStore.sethorseId"
                                 :items="horsesStore.horseOptions"
                                 label="Cheval *"
                                 density="comfortable"
                                 variant="outlined"
                                 bg-color="white"
                                 rounded="lg"
+                                :disabled="isEditMode"
                                 :error-messages="fieldErrors.horseId ? [fieldErrors.horseId] : undefined"
                             />
                         </v-col>
@@ -143,12 +145,11 @@ const route = useRoute();
 const router = useRouter();
 const horsesStore = useHorsesStore(); 
 
-// Détection mode édition vs création
 const isEditMode = computed(() => Boolean(route.name === 'ActivityEdit'));
 const eventId = computed(() => route.params.id as string);
 
 const isSubmitting = ref(false);
-const isLoading = ref(isEditMode.value); // Load si mode édition
+const isLoading = ref(isEditMode.value);
 const fieldErrors = ref<Record<string, string>>({});
 const form = ref({
     activityType: "",
@@ -183,13 +184,10 @@ const intensityOptions = [
     { title: "Soutenu", value: "soutenue" },
 ];
 
-// Chargement des données si mode édition
 const loadActivity = async () => {
     if (!isEditMode.value) return;
     try {
         const event = await eventsApi.getById(eventId.value);
-        // Mise à jour du store avec le cheval de l'activité
-        if (event.horse_id) horsesStore.sethorseId(event.horse_id);                
         
         form.value = {
             activityType: event.activity_type || event.name || "",
@@ -259,12 +257,11 @@ const goBack = () => {
 };
 
 onMounted(async () => {
+    await horsesStore.loadHorses();
+
     if (isEditMode.value) {
         await loadActivity();
     } else {
-        // En création, si un ID est dans l'URL, on l'utilise
-        const horseIdFromUrl = route.query.horseId as string;
-        if (horseIdFromUrl) horsesStore.sethorseId(horseIdFromUrl);                
         isLoading.value = false;
     }
 });

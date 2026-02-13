@@ -3,7 +3,7 @@
         variant="flat" 
         rounded="lg" 
         class="border-md"
-        :style="{ borderColor: '#efe5d9' }"
+        
     >
         <v-table v-if="items.length" density="comfortable">
             <thead>

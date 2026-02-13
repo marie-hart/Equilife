@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { ActionButtons } from "@/components";
-import { horsesApi } from "@/api/horses";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import type { Horse, HorseAction } from "@/types";
 
-defineProps<{
-    horses: Horse[];
-    cardHeight: number;
-    cardMaxWidth: string;
-    photoWidth: number;
-    photoHeight: number;
-}>();
+const horsesStore = useHorsesStore();
 
-const emit = defineEmits(['deleted']);
+const cardHeight = 240; 
+const cardMaxWidth = '100%';
+const photoWidth = 80;
+const photoHeight = 80;
 
 const snackbar = ref({
     show: false,
@@ -34,12 +31,7 @@ const confirmDelete = async () => {
     if (!horseToDelete.value || isDeleting.value) return;
     try {
         isDeleting.value = true;
-        await horsesApi.delete(horseToDelete.value.id);
-        // horses.value = horses.value.filter(
-        //     (horse) => horse.id !== horseToDelete.value?.id,
-        // );
-
-        emit('deleted');
+        await horsesStore.deleteHorse(horseToDelete.value.id);
 
         snackbar.value = {
             show: true,
@@ -97,9 +89,9 @@ const openDeleteDialog = (horse: Horse) => {
 </script>
 
 <template>
-    <v-row v-if="horses.length" dense>
+    <v-row v-if="horsesStore.horses.length" dense>
         <v-col
-            v-for="horse in horses"
+            v-for="horse in horsesStore.horses"
             :key="horse.id"
             cols="12"
             sm="6"
@@ -138,48 +130,47 @@ const openDeleteDialog = (horse: Horse) => {
                     />
                 </div>
 
-                
-
-                    <div 
-                        class="d-flex align-start justify-space-between ga-3 flex-grow-1"
-                    >
-                        <div class="flex-grow-1">
-                            <div class="text-body-2 text-grey-darken-1">
-                                <v-chip
-                                    v-if="horse.breed"
-                                    size="small"
-                                    variant="outlined"
-                                    class="mr-1"
-                                >
-                                    {{ horse.breed }}
-                                </v-chip>
-                                <v-chip
-                                    v-if="horse.age"
-                                    size="small"
-                                    variant="outlined"
-                                >
-                                    {{ horse.age }} ans
-                                </v-chip>
-                            </div>
-
-                            <div
-                                v-if="horse.additional_info"
-                                class="text-caption text-grey-darken-1 ma-2"
+                <div 
+                    class="d-flex align-start justify-space-between ga-3 flex-grow-1"
+                >
+                    <div class="flex-grow-1">
+                        <div class="text-body-2 text-grey-darken-1">
+                            <v-chip
+                                v-if="horse.breed"
+                                size="small"
+                                variant="outlined"
+                                class="mr-1"
                             >
-                                {{ horse.additional_info }}
-                            </div>
+                                {{ horse.breed }}
+                            </v-chip>
+                            <v-chip
+                                v-if="horse.age"
+                                size="small"
+                                variant="outlined"
+                            >
+                                {{ horse.age }} ans
+                            </v-chip>
                         </div>
 
-                        <v-img
-                            :src="horse.photo_path || '/placeholder-horse.jpg'"
-                            :alt="horse.name"
-                            :width="photoWidth"
-                            :height="photoHeight"
-                            class="rounded-lg"
-                            cover
-                        />
+                        <div
+                            v-if="horse.additional_info"
+                            class="text-caption text-grey-darken-1 ma-2"
+                        >
+                            {{ horse.additional_info }}
+                        </div>
                     </div>
-                <div class="d-flex justify-center">                
+
+                    <v-img
+                        :src="horse.photo_path || '/placeholder-horse.jpg'"
+                        :alt="horse.name"
+                        :width="photoWidth"
+                        :height="photoHeight"
+                        class="rounded-lg"
+                        cover
+                    />
+                </div>
+                
+                <div class="d-flex justify-center mt-2">                
                     <v-btn
                         variant="flat"
                         class="text-none rounded-lg"
@@ -193,5 +184,21 @@ const openDeleteDialog = (horse: Horse) => {
             </v-card>
         </v-col>
     </v-row>
-    <p v-else class="empty-state">Aucun cheval enregistré</p>
-    </template>
+    <p v-else class="empty-state text-center mt-10">Aucun cheval enregistré</p>
+
+    <v-dialog v-model="isDeleteDialogOpen" max-width="400">
+        <v-card class="pa-4">
+            <v-card-title>Supprimer</v-card-title>
+            <v-card-text>{{ deleteMessage }}</v-card-text>
+            <v-card-actions>
+                <v-spacer />
+                <v-btn variant="text" @click="isDeleteDialogOpen = false">Annuler</v-btn>
+                <v-btn color="error" :loading="isDeleting" @click="confirmDelete">Supprimer</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
+
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color">
+        {{ snackbar.message }}
+    </v-snackbar>
+</template>

@@ -12,7 +12,6 @@
                         <HorseProfileCard
                             :horseProfile="horsesStore.selectedHorse"
                             :horses="horsesStore.horses"
-                            @select="onHorseSelect"
                         />
                     </v-card>
                  </div>   
@@ -125,6 +124,7 @@ import { useDisplay } from "vuetify";
 import { HorseProfileCard } from "./horses";
 import type { Horse } from "@/types";
 import { useHorsesStore } from "@/stores/HorsesStore";
+import { useRoute } from 'vue-router';
 
 const events = ref<Event[]>([]);
 const reminders = ref<Event[]>([]);
@@ -132,10 +132,7 @@ const isLoading = ref(true);
 
 const { smAndDown } = useDisplay();
 const horsesStore = useHorsesStore();
-
-const onHorseSelect = (horse: Horse) => {
-    horsesStore.sethorseId(horse.id);
-};
+const route = useRoute()
 
 const snackbar = ref({
     show: false,
@@ -150,14 +147,13 @@ const deleteDialogOpen = ref(false);
 const loadDashboard = async () => {
     isLoading.value = true;
     try {
-        await horsesStore.loadHorses(); // Chargement des chevaux
+       const currentHorseId = horsesStore.horseId;
 
-        // Utilisation du store pour obtenir l'ID du cheval
-        const horseId = horsesStore.horseId !== "all" ? horsesStore.horseId : undefined;
+       if (!currentHorseId) return;
 
         const [eventsResponse, remindersResponse] = await Promise.all([
-            eventsApi.getAll(String(horseId)),
-            eventsApi.getReminders(String(horseId)),
+            eventsApi.getAll(String(currentHorseId)),
+            eventsApi.getReminders(String(currentHorseId)),
         ]);
 
         events.value = eventsResponse;

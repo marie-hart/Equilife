@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { Material, CreateMaterialDto } from "../types";
+import type { Product, CreateProductDto } from "../types";
 
 export const materialsApi = {
     getAll: async (includeInactive = false, horseId?: string) => {
@@ -7,17 +7,17 @@ export const materialsApi = {
         if (horseId) {
             params.horseId = horseId;
         }
-        const response = await apiClient.get<Material[]>("/materials", {
+        const response = await apiClient.get<Product[]>("/materials", {
             params,
         });
         return response.data;
     },
     getById: async (id: string) => {
-        const response = await apiClient.get<Material>(`/materials/${id}`);
+        const response = await apiClient.get<Product>(`/materials/${id}`);
         return response.data;
     },
     getDueForPurchase: async (horseId?: string) => {
-        const response = await apiClient.get<Material[]>(
+        const response = await apiClient.get<Product[]>(
             "/materials/due-for-purchase",
             {
                 params: horseId ? { horseId } : undefined,
@@ -25,15 +25,15 @@ export const materialsApi = {
         );
         return response.data;
     },
-    create: async (data: CreateMaterialDto) => {
-        const response = await apiClient.post<Material>("/materials", data);
+    create: async (data: CreateProductDto) => {
+        const response = await apiClient.post<Product>("/materials", data);
         return response.data;
     },
     update: async (
         id: string,
-        data: Partial<CreateMaterialDto & { is_active?: boolean }>,
+        data: Partial<CreateProductDto & { is_active?: boolean }>,
     ) => {
-        const response = await apiClient.put<Material>(
+        const response = await apiClient.put<Product>(
             `/materials/${id}`,
             data,
         );
@@ -43,7 +43,7 @@ export const materialsApi = {
         await apiClient.delete(`/materials/${id}`);
     },
     markAsPurchased: async (id: string, purchaseDate?: string) => {
-        const response = await apiClient.post<Material>(
+        const response = await apiClient.post<Product>(
             `/materials/${id}/purchase`,
             {
                 purchaseDate,

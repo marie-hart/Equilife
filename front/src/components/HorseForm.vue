@@ -137,7 +137,16 @@
                         />
                     </v-col>
                 </v-row>
-                <div class="d-flex align-center ga-3 mt-6 flex-wrap">
+                <div class="d-flex align-center justify-end ga-3 mt-6 flex-wrap">
+                      <v-btn 
+                        variant="outlined" 
+                        :to="{ name: 'Horses'}"
+                        rounded="lg"
+                        class="text-none"
+                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
+                    >
+                        Annuler
+                    </v-btn>
                     <v-btn
                         class="text-none"
                         :style="{ backgroundColor: '#554338', color: 'white' }"
@@ -154,15 +163,6 @@
                                   ? "Mettre à jour"
                                   : "Créer"
                         }}
-                    </v-btn>
-                    <v-btn 
-                        variant="outlined" 
-                        @click="goBack"
-                        rounded="lg"
-                        class="text-none"
-                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
-                    >
-                        Annuler
                     </v-btn>
                     <span v-if="formError" class="text-error text-caption">{{
                         formError
@@ -182,13 +182,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue"; 
 import { useRouter } from "vue-router";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { CreateHorseDto } from "@/types";
-import { storeToRefs } from 'pinia';
+
+const props = defineProps<{
+    horseId?: string; 
+}>();
 
 const router = useRouter();
 const horsesStore = useHorsesStore();
@@ -203,9 +206,7 @@ const snackbar = ref({
     color: "success",
 });
 
-const { horseId } = storeToRefs(useHorsesStore())
-
-const isEdit = computed(() => Boolean(horseId.value));
+const isEdit = computed(() => Boolean(props.horseId));
 
 const form = ref<CreateHorseDto>({
     name: "",
@@ -264,13 +265,13 @@ const handleFileChange = (files: File[] | File | null) => {
 
 const loadHorse = async () => {
     isLoading.value = true;
-    if (!horseId.value) {
+    
+    if (!props.horseId) {
         isLoading.value = false;
         return;
     }
     try {
-        // Chargement via le store
-        const horse = await horsesStore.loadHorseById(horseId.value);
+        const horse = await horsesStore.loadHorseById(props.horseId);
         if (horse) {
             form.value = {
                 name: horse.name,
@@ -283,6 +284,8 @@ const loadHorse = async () => {
                 feed: horse.feed || "",
                 additional_info: horse.additional_info || "",
             };
+            
+            horsesStore.sethorseId(props.horseId);
         }
     } catch (error) {
         console.error("Error loading horse:", error);
@@ -319,18 +322,15 @@ const handleSubmit = async () => {
 
         let savedHorseId: string;
 
-        if (horseId.value) {
-            // Mise à jour via le store
-            await horsesStore.updateHorse(horseId.value, payload);
-            savedHorseId = horseId.value;
+        if (props.horseId) {
+            await horsesStore.updateHorse(props.horseId, payload);
+            savedHorseId = props.horseId;
         } else {
-            // Création via le store
             const newHorse = await horsesStore.createHorse(payload);
             savedHorseId = newHorse.id;
         }
 
         if (selectedPhoto.value) {
-            // Upload photo via le store
             await horsesStore.uploadHorsePhoto(savedHorseId, selectedPhoto.value);
         }
 
@@ -341,7 +341,6 @@ const handleSubmit = async () => {
         };
 
         setTimeout(() => {
-            // Navigation vers les détails après enregistrement
             router.push({ name: "HorseDetails", params: { id: savedHorseId } });
         }, 800);
     } catch (error) {
@@ -358,14 +357,16 @@ const handleSubmit = async () => {
 };
 
 const goBack = () => {
-    if (horseId.value) {
-        router.push({ name: "HorseDetails", params: { id: horseId.value } });
-    } else {
+   
         router.push("/horses");
-    }
+    
 };
 
 onMounted(async () => {
     await loadHorse();
+});
+
+watch(() => props.horseId, () => {
+    loadHorse();
 });
 </script>

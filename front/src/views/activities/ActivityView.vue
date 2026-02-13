@@ -1,5 +1,5 @@
 <template>
-    <div class="page" :style="{ minHeight: '100vh', backgroundColor: '#fdfaf6' }">
+    <div class="page" :style="{ minHeight: '100vh' }">
         <main class="pa-4">
             <div class="d-flex align-center justify-space-between ga-4 mb-6">
                 <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
@@ -231,13 +231,10 @@ const loadActivities = async () => {
 
 
 onMounted(async () => {
-    const horseIdFromUrl = route.params.id as string;
-    if (horseIdFromUrl) horsesStore.sethorseId(horseIdFromUrl);
-    
+    await horsesStore.loadHorses();
     await loadActivities();
 });
 
-// Réaction au changement de cheval dans le filtre
 watch(
     () => horsesStore.horseId,
     () => {

@@ -82,16 +82,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed } from "vue";
 import { useHorsesStore } from "@/stores/HorsesStore";
 
 const horsesStore = useHorsesStore();
-
-onMounted(() => {
-  if (horsesStore.horses.length === 0) {
-    horsesStore.loadHorses();
-  }
-});
 
 const normalizePhotoUrl = (path?: string): string | null => {
   if (!path) return null;
@@ -107,5 +101,4 @@ const horseAvatar = computed(() =>
 );
 
 const showHorseSwitcher = computed(() => horsesStore.horses.length > 1);
-
 </script>

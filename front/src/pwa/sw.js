@@ -3,11 +3,11 @@
 import { clientsClaim } from "workbox-core";
 import { precacheAndRoute } from "workbox-precaching";
 
-type ServiceWorkerWithManifest = ServiceWorkerGlobalScope & {
-    __WB_MANIFEST: unknown[];
-};
+// type ServiceWorkerWithManifest = ServiceWorkerGlobalScope & {
+//     __WB_MANIFEST: unknown[];
+// };
 
-const sw = self as unknown as ServiceWorkerWithManifest;
+const sw = self
 
 // Take control immediately on update to avoid stale app shells.
 sw.skipWaiting();
@@ -17,21 +17,21 @@ clientsClaim();
 // eslint-disable-next-line no-underscore-dangle
 precacheAndRoute(sw.__WB_MANIFEST);
 
-sw.addEventListener("push", (event: PushEvent) => {
+sw.addEventListener("push", (event) => {
     const data = event.data?.json() ?? {};
     const title = data.title || "Rappel";
-    const options: NotificationOptions = {
+    const options = {
         body: data.body || "Rappel à traiter",
         tag: data.tag,
         data: data.data,
-        icon: "/logo.svg",
-        badge: "/logo.svg",
+        icon: "/pwa-icon.svg",
+        badge: "/pwa-icon.svg",
     };
 
     event.waitUntil(sw.registration.showNotification(title, options));
 });
 
-sw.addEventListener("notificationclick", (event: NotificationEvent) => {
+sw.addEventListener("notificationclick", (event) => {
     event.notification.close();
     const url = "/";
 

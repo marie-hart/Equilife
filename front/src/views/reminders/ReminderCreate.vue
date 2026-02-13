@@ -1,7 +1,7 @@
 <template>
     <div class="page">
         <main class="pa-4">
-            <v-card class="card" variant="outlined">
+            <v-card class="card" variant="flat">
                 <v-card-title>Créer un rappel</v-card-title>
                 <v-card-text>
                     <v-skeleton-loader
@@ -194,13 +194,9 @@ const createReminder = async () => {
 };
 
 const goBack = () => {
-    const id = horsesStore.horseId !== "all" ? horsesStore.horseId : undefined;
-    if (id) {
-        router.push({ name: "HorseReminders", params: { id } });
-    } else {
-        router.push({ name: "Reminders" });
-    }
-};
+    router.push({ name: "Reminders" });
+}
+    
 
 onMounted(async () => {
     isLoading.value = true;
