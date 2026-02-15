@@ -1,12 +1,26 @@
 import { horsesApi } from "@/api/horses";
-import { getStoredHorseId, setStoredHorseId } from "@/libs/horseProfile";
+import { getStoredHorseId, getStoredHorsePhoto, setStoredHorseId, setStoredHorsePhoto } from "@/libs/horseProfile";
 import { CreateHorseDto, Horse } from "@/types";
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 
+interface HorseWithPhoto extends Horse {
+    photoBase64?: string | null;
+}
+
 export const useHorsesStore = defineStore('horses', () => {
     const horseId = ref(getStoredHorseId())
-    const horses = ref<Horse[]>([]);
+    const horses = ref<HorseWithPhoto[]>([]);
+
+    const enrichHorseWithStoredPhoto = (horse: Horse): HorseWithPhoto => {
+        if (horse.id === horseId.value) {
+            return {
+                ...horse,
+                photoBase64: getStoredHorsePhoto()
+            };
+        }
+        return horse;
+    };
 
     const horseOptions = computed(() =>
         horses.value.map((h) => ({ title: h.name, value: h.id })),
@@ -57,21 +71,31 @@ function getHorseName() {
 };
 
 async function loadHorses() {
-    return horses.value = await horsesApi.getAll();
+        const data = await horsesApi.getAll();
+        // 4. Enrichir tous les chevaux chargés
+        horses.value = data.map(enrichHorseWithStoredPhoto);
+        return horses.value;
 };
 
-async function loadHorseById(id: string): Promise<Horse | undefined> {
-    let horse = horses.value.find(h => h.id === id);
-    if (horse) return horse;
-
-    horse = await horsesApi.getById(id);
+async function loadHorseById(id: string): Promise<HorseWithPhoto | undefined> {
+        let horse = horses.value.find(h => h.id === id);
         
-    if (horse) {
-        const index = horses.value.findIndex(h => h.id === id);
-        if (index !== -1) horses.value[index] = horse;
-        else horses.value.push(horse);
-    }
-    return horse;
+        // Si pas en mémoire, charger du back
+        if (!horse) {
+            const apiHorse = await horsesApi.getById(id);
+            if (apiHorse) {
+                horse = enrichHorseWithStoredPhoto(apiHorse);
+                const index = horses.value.findIndex(h => h.id === id);
+                if (index !== -1) horses.value[index] = horse;
+                else horses.value.push(horse);
+            }
+        } else {
+            // Si déjà en mémoire, s'assurer que le base64 est à jour
+            const index = horses.value.findIndex(h => h.id === id);
+            horses.value[index] = enrichHorseWithStoredPhoto(horse);
+        }
+        
+        return horse;
 }
 
 async function createHorse(data: CreateHorseDto): Promise<Horse> {
@@ -93,15 +117,35 @@ async function deleteHorse(horseId: string) {
     horses.value = horses.value.filter((h) => h.id !== horseId);
 }
 
-async function uploadHorsePhoto(id: string, file: File): Promise<void> {
-    await horsesApi.uploadPhoto(id, file);
-    // Recharger le cheval pour avoir la nouvelle URL de la photo
-    await loadHorseById(id);
+function sethorseId(id: string | null) {
+    horseId.value = id;
+    setStoredHorseId(id || '');
+        
+    // 6. Lors du changement d'ID, rafraîchir les photos
+    horses.value = horses.value.map(enrichHorseWithStoredPhoto);
 }
 
-function sethorseId(id: string) {
-    horseId.value = id
-    setStoredHorseId(id)
-}
+    // 4. Modifier l'action uploadHorsePhoto
+    async function uploadHorsePhoto(id: string, file: File): Promise<void> {
+        // Uploader vers le backend
+        await horsesApi.uploadPhoto(id, file);
+
+        // Convertir en Base64 pour le localStorage
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            const base64String = reader.result as string;
+            setStoredHorsePhoto(base64String);
+            
+            // 5. Mettre à jour directement dans le store
+            const horseIndex = horses.value.findIndex(h => h.id === id);
+            if (horseIndex !== -1) {
+                horses.value[horseIndex].photoBase64 = base64String;
+            }
+        };
+
+        // Recharger les données pour avoir la nouvelle URL back
+        await loadHorseById(id);
+    }
     
 })

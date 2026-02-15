@@ -111,7 +111,7 @@ const formatDate = (dateString: string): string =>
     });
 
 const getPhotoUrl = (horseData: Horse): string => {
-    if (!horseData.photo_path) return "/placeholder-horse.jpg";
+    if (!horseData.photo_path) return "/avatar.jpg";
     return horseData.photo_path; 
 };
 

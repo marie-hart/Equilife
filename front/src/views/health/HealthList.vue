@@ -23,7 +23,7 @@
                         <v-col cols="6" class="d-md-none">
                             <div class="text-subtitle-2 font-weight-medium">{{ care.name }}</div>
                             <div class="text-body-2" :style="{ color: '#7a6e61' }">
-                                {{ getHorseName(care.id) }}
+                                {{ getHorseName(String(care.horse_id)) }}
                             </div>
                             <div class="text-caption" v-if="recurrenceLabel(care) !== '-'" :style="{ color: '#7a6e61' }">
                                 {{ recurrenceLabel(care) }}
@@ -45,7 +45,7 @@
                             {{ care.name }}
                         </v-col>
                         <v-col cols="3" class="text-body-2 d-none d-md-block" :style="{ color: '#7a6e61' }">
-                            {{ getHorseName(care.id) }}
+                            {{ getHorseName(String(care.horse_id)) }}
                         </v-col>
                         <v-col cols="2" class="text-body-2 d-none d-md-block" :style="{ color: '#7a6e61' }">
                             {{ recurrenceLabel(care) }}
@@ -68,23 +68,20 @@
 
 <script setup lang="ts">
 import { ActionButtons } from "@/components";
-import type { Event } from "@/types";
-
-type CareAction = {
-    key: string;
-    title: string;
-    icon: string;
-    color?: string;
-    disabled: boolean;
-    onClick?: () => void;
-};
+import type { CareAction, Event } from "@/types";
+import { useHorsesStore } from "@/stores/HorsesStore";
 
 defineProps<{
     items: Event[];
     formatDate: (dateString: string) => string;
     formatDateMobile: (dateString: string) => string;
-    getHorseName: (id: string) => string;
     recurrenceLabel: (care: Event) => string;
     getCareActions: (care: Event) => CareAction[];
 }>();
+
+const horsesStore = useHorsesStore(); 
+
+const getHorseName = (horseId: string) => {
+    return horsesStore.getHorseNameById(horseId); 
+};
 </script>

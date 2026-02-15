@@ -6,17 +6,14 @@
   >
     <div class="d-flex align-start ga-4">
 
-      <v-avatar size="56">
+     <v-avatar size="80">
         <v-img
-          v-if="horseAvatar"
-          :src="horseAvatar"
+          :src="selectedHorse?.photoBase64 || selectedHorse?.photo_path || '/avatar.jpg'"
           cover
         />
-        <v-icon v-else size="32">mdi-horse</v-icon>
       </v-avatar>
 
       <div class="flex-grow-1">
-
         <div class="d-flex align-center ga-2">
           <h3 class="text-h6 font-weight-medium">
             {{ selectedHorse?.name || "Mon cheval" }}
@@ -87,18 +84,7 @@ import { useHorsesStore } from "@/stores/HorsesStore";
 
 const horsesStore = useHorsesStore();
 
-const normalizePhotoUrl = (path?: string): string | null => {
-  if (!path) return null;
-  if (path.startsWith("http")) return path;
-  if (path.startsWith("/")) return path;
-  return path;
-};
-
 const selectedHorse = computed(() => horsesStore.selectedHorse);
-
-const horseAvatar = computed(() =>
-  normalizePhotoUrl(selectedHorse.value?.photo_path)
-);
 
 const showHorseSwitcher = computed(() => horsesStore.horses.length > 1);
 </script>

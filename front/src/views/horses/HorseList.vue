@@ -3,13 +3,13 @@ import { ref, computed } from "vue";
 import { ActionButtons } from "@/components";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import type { Horse, HorseAction } from "@/types";
+import { useRouter } from 'vue-router';
 
 const horsesStore = useHorsesStore();
+const router = useRouter()
 
 const cardHeight = 240; 
 const cardMaxWidth = '100%';
-const photoWidth = 80;
-const photoHeight = 80;
 
 const snackbar = ref({
     show: false,
@@ -86,6 +86,11 @@ const openDeleteDialog = (horse: Horse) => {
     horseToDelete.value = horse;
     isDeleteDialogOpen.value = true;
 };
+
+const goToDashboard = (horseId: string) => {
+    horsesStore.sethorseId(horseId);
+    router.push({ name: "HorseDashboardView", params: { id: horseId } });
+};
 </script>
 
 <template>
@@ -160,14 +165,13 @@ const openDeleteDialog = (horse: Horse) => {
                         </div>
                     </div>
 
-                    <v-img
-                        :src="horse.photo_path || '/placeholder-horse.jpg'"
-                        :alt="horse.name"
-                        :width="photoWidth"
-                        :height="photoHeight"
-                        class="rounded-lg"
+                    <v-avatar size="80" class="mr-4">
+                        <v-img
+                        :src="horse.photoBase64 || horse.photo_path || '/avatar.jpg'"
                         cover
-                    />
+                        />
+                        <!-- <v-icon v-else size="32">mdi-horse</v-icon> -->
+                    </v-avatar>
                 </div>
                 
                 <div class="d-flex justify-center mt-2">                
@@ -175,7 +179,7 @@ const openDeleteDialog = (horse: Horse) => {
                         variant="flat"
                         class="text-none rounded-lg"
                         :style="{ color: '#554338', backgroundColor: '#efe5d9' }"
-                        :to="{ name: 'HorseDashboardView', params: { id: horse.id } }"
+                        @click="goToDashboard(horse.id)"
                     >
                         Mon Dashboard
                         <v-icon end>mdi-arrow-right</v-icon>

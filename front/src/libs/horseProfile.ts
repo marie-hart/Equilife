@@ -1,4 +1,5 @@
 const SELECTED_HORSE_ID_KEY = "selectedHorseId";
+const SELECTED_HORSE_PHOTO_KEY = "selectedHorsePhoto";
 
 export const getStoredHorseId = () => {
     try {
@@ -20,3 +21,26 @@ export const setStoredHorseId = (id: string) => {
      
     }
 }
+
+export const getStoredHorsePhoto = () => {
+    try {
+        return localStorage.getItem(SELECTED_HORSE_PHOTO_KEY);
+    } catch (error) {
+        console.warn("Unable to read horse photo from storage:", error);
+        return null;
+    }
+};
+
+export const setStoredHorsePhoto = (photoBase64: string | null) => {
+    try {
+        if (photoBase64) {
+            localStorage.setItem(SELECTED_HORSE_PHOTO_KEY, photoBase64);
+        } else {
+            localStorage.removeItem(SELECTED_HORSE_PHOTO_KEY);
+        }
+    } catch (error) {
+        console.warn("Unable to set horse photo in storage:", error);
+    }
+};
+
+

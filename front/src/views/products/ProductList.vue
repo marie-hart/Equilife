@@ -47,7 +47,7 @@
                                 </span>
                                 
                                 <span v-if="product.used_for_horses?.length" class="text-grey-darken-1">
-                                    • {{ product.used_for_horses.map(getHorseName).filter(Boolean).join(", ") }}
+                                    • {{ product.used_for_horses.map(id => getHorseName(String(id))).join(", ") }}
                                 </span>
                                 
                                 <span v-if="recurrenceLabel(product)" class="text-primary font-weight-medium">
@@ -86,12 +86,18 @@
 import { ActionButtons } from "@/components";
 import type { Product } from "@/types";
 import { ProductAction } from '../../types/product';
+import { useHorsesStore } from "@/stores/HorsesStore";
 
 defineProps<{
     products: Product[];
-    getHorseName: (horseId?: string) => string | undefined;
     recurrenceLabel: (product: Product) => string;
     getProductActions: (product: Product) => ProductAction[];
     toggleRepurchase: (product: Product) => void;
 }>();
+
+const horsesStore = useHorsesStore(); 
+
+const getHorseName = (horseId: string) => {
+    return horsesStore.getHorseNameById(horseId); 
+};
 </script>

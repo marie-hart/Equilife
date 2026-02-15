@@ -188,6 +188,7 @@ import { useHorsesStore } from "@/stores/HorsesStore";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { CreateHorseDto } from "@/types";
+import { setStoredHorsePhoto } from "@/libs/horseProfile";
 
 const props = defineProps<{
     horseId?: string; 
@@ -255,12 +256,36 @@ const coatOptions = [
     "Autre",
 ];
 
-const handleFileChange = (files: File[] | File | null) => {
+const handleFileChange = async (files: File[] | File | null) => {
+    let file = null;
     if (Array.isArray(files)) {
-        selectedPhoto.value = files[0] || null;
+        file = files[0] || null;
     } else {
-        selectedPhoto.value = files || null;
+        file = files || null;
     }
+
+    if (file) {
+        selectedPhoto.value = file;
+        // 2. Convertir et stocker dans localStorage ici
+        try {
+            const base64 = await fileToBase64(file);
+            // On peut stocker temporairement ici ou attendre la soumission
+            // Pour être sûr d'avoir le bon ID, attendons la soumission (handleSubmit)
+        } catch (error) {
+            console.error("Error converting file to base64", error);
+        }
+    } else {
+        selectedPhoto.value = null;
+    }
+};
+
+const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+    });
 };
 
 const loadHorse = async () => {
@@ -322,18 +347,22 @@ const handleSubmit = async () => {
 
         let savedHorseId: string;
 
-        if (props.horseId) {
+       if (props.horseId) {
+            // Mode Modification
             await horsesStore.updateHorse(props.horseId, payload);
-            savedHorseId = props.horseId;
+            savedHorseId = props.horseId; // 2. Assignation
         } else {
+            // Mode Création
             const newHorse = await horsesStore.createHorse(payload);
-            savedHorseId = newHorse.id;
+            savedHorseId = newHorse.id; // 2. Assignation
         }
 
+        // 3. Utilisation de savedHorseId ici
         if (selectedPhoto.value) {
+            // Uploadez et gérez le localStorage via le store
             await horsesStore.uploadHorsePhoto(savedHorseId, selectedPhoto.value);
         }
-
+        
         snackbar.value = {
             show: true,
             message: isEdit.value ? "Cheval mis à jour." : "Cheval créé.",

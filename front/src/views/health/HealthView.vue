@@ -118,7 +118,7 @@ const filters: readonly FilterDefinition<string>[] = [
         type: "select",
         label: "Cheval",
         defaultValue: "all",
-        options: horsesStore.horseFilterOptions, // UPDATED
+        options: horsesStore.horseFilterOptions,
     },
     {
         key: "status",

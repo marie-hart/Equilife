@@ -2,12 +2,15 @@
     <div>
       <v-bottom-navigation
         v-if="!lgAndUp"
-        class="rounded-t-xl"
+        class="mx-4 mb-4 pa-1" 
+        rounded="pill"
+        style="width: calc(100% - 32px)"
         app
         grow
       >
         <v-btn
           v-for="item in bottomNavItems"
+          rounded="xl"
           :key="item.tab"
           :value="item.tab"
           :to="getRoute(item)"
@@ -53,10 +56,10 @@
     isMoreOpen: boolean;
   }>();
   
-  const emit = defineEmits<{
-    (e: "navigate", routeName: NavItem["routeName"], params?: Record<string, any>): void;
-    (e: "update:isMoreOpen", value: boolean): void;
-  }>();
+  // const emit = defineEmits<{
+  //   (e: "navigate", routeName: NavItem["routeName"], params?: Record<string, any>): void;
+  //   (e: "update:isMoreOpen", value: boolean): void;
+  // }>();
   
   const { mdAndUp, lgAndUp } = useDisplay();
   

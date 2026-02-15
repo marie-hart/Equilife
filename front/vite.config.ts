@@ -18,9 +18,9 @@ export default defineConfig(({ mode }) => {
     vuetify({ autoImport: true }),
     VitePWA({
       registerType: "autoUpdate",
-      strategies: "generateSW",
+      strategies: "injectManifest",
       srcDir: "src/pwa",
-      filename: "sw.js",
+      filename: "sw.ts",
       injectRegister: "auto",
       manifest: {
         name: "Equilife",
@@ -61,6 +61,7 @@ export default defineConfig(({ mode }) => {
       "/api": {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        secure: false,
       },
       "/uploads": {
         target: 'http://localhost:3001',
