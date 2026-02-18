@@ -1,15 +1,12 @@
 <template>
     <div>
-      <!-- HEADER -->
       <v-app-bar app flat height="72" color="#909185">
-        <!-- DESKTOP : menu burger -->
         <v-app-bar-nav-icon
           v-if="lgAndUp"
           color="white"
           @click="isMoreOpen = !isMoreOpen"
         />
   
-        <!-- MOBILE : logo à gauche -->
         <img
           v-if="!lgAndUp"
           src="/logo-equilife.png"
@@ -20,7 +17,6 @@
   
         <v-spacer />
   
-        <!-- DESKTOP : logo centré -->
         <img
           v-if="lgAndUp"
           src="/logo-equilife.png"
@@ -30,11 +26,9 @@
   
         <v-spacer />
   
-        <!-- Notifications -->
-        <v-btn icon="mdi-bell-outline" variant="text" color="white" />
+       <NotificationBell />
       </v-app-bar>
   
-      <!-- NAVIGATION -->
       <HeaderNavigation
         :nav-items="navItems"
         :is-more-open="isMoreOpen"
@@ -42,53 +36,46 @@
         @update:isMoreOpen="isMoreOpen = $event"
       />
     </div>
-  </template>
+</template>
   
-  <script setup lang="ts">
-  import { ref } from "vue";
-  import { useRouter } from "vue-router";
-  import { useDisplay } from "vuetify";
-  import type { Horse } from "@/types";
-  import { HeaderNavigation } from "./index";
-  import type { NavItem } from "@/types";
+<script setup lang="ts">
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useDisplay } from "vuetify";
+import type { Horse, NavItem } from "@/types";
+import { HeaderNavigation } from "./index";
+import NotificationBell from "@/components/NotificationBell.vue"; 
 
-  const router = useRouter();
-  const { lgAndUp } = useDisplay();
+const router = useRouter();
+const { lgAndUp } = useDisplay();
 
-  /* STATE */
-  const horseProfile = ref<Horse | null>(null);
-  const isMoreOpen = ref(false);
+/* STATE */
+const horseProfile = ref<Horse | null>(null);
+const isMoreOpen = ref(false);
+
+/* NAV ITEMS */
+const navItems: NavItem[] = [
+  { tab: "dashboard", label: "Accueil", routeName: "HorseDashboardView", icon: "house" },
+  { tab: "reminders", label: "Rappels", routeName: "Reminders", icon: "bell" },
+  { tab: "health", label: "Soins", routeName: "HorseHealth", icon: "house-chimney-medical" },
+  { tab: "activities", label: "Activités", routeName: "HorseActivities", icon: "heart-pulse" },
+  { tab: "feeding", label: "Alimentation", routeName: "FeedingView", icon: "bowl-food" },
+  { tab: "products", label: "Produits", routeName: "Products", icon: "box-open" },
+  { tab: "horses", label: "Chevaux", routeName: "Horses", icon: "horse" },
+];
+
+/* NAVIGATION */
+const navigate = (name: NavItem["routeName"]) => {
+  if (name === "Reminders" || name === "Horses") {
+      router.push({ name });
+      return;
+  }
   
-  /* NAV ITEMS */
-  const navItems: NavItem[] = [
-    { tab: "dashboard", label: "Accueil", routeName: "HorseDashboardView", icon: "house" },
-    { tab: "reminders", label: "Rappels", routeName: "Reminders", icon: "bell" },
-    { tab: "health", label: "Soins", routeName: "HorseHealth", icon: "house-chimney-medical" },
-    { tab: "activities", label: "Activités", routeName: "HorseActivities", icon: "heart-pulse" },
-    { tab: "feeding", label: "Alimentation", routeName: "FeedingView", icon: "bowl-food" },
-    // { tab: "documents", label: "Documents", routeName: "HorseDocuments", icon: "file-lines", },
-    { tab: "products", label: "Produits", routeName: "Products", icon: "box-open" },
-    { tab: "horses", label: "Chevaux", routeName: "Horses", icon: "horse" },
-  ];
-  
-  /* NAVIGATION */
-  const navigate = (name: NavItem["routeName"]) => {
-    if (name === "Reminders") {
-        router.push({ name });
-        return;
-    }
-    
-    if (name === "Horses") {
-        router.push({ name });
-        return;
-    }
-    const horseId = horseProfile.value?.id;
-    if (horseId) {
-        router.push({ name, params: { id: horseId } });
-        return;
-    }
-    router.push({ name: "Dashboard" });
+  const horseId = horseProfile.value?.id;
+  if (horseId) {
+      router.push({ name, params: { id: horseId } });
+      return;
+  }
+  router.push({ name: "Dashboard" });
 };
-
-  </script>
-  
+</script>

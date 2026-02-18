@@ -104,6 +104,7 @@ const fetchDueReminders = async () => {
               e.id,
               e.name,
               e.description,
+              e.horse_id, -- AJOUT : Récupération de l'ID du cheval
               COALESCE(e.next_reminder_date, e.event_date) AS reminder_date
             FROM events e
             LEFT JOIN push_notifications pn
@@ -153,25 +154,21 @@ export const startReminderPushScheduler = () => {
             const due = await fetchDueReminders();
 
             for (const reminder of due) {
-                try {
-                    const payload = {
-                        title: "Rappel",
-                        body:
-                            reminder.description ||
-                            reminder.name ||
-                            "Rappel à traiter",
-                        tag: `reminder-${reminder.id}`,
-                        data: {
-                            reminderId: reminder.id,
-                            date: reminder.reminder_date,
-                        },
-                    };
+    try {
+        const payload = {
+            title: "Rappel EquiLife",
+            body: reminder.description || reminder.name || "Rappel à traiter",
+            tag: `reminder-${reminder.id}`,
+            data: {
+                id: reminder.id,           
+                name: reminder.name,       
+                horse_id: reminder.horse_id, 
+                event_date: reminder.reminder_date,
+            },
+        };
 
-                    await sendToAll(payload);
-                    await markNotified(
-                        reminder.id,
-                        reminder.reminder_date,
-                    );
+        await sendToAll(payload);
+        await markNotified(reminder.id, reminder.reminder_date);
                 } catch (err) {
                     console.error(
                         `❌ Failed to process reminder ${reminder.id}`,

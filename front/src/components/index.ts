@@ -6,3 +6,4 @@ export { default as ConfirmDeleteDialog } from "@/components/ui/ConfirmDeleteDia
 export { default as FiltersPanel } from "@/components/FiltersPanel.vue";
 export { default as FeedingForm } from "@/components/FeedingForm.vue"
 export { default as HorseForm } from "@/components/HorseForm.vue"
+export { default as NotificationBell } from "@/components/NotificationBell.vue"

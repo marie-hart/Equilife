@@ -1,0 +1,26 @@
+{
+  "name": "EquiLife",
+  "short_name": "EquiLife",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#909185",
+  "theme_color": "#909185",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -30,6 +30,7 @@ import router from "@/router";
 import { UI_BREAKPOINTS, VUETIFY_THRESHOLDS } from "@/ui/breakpoints";
 import { createPinia } from "pinia";
 import { useHorsesStore } from "./stores/HorsesStore";
+import { useNotificationStore } from "./stores/NotificationStore";
 
 library.add(
     faClock,
@@ -79,5 +80,17 @@ createApp(App)
     .mount("#app");
 
 const { loadHorses } = useHorsesStore();
+const notificationStore = useNotificationStore();
 
 loadHorses()
+if (notificationStore.isSupported) {
+    notificationStore.checkCurrentPermission();
+}
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.type === 'PUSH_RECEIVED') {
+            notificationStore.addUnreadReminder(event.data.reminder);
+        }
+    });
+}

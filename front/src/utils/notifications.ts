@@ -1,8 +1,9 @@
 import { eventsApi } from "@/api/events";
 import { pushApi } from "@/api/push";
 import type { Event } from "@/types";
+import { useNotificationStore } from "@/stores/NotificationStore";
 
-const POLL_INTERVAL_MS = 5 * 60 * 1000;
+const POLL_INTERVAL_MS = 1 * 60 * 1000;
 const STORAGE_KEY = "reminder_notifications_seen_v1";
 
 type SeenMap = Record<string, true>;
@@ -39,7 +40,7 @@ const canNotify = (): boolean =>
     "Notification" in window &&
     Notification.permission === "granted";
 
-const requestPermission = async (): Promise<NotificationPermission> => {
+export const requestPermission = async (): Promise<NotificationPermission> => {
     if (!isBrowser() || !("Notification" in window)) return "denied";
     if (Notification.permission !== "default") return Notification.permission;
     return Notification.requestPermission();
@@ -61,11 +62,14 @@ const showReminderNotification = (reminder: Event, reminderDate: Date) => {
         tag: `reminder-${reminder.id}`,
         data: { reminderId: reminder.id, date: reminderDate.toISOString() },
     });
+
+    const notificationStore = useNotificationStore();
+    notificationStore.addUnreadReminder(reminder);
 };
 
 let pollerStarted = false;
 
-const supportsPush = (): boolean =>
+export const supportsPush = (): boolean =>
     isBrowser() &&
     "serviceWorker" in navigator &&
     "PushManager" in window &&
@@ -84,30 +88,34 @@ const urlBase64ToUint8Array = (base64String: string) => {
     return outputArray;
 };
 
-const ensurePushSubscription = async (): Promise<boolean> => {
+export const ensurePushSubscription = async (): Promise<boolean> => {
     if (!supportsPush()) return false;
+    
+    // Attendre que le SW soit prêt
     const registration = await navigator.serviceWorker.ready;
-    const existing = await registration.pushManager.getSubscription();
-    if (existing) return true;
+    
+    // Vérifier si déjà abonné
+    let subscription = await registration.pushManager.getSubscription();
+    
+    if (!subscription) {
+        const publicKey = await pushApi.getPublicKey();
+        subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+    }
 
-    const publicKey = await pushApi.getPublicKey();
-    if (!publicKey) return false;
-
-    const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-    });
-
-    const json = subscription.toJSON();
-    if (!json.keys?.p256dh || !json.keys?.auth) return false;
-
+    const data = subscription.toJSON();
+    
+    // Envoyer au backend pour stockage en DB
     await pushApi.subscribe({
-        endpoint: subscription.endpoint,
+        endpoint: data.endpoint!,
         keys: {
-            p256dh: json.keys.p256dh,
-            auth: json.keys.auth,
+            p256dh: data.keys!.p256dh!,
+            auth: data.keys!.auth!,
         },
     });
+    
     return true;
 };
 
