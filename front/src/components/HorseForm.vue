@@ -37,16 +37,6 @@
                         />
                     </v-col>
                     <v-col cols="12" md="6">
-                        <v-text-field
-                            v-model="form.nickname"
-                            label="Surnom"
-                            density="comfortable"
-                            variant="outlined"
-                            bg-color="white"
-                            rounded="lg"
-                        />
-                    </v-col>
-                    <v-col cols="12" md="6">
                         <v-file-input
                             label="Photo"
                             variant="outlined"
@@ -211,7 +201,6 @@ const isEdit = computed(() => Boolean(props.horseId));
 
 const form = ref<CreateHorseDto>({
     name: "",
-    nickname: "",
     sex: undefined,
     breed: "",
     coat: "",
@@ -300,7 +289,6 @@ const loadHorse = async () => {
         if (horse) {
             form.value = {
                 name: horse.name,
-                nickname: horse.nickname || "",
                 sex: horse.sex,
                 breed: horse.breed || "",
                 coat: horse.coat || "",
@@ -335,7 +323,6 @@ const handleSubmit = async () => {
         
         const payload = {
             name: form.value.name.trim(),
-            nickname: form.value.nickname?.trim() || undefined,
             sex: form.value.sex || undefined,
             breed: form.value.breed?.trim() || undefined,
             coat: form.value.coat?.trim() || undefined,

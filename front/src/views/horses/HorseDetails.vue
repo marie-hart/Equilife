@@ -120,7 +120,6 @@ const horseInfo = computed(() => {
     const h = horse.value;
     return [
         { title: "Nom", value: h.name },
-        { title: "Surnom", value: h.nickname || "-" },
         { title: "Sexe", value: h.sex || "-" },
         { title: "Date de naissance", value: h.birth_date ? `${formatDate(h.birth_date)} (${h.age} ans)` : "-" },
         { title: "Race", value: h.breed || "-" },

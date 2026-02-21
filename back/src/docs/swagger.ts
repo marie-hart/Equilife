@@ -283,7 +283,6 @@ export const swaggerSpec = {
                 properties: {
                     id: { type: "string", format: "uuid" },
                     name: { type: "string" },
-                    nickname: { type: "string", nullable: true },
                     sex: {
                         type: "string",
                         nullable: true,
@@ -386,7 +385,6 @@ export const swaggerSpec = {
                 required: ["name"],
                 properties: {
                     name: { type: "string" },
-                    nickname: { type: "string", nullable: true },
                     sex: {
                         type: "string",
                         nullable: true,
@@ -408,7 +406,6 @@ export const swaggerSpec = {
                 type: "object",
                 properties: {
                     name: { type: "string" },
-                    nickname: { type: "string", nullable: true },
                     sex: {
                         type: "string",
                         nullable: true,

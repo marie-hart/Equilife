@@ -1,10 +1,6 @@
 -- Vérifie l'existence des nouvelles colonnes
 SELECT 1
 FROM information_schema.columns
-WHERE table_name = 'horses' AND column_name = 'nickname';
-
-SELECT 1
-FROM information_schema.columns
 WHERE table_name = 'horses' AND column_name = 'sex';
 
 SELECT 1

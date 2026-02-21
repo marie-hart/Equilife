@@ -112,7 +112,6 @@ export interface UpdateProductDto {
 export interface Horse {
     id: string;
     name: string;
-    nickname?: string;
     sex?: "Jument" | "Hongre" | "Etalon";
     breed?: string;
     coat?: string;
@@ -128,7 +127,6 @@ export interface Horse {
 
 export interface CreateHorseDto {
     name: string;
-    nickname?: string;
     sex?: "Jument" | "Hongre" | "Etalon";
     breed?: string;
     coat?: string;
@@ -140,7 +138,6 @@ export interface CreateHorseDto {
 
 export interface UpdateHorseDto {
     name: string;
-    nickname?: string;
     sex?: "Jument" | "Hongre" | "Etalon";
     breed?: string;
     coat?: string;

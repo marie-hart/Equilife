@@ -143,6 +143,7 @@ const horsesStore = useHorsesStore(); // Initialisation du Store
 const isLoading = ref(true);
 const isSubmitting = ref(false);
 const products = ref<Product[]>([]);
+const event = ref<Event | null>(null);
 const fieldErrors = ref<Record<string, string>>({});
 const snackbar = ref({ show: false, message: "", color: "success" });
 
@@ -243,63 +244,121 @@ const fillForm = (event: Event) => {
 };
 
 const handleSubmit = async () => {
-    const productName = products.value.find(m => m.id === form.value.productId)?.name?.trim() || "";
-    const careName = form.value.careDescription.trim() || productName;
-    
+    // 1. Validation des champs
     const { errors, firstError } = await validateRequiredFieldsMap([
         { key: "horseIds", label: "au moins un cheval", value: form.value.horseIds },
-        { key: "careDescription", label: "une description", value: careName },
+        { key: "careDescription", label: "une description", value: form.value.careDescription.trim() },
         { key: "date", label: "une date", value: form.value.date },
     ]);
-    
+
     fieldErrors.value = errors;
+
     if (firstError) {
         snackbar.value = { show: true, message: firstError, color: "error" };
         return;
     }
 
-    isSubmitting.value = true;
     try {
-        const payload: CreateEventDto = {
-            horse_id: "", // Sera mis à jour dans la boucle ou l'update
-            name: careName,
-            description: form.value.note || "",
+        isSubmitting.value = true;
+
+        // Préparation du payload commun
+        const basePayload = {
+            name: form.value.careDescription.trim(),
             event_date: fromDateInputValue(form.value.date),
-            product_id: form.value.productId || "",
-            is_care: true,
-            reminder_type: "soin", 
-            reminder_enabled: form.value.isRecurring,
-            reminder_interval_days: form.value.isRecurring && form.value.recurrenceUnit === "days" ? form.value.recurrenceInterval : 0,
-            reminder_interval_months: form.value.isRecurring && form.value.recurrenceUnit === "months" ? form.value.recurrenceInterval : 0,
-            reminder_interval_years: form.value.isRecurring && form.value.recurrenceUnit === "years" ? form.value.recurrenceInterval : 0,
+            product_id: form.value.productId || undefined, 
+            note: form.value.note.trim() || undefined,
+            
+            // Correction des noms de propriétés ici :
+            reminder_enabled: recurrence.value.isRecurring,
+            reminder_interval_value: recurrence.value.recurrenceInterval || undefined,
+            reminder_interval_unit: recurrence.value.recurrenceUnit || undefined,
         };
 
-        if (isEdit.value && eventId.value) {
-            await eventsApi.update(eventId.value, { ...payload, horse_id: form.value.horseIds[0] });
+        if (isEdit.value) {
+            // Mode édition : on met à jour un seul soin
+            const eventId = route.params.eventId as string;
+            await eventsApi.update(eventId, {
+                ...basePayload,
+                horse_id: form.value.horseIds[0] // En édition, un seul cheval
+            });
             snackbar.value = { show: true, message: "Soin mis à jour.", color: "success" };
         } else {
             await Promise.all(
-                form.value.horseIds.map(horseId => eventsApi.create({ ...payload, horse_id: horseId }))
+                form.value.horseIds.map(horseId => 
+                    eventsApi.create({
+                        ...basePayload,
+                        horse_id: horseId
+                    } as CreateEventDto)
+                )
             );
-            snackbar.value = { show: true, message: "Soin(s) créé(s).", color: "success" };
+            snackbar.value = { 
+                show: true, 
+                message: `${form.value.horseIds.length > 1 ? 'Soins ajoutés' : 'Soin ajouté'}.`, 
+                color: "success" 
+            };
         }
-        goBack();
+
+        // Petit délai pour laisser l'utilisateur voir le message de succès
+        setTimeout(() => goBack(), 1000);
+
     } catch (error) {
-        console.error("Error saving:", error);
-        snackbar.value = { show: true, message: "Sauvegarde impossible.", color: "error" };
+        console.error("Error saving event:", error);
+        snackbar.value = { 
+            show: true, 
+            message: "Erreur lors de l'enregistrement.", 
+            color: "error" 
+        };
     } finally {
         isSubmitting.value = false;
     }
 };
 
 const goBack = () => {
-    const horseId = form.value.horseIds[0];
-    if (horseId) {
-        router.push({ name: "HorseHealth", params: { id: horseId } });
+    // On retourne à la vue santé du cheval (ou à la liste globale)
+    if (horsesStore.horseId && horsesStore.horseId !== 'all') {
+        router.push({ name: 'HealthView', params: { id: horsesStore.horseId } });
     } else {
-        router.push("/horses");
+        router.push('/health');
     }
 };
 
-onMounted(loadData);
+const loadProducts = async () => {
+    try {
+        products.value = await productApi.getAll(false);
+    } catch (error) {
+        console.error("Error loading products:", error);
+    }
+};
+
+const loadEvent = async () => {
+    try {
+        const id = route.params.id as string;
+        event.value = await eventsApi.getById(id);
+    } catch (error) {
+        console.error("Error loading event:", error);
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+onMounted(async () => {
+    isLoading.value = true;
+    try {
+        await Promise.all([
+            horsesStore.loadHorses(),
+            loadProducts()
+        ]);
+
+        const horseIdFromQuery = route.query.horseId as string;
+        if (horseIdFromQuery && !isEdit.value) {
+            form.value.horseIds = [horseIdFromQuery];
+        }
+
+        if (isEdit.value) {
+            await loadEvent(); 
+        }
+    } finally {
+        isLoading.value = false;
+    }
+});
 </script>

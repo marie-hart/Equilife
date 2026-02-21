@@ -1,6 +1,5 @@
 -- Ajout des champs de profil cheval
 ALTER TABLE horses
-  ADD COLUMN nickname VARCHAR(255),
   ADD COLUMN sex VARCHAR(20),
   ADD COLUMN coat VARCHAR(50),
   ADD COLUMN stable_location VARCHAR(255),

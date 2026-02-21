@@ -15,7 +15,6 @@ export class HorseRepository {
             `SELECT 
         id, 
         name, 
-        nickname,
         sex,
         breed, 
         coat,
@@ -47,7 +46,6 @@ export class HorseRepository {
             `SELECT 
         id, 
         name, 
-        nickname,
         sex,
         breed, 
         coat,
@@ -78,7 +76,6 @@ export class HorseRepository {
             `SELECT 
         id, 
         name, 
-        nickname,
         sex,
         breed, 
         coat,
@@ -108,7 +105,6 @@ export class HorseRepository {
         const result = await pool.query(
             `INSERT INTO horses (
         name,
-        nickname,
         sex,
         breed,
         coat,
@@ -121,7 +117,6 @@ export class HorseRepository {
        RETURNING 
          id, 
          name, 
-         nickname,
          sex,
          breed, 
          coat,
@@ -135,7 +130,6 @@ export class HorseRepository {
          updated_at`,
             [
                 data.name,
-                data.nickname || null,
                 data.sex || null,
                 data.breed || null,
                 data.coat || null,
@@ -159,10 +153,6 @@ export class HorseRepository {
         if (data.name !== undefined) {
             fields.push(`name = $${paramIndex++}`);
             values.push(data.name);
-        }
-        if (data.nickname !== undefined) {
-            fields.push(`nickname = $${paramIndex++}`);
-            values.push(data.nickname || null);
         }
         if (data.sex !== undefined) {
             fields.push(`sex = $${paramIndex++}`);
@@ -205,7 +195,6 @@ export class HorseRepository {
        RETURNING 
          id, 
          name, 
-         nickname,
          sex,
          breed, 
          coat,
@@ -240,7 +229,6 @@ export class HorseRepository {
        RETURNING 
          id, 
          name, 
-         nickname,
          sex,
          breed, 
          coat,
@@ -288,7 +276,6 @@ export class HorseRepository {
         return {
             id: row.id,
             name: row.name,
-            nickname: row.nickname || undefined,
             sex: row.sex || undefined,
             breed: row.breed || undefined,
             coat: row.coat || undefined,
