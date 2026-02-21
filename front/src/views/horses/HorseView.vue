@@ -27,7 +27,7 @@ loadHorseData()
 <template>
     <v-container fluid>
         <div class="d-flex align-center justify-space-between mb-4">
-            <v-card-title class="text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
+            <v-card-title class="text-h6 mb-2 font-weight-bold" :style="{ color: '#6B4F3A' }">
                 Fiches chevaux
             </v-card-title>
 

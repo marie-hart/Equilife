@@ -9,7 +9,8 @@
       <v-btn 
         icon 
         variant="text" 
-        color="white" 
+        class="pr-4"
+        color="#1F3D2B" 
         v-bind="menuProps" 
         @click="handleBellClick"
       >

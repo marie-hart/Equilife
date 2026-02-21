@@ -1,94 +1,107 @@
 <template>
-    <v-col cols="12" class="pa-0">
-      <SectionCard
-        title="Note rapide"
-        icon="book"
-      >
-  
-        <!-- Zone de saisie -->
-        <v-card
-          variant="outlined"
-          rounded="lg"
-          class="pa-4 border-md"
-        >
-          <v-textarea
-            v-model="noteText"
-            placeholder="Ajouter une petite note…"
-            variant="solo"
-            density="comfortable"
-            auto-grow
-            rows="2"
-            hide-details
-            @blur="$emit('save')"
-          />
-  
-          <div class="d-flex justify-end mt-3">
-            <v-btn
-              variant="outlined"
-              rounded="lg"
-              color="#a4afb5"
-              class="text-none"
-              :style="{ backgroundColor: '#f6f0ea' }"
-              @click="$emit('save')"
-            >
-              Ajouter la note
-            </v-btn>
-          </div>
-        </v-card>
-  
-        <v-divider class="my-4" />
-  
-        <!-- Notes existantes -->
-        <v-list
-          v-if="notes.length"
-          density="compact"
-          style="background-color: transparent"
-        >
-          <v-list-item
-            v-for="note in notes"
-            :key="note.id"
-            variant="tonal"
-            rounded="lg"
-            class="mb-2"
-          >
-            <v-list-item-title class="text-body-2">
-              {{ note.text }}
-            </v-list-item-title>
-  
-            <v-list-item-subtitle class="text-caption">
-              {{ formatDateLong(note.createdAt) }}
-            </v-list-item-subtitle>
-  
-            <template #append>
-              <v-btn
-                icon="mdi-pencil-outline"
-                size="x-small"
-                variant="text"
-                @click="$emit('edit', note)"
-              />
-              <v-btn
-                icon="mdi-delete-outline"
-                size="x-small"
-                variant="text"
-                color="error"
-                @click="$emit('delete', note.id)"
-              />
-            </template>
-          </v-list-item>
-        </v-list>
-  
-        <!-- Empty state -->
-        <v-alert
-          v-else
-          type="info"
-          variant="tonal"
-          density="comfortable"
-          text="Aucune note pour le moment"
+  <v-col cols="12" class="pa-2">
+    <v-card
+      rounded="xl"
+      elevation="0"
+      class="pa-2"
+    >
+
+      <!-- Header -->
+      <div class="d-flex align-center mb-3">
+        <v-icon
+          icon="mdi-note-text-outline"
+          size="20"
+          class="mr-2"
+          :style="{ color: '#6B4E3D' }"
         />
-  
-      </SectionCard>
-    </v-col>
-  </template>
+        <span class="text-subtitle-1 font-weight-medium">
+          Note rapide
+        </span>
+      </div>
+
+      <!-- Zone de saisie -->
+      <v-textarea
+        v-model="noteText"
+        placeholder="Ajouter une petite note…"
+        variant="solo"
+        bg-color="#F3EFEA"
+        rounded="lg"
+        density="compact"
+        auto-grow
+        rows="1"
+        hide-details
+        class="mb-2"
+        @blur="$emit('save')"
+      />
+
+      <!-- Bouton -->
+      <v-btn
+        block
+        rounded="xl"
+        height="40"
+        class="text-none"
+        :style="{
+          backgroundColor: '#2E4B36',
+          color: '#FFFFFF'
+        }"
+        @click="$emit('save')"
+      >
+        Ajouter la note
+      </v-btn>
+
+      <v-divider class="my-3" />
+
+      <!-- Notes existantes -->
+      <v-list
+        v-if="notes.length"
+        density="compact"
+        class="pa-0"
+        style="background-color: transparent"
+      >
+        <v-list-item
+          v-for="note in notes"
+          :key="note.id"
+          rounded="lg"
+          class="mb-2"
+          :style="{ backgroundColor: '#F3EFEA' }"
+        >
+          <v-list-item-title class="text-body-2">
+            {{ note.text }}
+          </v-list-item-title>
+
+          <v-list-item-subtitle class="text-caption text-medium-emphasis">
+            {{ formatDateLong(note.createdAt) }}
+          </v-list-item-subtitle>
+
+          <template #append>
+            <v-btn
+              icon="mdi-pencil-outline"
+              size="x-small"
+              variant="text"
+              @click="$emit('edit', note)"
+            />
+            <v-btn
+              icon="mdi-delete-outline"
+              size="x-small"
+              variant="text"
+              color="error"
+              @click="$emit('delete', note.id)"
+            />
+          </template>
+        </v-list-item>
+      </v-list>
+
+      <!-- Empty state -->
+      <div
+        v-else
+        class="text-caption text-medium-emphasis text-center py-3"
+      >
+        Aucune note pour le moment
+      </div>
+
+    </v-card>
+  </v-col>
+</template>
   
 
 <script setup lang="ts">

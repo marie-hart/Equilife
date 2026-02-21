@@ -23,7 +23,7 @@
                         variant="flat"
                         rounded="lg"
                         :to="{ name: 'ProductCreate', params: { id: horsesStore.horseId } }"
-                        :style="{ backgroundColor: '#554338', color: 'white' }"
+                        :style="{ backgroundColor: '#1F3D2B', color: 'white' }"
                         class="text-none"
                     >
                         <v-icon start icon="mdi-plus" />
@@ -35,7 +35,6 @@
                     class="pa-2" 
                     variant="flat" 
                     rounded="lg"
-                    :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
                 >
                     <v-card-title class="text-subtitle-1 font-weight-bold" :style="{ color: '#3c3226' }">
                         Filtres
@@ -77,10 +76,6 @@
                 <ProductList
                     v-else
                     :products="filteredProducts"
-                    :get-horse-name="horsesStore.getHorseNameById"
-                    :recurrence-label="recurrenceLabel"
-                    :get-product-actions="getProductActions"
-                    :toggle-repurchase="toggleRepurchase"
                 />
             </div>
 
@@ -111,7 +106,6 @@ import { useHorsesStore } from "@/stores/HorsesStore";
 import type { Product, ProductAction } from "@/types";
 import type { Event } from "@/types";
 import { ProductList } from "@/views/products";
-// REMOVED: import { storeToRefs } from 'pinia';
 
 const products = ref<Product[]>([]);
 const isLoading = ref(true);
@@ -125,7 +119,7 @@ const isDeleteOpen = ref(false);
 const selectedCategory = ref<string>("all");
 const searchQuery = ref<string>("");
 
-const horsesStore = useHorsesStore(); // Initialisation du Store
+const horsesStore = useHorsesStore();
 
 const categoryFilterOptions = [
     { title: "Toutes", value: "all" },

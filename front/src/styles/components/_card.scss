@@ -1,0 +1,27 @@
+.app-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  padding: 1.25rem;
+}
+
+.app-card--link {
+  cursor: pointer;
+  transition: var(--transition);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+  }
+}
+
+.app-card__title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.app-card__subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}

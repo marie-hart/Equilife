@@ -9,8 +9,8 @@
           class="elevation-0 px-2"
           size="small"
           :style="{
-              backgroundColor: '#f2e8dc',
-              color: '#554338'
+              backgroundColor: '#6B4F3A',
+              color: '#FAF9F7'
           }"
           :to="{ name: 'ReminderCreate', params: { id: horsesStore.horseId ?? undefined } }"
       />
@@ -18,7 +18,7 @@
     <v-card
           variant="flat"
           rounded="lg"
-          class="pa-4 border-md"
+          class="pa-2 border-md"
     >
       <div class="d-flex flex-column ga-4">
         <v-chip
@@ -27,7 +27,7 @@
           variant="flat"
           class="align-self-start"
           :style="{
-            backgroundColor: '#e3b077',
+            backgroundColor: '#E6DCCB',
             color: '#3c3226'
           }"
         >
@@ -44,19 +44,14 @@
                 :to="{ name: 'ActivityDetails', params: { id: reminder.id } }"
                 variant="tonal"
                 rounded="lg"
-                class="pa-3 d-flex align-center justify-space-between"
-                :style="{
-                    backgroundColor: '#fdfaf6', // Fond léger pour l'item
-                    color: '#554338',
-                    border: 'none'
-                }"
+                class="pa-2 d-flex align-center justify-space-between"
                 flat
             >
                 <div class="d-flex flex-column">
                     <span class="text-body-2 font-weight-medium">
                         {{ reminder.name }}
                     </span>
-                    <span class="text-caption" :style="{ color: '#7a6e61' }">
+                    <span class="text-caption" :style="{ color: '#6B4F3A' }">
                         {{ formatDateLong(getReminderDate(reminder)) }}
                     </span>
                 </div>
@@ -77,13 +72,13 @@
     </v-card>
     <div class="d-flex justify-center">
           <v-btn
-            rounded="lg"
+            rounded="xl"
             variant="flat"
             :to="{ name: 'Reminders' }"
             class="mt-4"
             :style="{
-              backgroundColor: '#f2e8dc',
-              color: '#554338'
+              backgroundColor: '#6B4F3A',
+              color: '#FAF9F7'
             }"
           >
             Voir tous les rappels

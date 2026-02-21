@@ -1,32 +1,31 @@
 <template>
     <div>
-      <v-app-bar app flat height="72" color="#909185">
-        <v-app-bar-nav-icon
-          v-if="lgAndUp"
-          color="white"
-          @click="isMoreOpen = !isMoreOpen"
-        />
+      <v-app-bar 
+        app 
+        flat 
+        color="#f3eadf" 
+        height="72"
+        style="border-bottom: none !important;"
+      >
+        <div class="d-flex align-center shadow-none" style="flex: 1;">
+          <v-app-bar-nav-icon
+            v-if="lgAndUp"
+            color="grey-darken-3"
+            @click="isMoreOpen = !isMoreOpen"
+          />
+        </div>
   
-        <img
-          v-if="!lgAndUp"
-          src="/logo-equilife.png"
-          alt="EquiLife"
-          height="50"
-          class="ml-3"
-        />
+        <div class="d-flex justify-center align-center">
+          <img
+            src="/equilife.png"
+            alt="EquiLife"
+            :height="lgAndUp ? 50 : 32"
+          />
+        </div>
   
-        <v-spacer />
-  
-        <img
-          v-if="lgAndUp"
-          src="/logo-equilife.png"
-          alt="EquiLife"
-          height="50"
-        />
-  
-        <v-spacer />
-  
-       <NotificationBell />
+        <div class="d-flex justify-end align-center" style="flex: 1;">
+          <NotificationBell />
+        </div>
       </v-app-bar>
   
       <HeaderNavigation

@@ -3,8 +3,8 @@
   "short_name": "EquiLife",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#909185",
-  "theme_color": "#909185",
+  "theme_color": "#1F3D2B",
+  "background_color": "#FAF9F7",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",

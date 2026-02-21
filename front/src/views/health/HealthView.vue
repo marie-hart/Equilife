@@ -21,7 +21,7 @@
                         variant="flat"
                         rounded="lg"
                         :to="{ name: 'HealthCreate', params: { id: horsesStore.horseId !== 'all' ? horsesStore.horseId : undefined } }"
-                        :style="{ backgroundColor: '#554338', color: 'white' }"
+                        :style="{ backgroundColor: '#1F3D2B', color: 'white' }"
                     >
                         <v-icon start icon="mdi-plus" />
                         Ajouter

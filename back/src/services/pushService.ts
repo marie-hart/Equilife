@@ -104,11 +104,11 @@ const fetchDueReminders = async () => {
               e.id,
               e.name,
               e.description,
-              e.horse_id, -- AJOUT : Récupération de l'ID du cheval
+              e.horse_id,
               COALESCE(e.next_reminder_date, e.event_date) AS reminder_date
             FROM events e
             LEFT JOIN push_notifications pn
-              ON pn.event_id = e.id
+              ON pn.event_id::text = e.id::text
               AND pn.reminder_date = COALESCE(e.next_reminder_date, e.event_date)
             WHERE e.reminder_enabled = true
               AND COALESCE(e.next_reminder_date, e.event_date) IS NOT NULL

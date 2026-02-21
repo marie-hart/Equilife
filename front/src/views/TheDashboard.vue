@@ -8,72 +8,77 @@
 
             <template v-else>
                 <div class="mb-4">
-                    <v-card rounded="xl" height="100%">
-                        <HorseProfileCard
-                            :horseProfile="horsesStore.selectedHorse"
-                            :horses="horsesStore.horses"
-                        />
-                    </v-card>
-                 </div>   
-                 
-                 <div class="mb-4">
-                    <QuickNoteView />
-                 </div>
+                <v-card
+                    rounded="xl"
+                    elevation="2"
+                    >
+                    <HorseProfileCard
+                        :horseProfile="horsesStore.selectedHorse"
+                        :horses="horsesStore.horses"
+                    />
 
-               <v-row v-if="smAndDown" dense>
+                    <v-divider />
+
+                    <QuickNoteView />
+                </v-card>
+                </div>
+                 
+                <v-row v-if="smAndDown" dense>
                     <v-col cols="12" sm="6">
                         <v-card
                             :to="getActivitiesRoute()"
+                            block
+                            rounded="xl"
+                            variant="tonal"
+                            elevation="4"
+                            style="background-color: #2E4B36; color: white"
+                            class="py-2 px-6"
+                        >
+                            <div class="d-flex align-center ga-3">
+                                <img
+                                src="/equestre.svg"
+                                alt="Suivi d’entraînement"
+                                width="32"
+                                />
+                                <div>
+                                    <div class="text-subtitle-1 font-weight-medium">
+                                        Suivi d’entraînement
+                                    </div>
+                                    <div class="text-caption text-white">
+                                        Activités & séances
+                                    </div>
+                                </div>
+                            </div>
+                        </v-card>
+                    </v-col>
+
+                    <v-col cols="12" sm="6">
+                        <v-card
+                            :to="goToFeeding()"
                             link
                             rounded="xl"
                             variant="tonal"
-                            style="background-color: #f1d9c2;"
-                            class="pa-4"
+                            elevation="4"
+                            style="background-color:#6b4f3a; color: white"
+                            class="py-2 px-6"
                         >
-                <div class="d-flex align-center ga-3">
-                    <img
-                        src="/equestre.png"
-                        alt="Suivi d’entraînement"
-                        width="32"
-                    />
-                   <div>
-                        <div class="text-subtitle-1 font-weight-medium">
-                            Suivi d’entraînement
-                        </div>
-                        <div class="text-caption text-grey-darken-1">
-                            Activités & séances
-                        </div>
-                    </div>
-                </div>
-                </v-card>
-                </v-col>
-
-                <v-col cols="12" sm="6">
-                    <v-card
-                    :to="goToFeeding()"
-                    link
-                    rounded="xl"
-                    variant="tonal"
-                    style="background-color:#c7c8b7;"
-                    class="pa-4"
-                    >
-                    <div class="d-flex align-center ga-3">
-                        <img
-                        src="/ration.png"
-                        alt="Alimentation"
-                        width="32"
-                        />
-                        <div>
-                        <div class="text-subtitle-1 font-weight-medium">
-                            Alimentation
-                        </div>
-                        <div class="text-caption text-grey-darken-1">
-                            Rations & repas
-                        </div>
-                    </div>
-                    </div>
-                    </v-card>
-                </v-col>
+                            <div class="d-flex align-center ga-3">
+                                <img
+                                src="/ration.svg"
+                                alt="Alimentation"
+                                width="32"
+                                />
+                                <div>
+                                    <div class="text-subtitle-1 font-weight-medium">
+                                        Alimentation
+                                    </div>
+                                    <div class="text-caption text-white">
+                                        Rations & repas
+                                    </div>
+                                </div>
+                            </div>
+                        </v-card>
+                    </v-col>
                 </v-row>
 
                 <div class="mt-4">

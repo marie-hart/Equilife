@@ -1,156 +1,214 @@
 <template>
-    <v-form @submit.prevent="emit('submit')">
-        <v-row dense>
-            <v-col cols="12" md="6">
-                <v-text-field v-model="name" label="Nom" density="compact" />
-            </v-col>
-            <v-col cols="12" md="6">
-                <v-select
-                    v-model="category"
-                    :items="categoryOptions"
-                    label="Catégorie"
-                    density="compact"
-                    variant="outlined"
-                />
-            </v-col>
-            <v-col cols="12" md="6">
-                <v-text-field
-                    v-model="brand"
-                    label="Marque"
-                    density="compact"
-                />
-            </v-col>
-            <RecurrenceFields
-                v-model="recurrence"
-                :units="recurrenceUnits"
-                :show="showRecurrence"
-                :checkbox-md="4"
-                :fields-md="8"
-            />
-            <v-col cols="12">
-                <v-textarea
-                    v-model="note"
-                    label="Note"
-                    density="compact"
-                    variant="outlined"
-                    rows="2"
-                />
-            </v-col>
-            <v-col cols="12" v-if="showRepurchase">
-                <v-checkbox
-                    v-model="needsRepurchase"
-                    label="À racheter"
-                    density="compact"
-                />
-            </v-col>
-        </v-row>
-        <div class="d-flex justify-end ga-2">
-            <v-btn
-                v-if="showCancel"
-                variant="text"
-                size="small"
-                type="button"
-                @click="emit('cancel')"
-            >
-                {{ cancelLabel }}
-            </v-btn>
-            <v-btn
-                variant="elevated"
-                color="primary"
-                size="small"
-                type="submit"
-                :loading="loading"
-            >
-                {{ submitLabel }}
-            </v-btn>
-        </div>
-    </v-form>
+  <v-form @submit.prevent="handleSubmit">
+    <v-row dense>
+
+      <!-- NOM -->
+      <v-col cols="12" md="6">
+        <v-text-field
+          v-model="localForm.name"
+          label="Nom *"
+          density="comfortable"
+          variant="outlined"
+          rounded="lg"
+          :error-messages="errors.name"
+        />
+      </v-col>
+
+      <!-- TYPE -->
+      <v-col cols="12" md="6">
+        <v-select
+          v-model="localForm.type"
+          :items="typeOptions"
+          label="Type *"
+          density="comfortable"
+          variant="outlined"
+          rounded="lg"
+          :error-messages="errors.type"
+        />
+      </v-col>
+
+      <!-- MARQUE -->
+      <v-col cols="12" md="6">
+        <v-text-field
+          v-model="localForm.brand"
+          label="Marque"
+          density="comfortable"
+          variant="outlined"
+          rounded="lg"
+        />
+      </v-col>
+
+      <!-- ================= STOCK SECTION ================= -->
+      <template v-if="isStockManaged">
+
+        <v-col cols="12">
+          <div class="text-subtitle-1 font-weight-medium mt-4 mb-2">
+            Gestion du stock
+          </div>
+        </v-col>
+
+        <!-- DATE -->
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="localForm.purchase_date"
+            label="Date de réception *"
+            type="date"
+            density="comfortable"
+            variant="outlined"
+            rounded="lg"
+            :error-messages="errors.purchase_date"
+          />
+        </v-col>
+
+        <!-- QUANTITE -->
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model.number="localForm.quantity_purchased"
+            label="Quantité achetée *"
+            type="number"
+            min="0"
+            density="comfortable"
+            variant="outlined"
+            rounded="lg"
+            :error-messages="errors.quantity_purchased"
+          />
+        </v-col>
+
+        <!-- CONSOMMATION -->
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model.number="localForm.daily_usage"
+            label="Consommation / jour *"
+            type="number"
+            min="0"
+            density="comfortable"
+            variant="outlined"
+            rounded="lg"
+            :error-messages="errors.daily_usage"
+          />
+        </v-col>
+
+        <!-- UNITE -->
+        <v-col cols="12" md="4">
+          <v-select
+            v-model="localForm.unit"
+            :items="unitOptions"
+            label="Unité"
+            density="comfortable"
+            variant="outlined"
+            rounded="lg"
+          />
+        </v-col>
+
+      </template>
+
+      <!-- NOTE -->
+      <v-col cols="12">
+        <v-textarea
+          v-model="localForm.note"
+          label="Note"
+          density="comfortable"
+          variant="outlined"
+          rounded="lg"
+          rows="3"
+        />
+      </v-col>
+
+    </v-row>
+
+    <!-- ACTIONS -->
+    <div class="d-flex justify-end mt-4 ga-2">
+      <v-btn
+        v-if="showCancel"
+        variant="outlined"
+        rounded="lg"
+        @click="$emit('cancel')"
+      >
+        Annuler
+      </v-btn>
+
+      <v-btn
+        variant="flat"
+        :style="{ backgroundColor: '#554338', color: 'white' }"
+        rounded="lg"
+        :loading="loading"
+        type="submit"
+      >
+        {{ submitLabel }}
+      </v-btn>
+    </div>
+
+  </v-form>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { RecurrenceFields } from "@/components";
-import { ProductFormValue } from "@/types";
+import { computed, reactive, watch } from "vue";
+import type { Product } from "@/types";
 
 const props = withDefaults(
-    defineProps<{
-        modelValue: ProductFormValue;
-        loading?: boolean;
-        submitLabel?: string;
-        cancelLabel?: string;
-        showCancel?: boolean;
-        showRecurrence?: boolean;
-        showRepurchase?: boolean;
-    }>(),
-    {
-        loading: false,
-        submitLabel: "Enregistrer",
-        cancelLabel: "Annuler",
-        showCancel: false,
-        showRecurrence: true,
-        showRepurchase: false,
-    },
+  defineProps<{
+    modelValue: Partial<Product>;
+    loading?: boolean;
+    submitLabel?: string;
+    showCancel?: boolean;
+  }>(),
+  {
+    loading: false,
+    submitLabel: "Enregistrer",
+    showCancel: false,
+  }
 );
 
-const emit = defineEmits<{
-    (event: "update:modelValue", value: ProductFormValue): void;
-    (event: "submit"): void;
-    (event: "cancel"): void;
-}>();
+const emit = defineEmits(["update:modelValue", "submit", "cancel"]);
 
-const name = computed({
-    get: () => props.modelValue.name,
-    set: (value) =>
-        emit("update:modelValue", { ...props.modelValue, name: value }),
-});
+const localForm = reactive({ ...props.modelValue });
+const errors = reactive<Record<string, string[]>>({});
 
-const category = computed({
-    get: () => props.modelValue.category,
-    set: (value) =>
-        emit("update:modelValue", { ...props.modelValue, category: value }),
-});
+watch(
+  () => localForm,
+  () => emit("update:modelValue", { ...localForm }),
+  { deep: true }
+);
 
-const brand = computed({
-    get: () => props.modelValue.brand,
-    set: (value) =>
-        emit("update:modelValue", { ...props.modelValue, brand: value }),
-});
+const STOCK_TYPES = ["Granulés", "Complément"];
 
-const note = computed({
-    get: () => props.modelValue.note,
-    set: (value) =>
-        emit("update:modelValue", { ...props.modelValue, note: value }),
-});
+const isStockManaged = computed(() =>
+  STOCK_TYPES.includes(localForm.type || "")
+);
 
-const recurrence = computed({
-    get: () => ({
-        isRecurring: props.modelValue.isRecurring,
-        recurrenceInterval: props.modelValue.recurrenceInterval,
-        recurrenceUnit: props.modelValue.recurrenceUnit,
-    }),
-    set: (value) =>
-        emit("update:modelValue", { ...props.modelValue, ...value }),
-});
-
-const needsRepurchase = computed({
-    get: () => props.modelValue.needs_repurchase ?? false,
-    set: (value) =>
-        emit("update:modelValue", {
-            ...props.modelValue,
-            needs_repurchase: value,
-        }),
-});
-
-const categoryOptions = [
-    { title: "Aliment", value: "Aliment" },
-    { title: "Complément", value: "Complément" },
-    { title: "Soin", value: "Soin" },
-    { title: "Matériels", value: "Matériels" },
-    { title: "Autres", value: "Autres" },
+const typeOptions = [
+  "Granulés",
+  "Complément",
+  "Friandises",
+  "Équipement",
+  "Pharmacie",
+  "Autres"
 ];
 
-const recurrenceUnits = [
-    { title: "Mois", value: "months" },
-    { title: "Ans", value: "years" },
-];
+const unitOptions = ["kg", "L", "g"];
+
+const validate = () => {
+  Object.keys(errors).forEach(k => delete errors[k]);
+
+  if (!localForm.name) errors.name = ["Champ obligatoire"];
+  if (!localForm.type) errors.type = ["Champ obligatoire"];
+
+  if (isStockManaged.value) {
+    if (!localForm.purchase_date)
+      errors.purchase_date = ["Champ obligatoire"];
+
+    if (!localForm.quantity_purchased)
+      errors.quantity_purchased = ["Champ obligatoire"];
+
+    if (!localForm.daily_usage)
+      errors.daily_usage = ["Champ obligatoire"];
+  }
+
+  return Object.keys(errors).length === 0;
+};
+
+const handleSubmit = () => {
+  if (!validate()) return;
+  emit("submit");
+};
 </script>

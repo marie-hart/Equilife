@@ -44,13 +44,14 @@ export default defineConfig(({ mode }) => {
             src: "icons/icon-512x512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "maskable", // Important pour Android
+            purpose: "maskable",
           },
         ],
       },
       includeAssets: ['apple-touch-icon.png'],
       devOptions: {
         enabled: true,
+        type: 'module'
       },
     }),
   ],

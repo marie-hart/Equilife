@@ -4,7 +4,7 @@
     box-sizing: border-box;
 }
 
-:root {
+/* :root {
     --bg-grey: #d3d3d3;
     --bg-light: #f2f2f2;
     --primary-turquoise: #1e63b0;
@@ -19,6 +19,43 @@
     --spacing-sm: 1rem;
     --spacing-md: 1.5rem;
     --spacing-lg: 2rem;
+} */
+
+:root {
+    /* === BRAND COLORS === */
+    --primary-green: #1F3D2B;
+    --secondary-brown: #6B4F3A;
+
+    /* === BACKGROUNDS === */
+    --bg-main: #FAF9F7;
+    --bg-surface: #E6DCCB;
+    --bg-elevated: #FFFFFF;
+
+    /* === TEXT === */
+    --text-primary: #1F3D2B;
+    --text-secondary: #6B4F3A;
+    --text-muted: rgba(31, 61, 43, 0.6);
+    --text-inverse: #FAF9F7;
+
+    /* === BORDERS === */
+    --border-light: #E6DCCB;
+    --border-strong: #1F3D2B;
+
+    /* === UI TOKENS === */
+    --border-radius: 16px;
+    --border-radius-sm: 10px;
+
+    --shadow-soft: 0 4px 12px rgba(31, 61, 43, 0.08);
+    --shadow-elevated: 0 8px 20px rgba(31, 61, 43, 0.12);
+
+    /* === SPACING === */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+
+    /* === TRANSITIONS === */
+    --transition: 0.25s ease-in-out;
 }
 
 html {
@@ -51,10 +88,24 @@ button {
     min-height: 44px; /* Taille minimale pour le touch */
 }
 
-.btn-primary {
+/* .btn-primary {
     background-color: var(--primary-turquoise);
     color: white;
+} */
+
+.btn-primary {
+    background-color: var(--primary-green);
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    padding: 0.8rem 1.4rem;
+    transition: var(--transition);
 }
+
+.btn-primary:hover {
+    background-color: #173022;
+}
+
 
 .btn-primary:active {
     background-color: #2399a8;
@@ -69,9 +120,15 @@ button {
     }
 }
 
-.btn-secondary {
+/* .btn-secondary {
     background-color: var(--secondary-beige);
     color: var(--text-dark);
+} */
+
+.btn-secondary {
+    background-color: var(--secondary-brown);
+    color: var(--text-inverse);
+    border-radius: var(--border-radius-sm);
 }
 
 .btn-secondary:active {
@@ -87,13 +144,21 @@ button {
     }
 }
 
-.card {
+/* .card {
     background-color: var(--white);
     border: 1px solid #e2e8f0;
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     box-shadow: var(--shadow);
+} */
+
+.card {
+    background-color: var(--bg-surface);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-soft);
 }
+
 
 .icon {
     width: 20px;

@@ -26,6 +26,7 @@
         temporary
         location="left"
         :model-value="isMoreOpen"
+        style="border-right: none !important;"
       >
         <v-list nav>
           <v-list-item
@@ -55,11 +56,6 @@
     navItems: NavItem[];
     isMoreOpen: boolean;
   }>();
-  
-  // const emit = defineEmits<{
-  //   (e: "navigate", routeName: NavItem["routeName"], params?: Record<string, any>): void;
-  //   (e: "update:isMoreOpen", value: boolean): void;
-  // }>();
   
   const { mdAndUp, lgAndUp } = useDisplay();
   

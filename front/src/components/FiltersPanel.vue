@@ -4,11 +4,7 @@
         rounded="lg"
         flat
         class="pa-4"
-        :style="{
-            backgroundColor: '#fdfaf6',
-            color: '#554338',
-            border: 'none'
-        }"
+        :style="{ border: 'none' }"
     >
         <v-row dense>
             <v-col v-for="filter in filters" :key="filter.key" cols="12" md="4">
@@ -17,9 +13,9 @@
                     v-model="modelValue[filter.key]"
                     :items="filter.options"
                     :label="filter.label"
+                    hide-details="auto"
                     density="compact"
                     variant="outlined"
-                    bg-color="white"
                     rounded="lg"
                 />
 
@@ -27,6 +23,7 @@
                     v-else-if="filter.type === 'date'"
                     v-model="modelValue[filter.key]"
                     :label="filter.label"
+                    hide-details="auto"
                     variant="outlined"
                     bg-color="white"
                     rounded="lg"
@@ -36,6 +33,7 @@
                     v-else-if="filter.type === 'search'"
                     v-model="modelValue[filter.key]"
                     :label="filter.label"
+                    hide-details="auto"
                     density="compact"
                     variant="outlined"
                     bg-color="white"

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="text-subtitle-1 mb-2 font-weight-bold" :style="{ color: '#554338' }">Liste des soins</div>
+        <div class="text-h6 mb-2 font-weight-bold" :style="{ color: '#6B4F3A' }">Liste des soins</div>
         <div class="pt-2">
             <div v-if="items.length" class="d-flex flex-column ga-2">
                 <v-card

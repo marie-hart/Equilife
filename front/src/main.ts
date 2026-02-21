@@ -23,7 +23,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import "@mdi/font/css/materialdesignicons.css";
-import "@/styles/Global.css";
+// import "@/styles/Global.css";
+// import "@/styles/main.scss";
 import "vuetify/styles";
 import App from "@/App.vue";
 import router from "@/router";
@@ -63,9 +64,9 @@ const vuetify = createVuetify({
         themes: {
             light: {
                 colors: {
-                    primary: "#2F4F2F",
-                    secondary: "#E8E4DA",
-                    surface: "#FAFAF8",
+                    primary: "#1F3D2B",
+                    secondary: "#E6DCCB",
+                    surface: "#FAF9F7",
                 },
             },
         },
