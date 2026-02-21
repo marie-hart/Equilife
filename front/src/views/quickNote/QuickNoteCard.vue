@@ -106,9 +106,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { SectionCard } from "@/components/index.js";
-import { formatDateLong } from "@/libs/date.js";
-import type { DashboardNote } from "@/types/note.js";
+import { formatDateLong } from "@/libs/date";
+import type { DashboardNote } from "@/types/note";
 
 const props = defineProps<{
     modelValue: string;

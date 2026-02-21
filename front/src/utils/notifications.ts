@@ -137,20 +137,17 @@ const pollReminders = async () => {
     if (changed) saveSeen(seen);
 };
 
-export const startReminderNotifications = async () => {
-    if (!isBrowser() || pollerStarted) return;
-    pollerStarted = true;
+export function startReminderNotifications() {
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    const data = event.data;
 
-    const permission = await requestPermission();
-    if (permission !== "granted") return;
-
-    try {
-        const subscribed = await ensurePushSubscription();
-        if (subscribed) return;
-    } catch {
-        // Fall back to polling if push subscription fails
+    if (data?.type === "stock") {
+      const store = useNotificationStore();
+      store.addStockAlert({
+        product_id: data.product_id,
+        title: data.title,
+        body: data.body
+      });
     }
-
-    await pollReminders();
-    window.setInterval(pollReminders, POLL_INTERVAL_MS);
-};
+  });
+}

@@ -58,55 +58,54 @@ export interface UpdateEventDto {
     reminder_interval_years?: number;
 }
 
-// Types pour le matériel
-export interface Material {
-    id: string;
-    name: string;
-    description?: string;
-    category?: "Aliment" | "Complément" | "Soin" | "Matériels" | "Autres";
-    brand?: string;
-    note?: string;
-    last_purchase_date?: Date;
-    purchase_interval_months?: number;
-    purchase_interval_years?: number;
-    estimated_cost?: number;
-    horse_id?: string;
-    used_for_horses?: string[];
-    needs_repurchase?: boolean;
-    is_active: boolean;
-    created_at: Date;
-    updated_at: Date;
+export interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  category?: "Aliment" | "Complément" | "Soin" | "Matériels" | "Autres";
+  brand?: string;
+  note?: string;
+  last_purchase_date?: Date;
+  purchase_interval_months?: number;
+  purchase_interval_years?: number;
+  estimated_cost?: number;
+  horse_id?: string;
+  used_for_horses?: string[];
+  needs_repurchase?: boolean;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
-export interface CreateMaterialDto {
-    name: string;
-    description?: string;
-    category?: "Aliment" | "Complément" | "Soin" | "Matériels" | "Autres";
-    brand?: string;
-    note?: string;
-    last_purchase_date?: string;
-    purchase_interval_months?: number;
-    purchase_interval_years?: number;
-    estimated_cost?: number;
-    horse_id?: string;
-    used_for_horses?: string[];
-    needs_repurchase?: boolean;
+export interface CreateProductDto {
+  name: string;
+  description?: string;
+  category?: "Aliment" | "Complément" | "Soin" | "Matériels" | "Autres";
+  brand?: string;
+  note?: string;
+  last_purchase_date?: string;
+  purchase_interval_months?: number;
+  purchase_interval_years?: number;
+  estimated_cost?: number;
+  horse_id?: string;
+  used_for_horses?: string[];
+  needs_repurchase?: boolean;
 }
 
-export interface UpdateMaterialDto {
-    name?: string;
-    description?: string;
-    category?: "Aliment" | "Complément" | "Soin" | "Matériels" | "Autres";
-    brand?: string;
-    note?: string;
-    last_purchase_date?: string;
-    purchase_interval_months?: number;
-    purchase_interval_years?: number;
-    estimated_cost?: number;
-    horse_id?: string;
-    used_for_horses?: string[];
-    needs_repurchase?: boolean;
-    is_active?: boolean;
+export interface UpdateProductDto {
+  name?: string;
+  description?: string;
+  category?: "Aliment" | "Complément" | "Soin" | "Matériels" | "Autres";
+  brand?: string;
+  note?: string;
+  last_purchase_date?: string;
+  purchase_interval_months?: number;
+  purchase_interval_years?: number;
+  estimated_cost?: number;
+  horse_id?: string;
+  used_for_horses?: string[];
+  needs_repurchase?: boolean;
+  is_active?: boolean;
 }
 
 // Types pour les chevaux

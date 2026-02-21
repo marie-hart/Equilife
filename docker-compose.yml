@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: horse_user
       POSTGRES_PASSWORD: horse_password
     ports:
-      - "5436:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

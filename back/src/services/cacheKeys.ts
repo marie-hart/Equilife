@@ -1,44 +1,56 @@
-/**
- * Clés de cache utilisées dans l'application
- */
 export class CacheKeys {
-    // Événements
+    // --- Événements ---
     static eventKey(id: string): string {
         return `event:${id}`;
     }
 
     static eventsListKey(horseId?: string): string {
-        return horseId ? `events:list:${horseId}` : "events:list";
+        return horseId ? `event:list:${horseId}` : "event:list:all";
     }
 
     static eventsRemindersKey(horseId?: string): string {
-        return horseId ? `events:reminders:${horseId}` : "events:reminders";
+        return horseId ? `event:reminders:${horseId}` : "event:reminders:all";
     }
 
-    // Matériels
-    static materialKey(id: string): string {
-        return `material:${id}`;
+    // --- Produits ---
+    static productKey(id: string): string {
+        return `product:${id}`;
     }
 
-    static materialsListKey(
+    static productsListKey(
         includeInactive: boolean = false,
         horseId?: string,
     ): string {
+        const status = includeInactive ? "all" : "active";
         return horseId
-            ? `materials:list:${includeInactive}:${horseId}`
-            : `materials:list:${includeInactive}`;
+            ? `product:list:${status}:${horseId}`
+            : `product:list:${status}`;
     }
 
-    static materialsDueKey(horseId?: string): string {
-        return horseId ? `materials:due:${horseId}` : "materials:due";
+    static productsDueKey(horseId?: string): string {
+        return horseId ? `product:due:${horseId}` : "product:due:all";
     }
 
-    // Chevaux
-    static horsesListKey(): string {
-        return "horses:list";
-    }
-
+    // --- Chevaux ---
     static horseKey(id: string): string {
         return `horse:${id}`;
+    }
+
+    static horsesListKey(): string {
+        return "horse:list:all";
+    }
+
+    // --- Rations (Nouveau) ---
+    static rationKey(id: string): string {
+        return `ration:${id}`;
+    }
+
+    static horseRationKey(horseId: string): string {
+        return `ration:horse:${horseId}`;
+    }
+
+    // --- Documents (Nouveau) ---
+    static horseDocumentsKey(horseId: string): string {
+        return `document:horse:${horseId}`;
     }
 }

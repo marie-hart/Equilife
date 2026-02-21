@@ -3,19 +3,10 @@
 %uri=https://github.com/yourusername/horse-care-app
 
 init 2024-01-01T00:00:00Z Initial schema <init@sqitch.org>
-
-horses_table 2026-01-17T15:03:51Z mariehdek <mariehdek@yahoo.fr> # Add horses table with profile information and photo upload
-horse_links 2026-01-17T15:43:51Z mariehdek <mariehdek@yahoo.fr> # Add horse_id to events and materials
-horses_profile_fields 2026-01-19T10:00:00Z mariehdek <mariehdek@yahoo.fr> # Add profile fields to horses
-events_care_fields 2026-01-20T09:00:00Z mariehdek <mariehdek@yahoo.fr> # Add care fields to events
-events_reminder_type 2026-01-20T09:30:00Z mariehdek <mariehdek@yahoo.fr> # Add reminder type to events
-events_activity_fields 2026-01-20T10:00:00Z mariehdek <mariehdek@yahoo.fr> # Add activity journal fields to events
-documents_table 2026-01-20T11:00:00Z mariehdek <mariehdek@yahoo.fr> # Add documents table
-rations_table 2026-01-20T11:30:00Z mariehdek <mariehdek@yahoo.fr> # Add rations tables
-rations_note 2026-01-20T12:00:00Z mariehdek <mariehdek@yahoo.fr> # Add note to rations
-materials_products 2026-01-20T12:15:00Z mariehdek <mariehdek@yahoo.fr> # Add product fields to materials
-events_products 2026-01-20T12:30:00Z mariehdek <mariehdek@yahoo.fr> # Link events to products
-materials_unique_name 2026-01-20T12:35:00Z mariehdek <mariehdek@yahoo.fr> # Unique product names
-demo_eclipse_seed 2026-01-21T09:00:00Z mariehdek <mariehdek@yahoo.fr> # Seed demo data for Eclipse
-dedupe_eclipse 2026-01-21T09:30:00Z mariehdek <mariehdek@yahoo.fr> # Dedupe Eclipse horse
-horse_links_cascade 2026-01-26T10:00:00Z mariehdek <mariehdek@yahoo.fr> # Cascade delete horse links
+horses_table [init] 2024-01-01T00:01:00Z Votre Nom <votre@email.com>
+products [init] 2024-01-01T00:02:00Z Votre Nom <votre@email.com>
+horse_links [horses_table products] 2024-01-01T00:03:00Z Votre Nom <votre@email.com>
+events_products [init products] 2024-01-01T00:04:00Z Votre Nom <votre@email.com>
+rations_table [horses_table products] 2024-01-01T00:05:00Z Votre Nom <votre@email.com>
+documents_table [horses_table] 2024-01-01T00:06:00Z Votre Nom <votre@email.com>
+demo_eclipse_seed [horses_table products horse_links rations_table] 2024-01-01T00:07:00Z Votre Nom <votre@email.com>

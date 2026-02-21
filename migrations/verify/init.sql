@@ -1,36 +1,9 @@
--- Vérifier que les tables existent
-DO $ $ BEGIN IF NOT EXISTS (
-    SELECT
-        1
-    FROM
-        information_schema.tables
-    WHERE
-        table_name = 'events'
-) THEN RAISE EXCEPTION 'Table events does not exist';
+BEGIN;
 
-END IF;
+SELECT id, name, category, is_active FROM products WHERE FALSE;
+SELECT id, name, event_date FROM events WHERE FALSE;
 
-IF NOT EXISTS (
-    SELECT
-        1
-    FROM
-        information_schema.tables
-    WHERE
-        table_name = 'materials'
-) THEN RAISE EXCEPTION 'Table materials does not exist';
+-- Vérifie si l'extension uuid-ossp est là
+SELECT 1/COUNT(*) FROM pg_extension WHERE extname = 'uuid-ossp';
 
-END IF;
-
--- Vérifier que les fonctions existent
-IF NOT EXISTS (
-    SELECT
-        1
-    FROM
-        pg_proc
-    WHERE
-        proname = 'update_updated_at_column'
-) THEN RAISE EXCEPTION 'Function update_updated_at_column does not exist';
-
-END IF;
-
-END $ $;
+ROLLBACK;

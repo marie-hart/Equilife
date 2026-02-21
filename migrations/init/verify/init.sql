@@ -16,8 +16,8 @@ IF NOT EXISTS (
     FROM
         information_schema.tables
     WHERE
-        table_name = 'materials'
-) THEN RAISE EXCEPTION 'Table materials does not exist';
+        table_name = 'products'
+) THEN RAISE EXCEPTION 'Table products does not exist';
 
 END IF;
 

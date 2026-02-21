@@ -129,7 +129,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { DatePickerField, RecurrenceFields } from "@/components";
-import { materialsApi } from "@/api/materials";
+import { productApi } from "@/api/product";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { Product, Event, RecurrenceUnit, CreateEventDto } from "@/types";
 import { fromDateInputValue, toDateInputValue } from "@/libs/date";
@@ -161,22 +161,18 @@ const form = ref({
     note: "",
 });
 
-// Options
 const horseOptions = computed(() =>
     horsesStore.horses.map((horse) => ({ title: horse.name, value: horse.id })),
 );
 
 const productOptions = computed(() => {
-    const seen = new Set<string>();
+    const excluded = new Set(["Aliment", "Complément"]);
     return products.value
-        .filter((product) => product.category === "Soin")
-        .filter((product) => {
-            const key = product.name?.trim().toLowerCase();
-            if (!key || seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        })
-        .map((product) => ({ title: product.name, value: product.id }));
+        .filter((p) => p.is_active && (!p.category || !excluded.has(p.category)))
+        .map((p) => ({
+            title: `${p.name} ${p.brand ? `(${p.brand})` : ''}`,
+            value: p.id
+        }));
 });
 
 const recurrenceUnits = [
@@ -201,7 +197,7 @@ const loadData = async () => {
     isLoading.value = true;
     try {
         await horsesStore.loadHorses(); // Chargement via le store
-        await materialsApi.getAll(false).then(res => products.value = res);
+        await productApi.getAll(false).then(res => products.value = res);
         
         if (isEdit.value && eventId.value) {
             const event = await eventsApi.getById(eventId.value);

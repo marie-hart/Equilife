@@ -121,8 +121,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { materialsApi } from "../../api/materials.js";
-import type { Product } from "../../types/index.js";
+import { productApi } from "@/api/product";
+import type { Product } from "@/types";
 
 const route = useRoute();
 const router = useRouter();
@@ -140,7 +140,7 @@ const productId = route.params.id as string;
 const loadProduct = async () => {
     try {
         const id = route.params.id as string;
-        product.value = await materialsApi.getById(id);
+        product.value = await productApi.getById(id);
     } catch (error) {
         console.error("Error loading product:", error);
     } finally {
@@ -155,7 +155,7 @@ const goBack = () => {
 const confirmDelete = async () => {
     if (!product.value) return;
     try {
-        await materialsApi.delete(product.value.id);
+        await productApi.delete(product.value.id);
         snackbar.value = {
             show: true,
             message: "Produit supprimé.",

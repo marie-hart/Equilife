@@ -1,10 +1,10 @@
-import express, { Request, Response, RequestHandler } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
 import eventRoutes from "./routes/eventRoutes";
-import materialRoutes from "./routes/materialRoutes";
+import productRoutes from "./routes/productRoutes";
 import horseRoutes from "./routes/horseRoutes";
 import documentRoutes from "./routes/documentRoutes";
 import rationRoutes from "./routes/rationRoutes";
@@ -14,6 +14,7 @@ import redis from "./config/redis";
 import { swaggerSpec } from "./docs/swagger";
 import {
     initPushService,
+    startProductStockPushScheduler,
     startReminderPushScheduler,
 } from "./services/pushService";
 
@@ -22,117 +23,95 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
+// 1. Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Swagger docs
-const swaggerServe = swaggerUi.serve as unknown as RequestHandler[];
-const swaggerSetup = swaggerUi.setup(swaggerSpec) as unknown as RequestHandler;
-app.use("/api/docs", ...swaggerServe, swaggerSetup);
+// @ts-ignore - Pour ignorer l'incompatibilité de signature mineure
+app.use("/api/docs", swaggerUi.serve);
+// @ts-ignore - Pour ignorer l'incompatibilité de signature mineure
+app.get("/api/docs", swaggerUi.setup(swaggerSpec) as express.RequestHandler);
 
-// Servir les fichiers statiques (photos uploadées)
+// 3. Fichiers statiques
+// Note: Assure-toi que le dossier 'uploads' existe au démarrage
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-// Root route - API information
+// 4. Routes de l'API
+app.use("/api/events", eventRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/horses", horseRoutes);
+app.use("/api/documents", documentRoutes);
+app.use("/api/rations", rationRoutes);
+app.use("/api/push", pushRoutes);
+
+// Route d'information (mise à jour pour correspondre à ton schéma réel)
 app.get("/", (req: Request, res: Response) => {
     res.json({
         message: "Horse Care App API",
-        version: "1.0.0",
-        endpoints: {
-            health: "/health",
-            events: {
-                base: "/api/events",
-                list: "GET /api/events",
-                reminders: "GET /api/events/reminders",
-                getById: "GET /api/events/:id",
-                create: "POST /api/events",
-                update: "PUT /api/events/:id",
-                delete: "DELETE /api/events/:id",
-            },
-            materials: {
-                base: "/api/materials",
-                list: "GET /api/materials",
-                dueForPurchase: "GET /api/materials/due-for-purchase",
-                getById: "GET /api/materials/:id",
-                create: "POST /api/materials",
-                update: "PUT /api/materials/:id",
-                delete: "DELETE /api/materials/:id",
-                markAsPurchased: "POST /api/materials/:id/purchase",
-            },
-            horses: {
-                base: "/api/horses",
-                list: "GET /api/horses",
-                first: "GET /api/horses/first",
-                getById: "GET /api/horses/:id",
-                create: "POST /api/horses",
-                update: "PUT /api/horses/:id",
-                uploadPhoto: "POST /api/horses/:id/photo",
-                delete: "DELETE /api/horses/:id",
-            },
-            documents: {
-                base: "/api/documents",
-                list: "GET /api/documents",
-                create: "POST /api/documents",
-                delete: "DELETE /api/documents/:id",
-            },
-            rations: {
-                base: "/api/rations",
-                list: "GET /api/rations",
-                create: "POST /api/rations",
-                getById: "GET /api/rations/:id",
-                update: "PUT /api/rations/:id",
-                delete: "DELETE /api/rations/:id",
-            },
-        },
+        version: "1.1.0", // Nouvelle version pour ton nouveau schéma
+        status: "Running"
     });
 });
 
-// Health check
+// Health check avec statut Redis
 app.get("/health", async (req: Request, res: Response) => {
     try {
         await pool.query("SELECT 1");
-        const redisStatus =
-            redis.status === "ready" ? "connected" : "disconnected";
+        const redisStatus = redis.status === "ready" ? "connected" : "disconnected";
         res.json({
             status: "ok",
             database: "connected",
             redis: redisStatus,
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         res.status(500).json({ status: "error", database: "disconnected" });
     }
 });
 
-// Routes
-app.use("/api/events", eventRoutes);
-app.use("/api/materials", materialRoutes);
-app.use("/api/horses", horseRoutes);
-app.use("/api/documents", documentRoutes);
-app.use("/api/rations", rationRoutes);
-app.use("/api/push", pushRoutes);
-
-// 404 handler
+// 5. Gestion des erreurs
 app.use((req: Request, res: Response) => {
     res.status(404).json({ error: "Route not found" });
 });
 
-// Error handler
-app.use(
-    (err: Error, req: Request, res: Response, next: express.NextFunction) => {
-        console.error("Error:", err);
-        res.status(500).json({ error: "Internal server error" });
-    },
-);
-
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error(`[${new Date().toISOString()}] Error:`, err.message);
+    
+    // Si c'est une erreur de validation ou de base de données spécifique
+    const status = err.status || 500;
+    res.status(status).json({ 
+        error: process.env.NODE_ENV === 'production' 
+            ? "Internal server error" 
+            : err.message 
+    });
 });
 
-void initPushService().then((enabled) => {
-    if (enabled) startReminderPushScheduler();
-});
+// 6. Démarrage sécurisé
+const start = async () => {
+    try {
+        // Test de la connexion DB avant de lancer le reste
+        await pool.query("SELECT 1");
+        console.log("🐘 Database connected");
+
+        app.listen(PORT, () => {
+            console.log(`🚀 Server ready on http://localhost:${PORT}`);
+        });
+
+        // Initialisation des services de notifications
+        const pushEnabled = await initPushService();
+        if (pushEnabled) {
+            startReminderPushScheduler();
+            startProductStockPushScheduler();
+            console.log("🔔 Push services and schedulers started");
+        }
+    } catch (error) {
+        console.error("❌ Failed to start server:", error);
+        process.exit(1);
+    }
+};
+
+void start();
 
 export default app;

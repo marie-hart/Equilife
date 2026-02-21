@@ -77,7 +77,7 @@
 import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { rationsApi } from "@/api/rations";
-import { materialsApi } from "@/api/materials";
+import { productApi } from "@/api/product";
 import type { Product, Ration } from "@/types";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { FeedingList } from "@/views/feeding";
@@ -111,7 +111,7 @@ const getProductName = (productId?: string): string | undefined =>
 
 const loadProducts = async () => {
     try {
-        products.value = await materialsApi.getAll(false);
+        products.value = await productApi.getAll(false);
     } catch (error) {
         console.error("Error loading products:", error);
     }

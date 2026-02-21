@@ -14,7 +14,7 @@ export const swaggerSpec = {
     tags: [
         { name: "Health", description: "Statut des services" },
         { name: "Events", description: "Événements et rappels" },
-        { name: "Materials", description: "Matériel" },
+        { name: "Product", description: "Produit" },
         { name: "Horses", description: "Chevaux" },
         { name: "Documents", description: "Documents" },
         { name: "Rations", description: "Rations" },
@@ -170,7 +170,7 @@ export const swaggerSpec = {
                     },
                 },
             },
-            Material: {
+            Product: {
                 type: "object",
                 properties: {
                     id: { type: "string", format: "uuid" },
@@ -208,7 +208,7 @@ export const swaggerSpec = {
                     updated_at: { type: "string", format: "date-time" },
                 },
             },
-            CreateMaterialDto: {
+            CreateProductDto: {
                 type: "object",
                 required: ["name"],
                 properties: {
@@ -243,7 +243,7 @@ export const swaggerSpec = {
                     needs_repurchase: { type: "boolean" },
                 },
             },
-            UpdateMaterialDto: {
+            UpdateProductDto: {
                 type: "object",
                 properties: {
                     name: { type: "string" },
@@ -643,10 +643,10 @@ export const swaggerSpec = {
                 },
             },
         },
-        "/api/materials": {
+        "/api/products": {
             get: {
-                tags: ["Materials"],
-                summary: "Lister le matériel actif",
+                tags: ["Product"],
+                summary: "Liste des produits actif",
                 parameters: [
                     {
                         name: "horseId",
@@ -657,13 +657,13 @@ export const swaggerSpec = {
                 ],
                 responses: {
                     200: {
-                        description: "Liste du matériel",
+                        description: "Liste des produits",
                         content: {
                             "application/json": {
                                 schema: {
                                     type: "array",
                                     items: {
-                                        $ref: "#/components/schemas/Material",
+                                        $ref: "#/components/schemas/Product",
                                     },
                                 },
                             },
@@ -672,25 +672,25 @@ export const swaggerSpec = {
                 },
             },
             post: {
-                tags: ["Materials"],
-                summary: "Créer un matériel",
+                tags: ["Product"],
+                summary: "Créer un produit",
                 requestBody: {
                     required: true,
                     content: {
                         "application/json": {
                             schema: {
-                                $ref: "#/components/schemas/CreateMaterialDto",
+                                $ref: "#/components/schemas/CreateProductDto",
                             },
                         },
                     },
                 },
                 responses: {
                     200: {
-                        description: "Matériel créé",
+                        description: "Produit créé",
                         content: {
                             "application/json": {
                                 schema: {
-                                    $ref: "#/components/schemas/Material",
+                                    $ref: "#/components/schemas/Product",
                                 },
                             },
                         },
@@ -698,19 +698,19 @@ export const swaggerSpec = {
                 },
             },
         },
-        "/api/materials/due-for-purchase": {
+        "/api/products/due-for-purchase": {
             get: {
-                tags: ["Materials"],
-                summary: "Lister le matériel à acheter",
+                tags: ["Product"],
+                summary: "Lister les produits à acheter",
                 responses: {
                     200: {
-                        description: "Liste du matériel à acheter",
+                        description: "Liste des produits à acheter",
                         content: {
                             "application/json": {
                                 schema: {
                                     type: "array",
                                     items: {
-                                        $ref: "#/components/schemas/Material",
+                                        $ref: "#/components/schemas/Product",
                                     },
                                 },
                             },
@@ -719,10 +719,10 @@ export const swaggerSpec = {
                 },
             },
         },
-        "/api/materials/{id}": {
+        "/api/product/{id}": {
             get: {
-                tags: ["Materials"],
-                summary: "Récupérer un matériel",
+                tags: ["Product"],
+                summary: "Récupérer un produit",
                 parameters: [
                     {
                         name: "id",
@@ -733,11 +733,11 @@ export const swaggerSpec = {
                 ],
                 responses: {
                     200: {
-                        description: "Matériel",
+                        description: "Product",
                         content: {
                             "application/json": {
                                 schema: {
-                                    $ref: "#/components/schemas/Material",
+                                    $ref: "#/components/schemas/Product",
                                 },
                             },
                         },
@@ -753,8 +753,8 @@ export const swaggerSpec = {
                 },
             },
             put: {
-                tags: ["Materials"],
-                summary: "Mettre à jour un matériel",
+                tags: ["Product"],
+                summary: "Mettre à jour un produit",
                 parameters: [
                     {
                         name: "id",
@@ -768,18 +768,18 @@ export const swaggerSpec = {
                     content: {
                         "application/json": {
                             schema: {
-                                $ref: "#/components/schemas/UpdateMaterialDto",
+                                $ref: "#/components/schemas/UpdateProductDto",
                             },
                         },
                     },
                 },
                 responses: {
                     200: {
-                        description: "Matériel mis à jour",
+                        description: "Produit mis à jour",
                         content: {
                             "application/json": {
                                 schema: {
-                                    $ref: "#/components/schemas/Material",
+                                    $ref: "#/components/schemas/Product",
                                 },
                             },
                         },
@@ -787,8 +787,8 @@ export const swaggerSpec = {
                 },
             },
             delete: {
-                tags: ["Materials"],
-                summary: "Désactiver un matériel",
+                tags: ["Product"],
+                summary: "Supprimer un produit",
                 parameters: [
                     {
                         name: "id",
@@ -798,14 +798,14 @@ export const swaggerSpec = {
                     },
                 ],
                 responses: {
-                    204: { description: "Désactivé" },
+                    204: { description: "Supprimé" },
                 },
             },
         },
-        "/api/materials/{id}/purchase": {
+        "/api/product/{id}/purchase": {
             post: {
-                tags: ["Materials"],
-                summary: "Marquer un matériel comme acheté",
+                tags: ["Product"],
+                summary: "Marquer un produit comme acheté",
                 parameters: [
                     {
                         name: "id",
@@ -833,11 +833,11 @@ export const swaggerSpec = {
                 },
                 responses: {
                     200: {
-                        description: "Matériel mis à jour",
+                        description: "Produit mis à jour",
                         content: {
                             "application/json": {
                                 schema: {
-                                    $ref: "#/components/schemas/Material",
+                                    $ref: "#/components/schemas/Product",
                                 },
                             },
                         },

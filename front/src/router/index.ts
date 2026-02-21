@@ -133,17 +133,17 @@ const router = createRouter({
             component: Products,
         },
         {
-            path: "/horses/:id/products/new",
+            path: "/horses/:id/product/new",
             name: "ProductCreate",
             component: ProductCreate,
         },
         {
-            path: "/materials/:id",
+            path: "/product/:id",
             name: "ProductDetails",
             component: ProductDetails,
         },
         {
-            path: "/materials/:id/edit",
+            path: "/product/:id/edit",
             name: "ProductEdit",
             component: ProductEdit,
         },

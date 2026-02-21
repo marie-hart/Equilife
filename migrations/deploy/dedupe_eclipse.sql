@@ -20,9 +20,9 @@ BEGIN
   LIMIT 1;
 
   -- Prévenir les conflits sur la table de liaison
-  DELETE FROM material_horses mh
-  USING material_horses mk
-  WHERE mk.material_id = mh.material_id
+  DELETE FROM product_horses mh
+  USING product_horses mk
+  WHERE mk.product_id = mh.product_id
     AND mk.horse_id = keep_id
     AND mh.horse_id <> keep_id
     AND mh.horse_id = ANY(eclipse_ids);
@@ -36,10 +36,10 @@ BEGIN
   UPDATE rations SET horse_id = keep_id
   WHERE horse_id = ANY(eclipse_ids) AND horse_id <> keep_id;
 
-  UPDATE materials SET horse_id = keep_id
+  UPDATE product SET horse_id = keep_id
   WHERE horse_id = ANY(eclipse_ids) AND horse_id <> keep_id;
 
-  UPDATE material_horses SET horse_id = keep_id
+  UPDATE product_horses SET horse_id = keep_id
   WHERE horse_id = ANY(eclipse_ids) AND horse_id <> keep_id;
 
   DELETE FROM horses

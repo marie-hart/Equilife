@@ -1,13 +1,14 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { startReminderNotifications, requestPermission, supportsPush } from "@/utils/notifications";
-import type { Event } from "@/types"
+import type { Event, StockNotification } from "@/types"
 
 export const useNotificationStore = defineStore("notifications", () => {
     const permission = ref<NotificationPermission>("default");
     const isSubscribing = ref(false);
     const unreadReminders = ref<Event[]>([]);
-
+     const unreadStockAlerts = ref<StockNotification[]>([]);
+    
     const isSupported = computed(() => supportsPush());
     const isEnabled = computed(() => permission.value === "granted");
 
@@ -26,7 +27,12 @@ export const useNotificationStore = defineStore("notifications", () => {
         return isIOS.value && !isStandalone.value;
     });
 
-    const hasUnread = computed(() => unreadReminders.value.length > 0);
+    const hasUnread = computed(
+    () =>
+      unreadReminders.value.length > 0 ||
+      unreadStockAlerts.value.length > 0
+  );
+
 
     return {
         permission,
@@ -42,9 +48,15 @@ export const useNotificationStore = defineStore("notifications", () => {
         checkCurrentPermission,
         addUnreadReminder,
         markAsRead,
+        addStockAlert,
+        markStockAsRead,
     };
 
-      async function enableNotifications() {
+    /* =========================
+        PERMISSION
+    ========================== */
+
+    async function enableNotifications() {
         isSubscribing.value = true;
         try {
             const result = await requestPermission();
@@ -69,15 +81,39 @@ export const useNotificationStore = defineStore("notifications", () => {
         }
     }
 
-    // Fonction pour ajouter un rappel (appelée par votre logique de polling ou push)
+    /* =========================
+        REMINDERS
+    ========================== */
+
     function addUnreadReminder(reminder: Event) {
         if (!unreadReminders.value.find(r => r.id === reminder.id)) {
             unreadReminders.value.push(reminder);
         }
     }
 
-    // Fonction pour retirer un rappel quand on clique dessus
     function markAsRead(reminderId: string) {
         unreadReminders.value = unreadReminders.value.filter(r => r.id !== reminderId);
     }
+
+    /* =========================
+        STOCK ALERTS
+    ========================== */
+
+    function addStockAlert(alert: StockNotification) {
+        if (
+        !unreadStockAlerts.value.find(
+            a => a.product_id === alert.product_id
+        )
+        ) {
+        unreadStockAlerts.value.push(alert);
+        }
+    }
+
+    function markStockAsRead(productId: string) {
+        unreadStockAlerts.value =
+        unreadStockAlerts.value.filter(
+            a => a.product_id !== productId
+        );
+    }
+
 });

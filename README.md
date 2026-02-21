@@ -1,212 +1,61 @@
-# Horse Care App
+# Horse Care App 🐴
 
-Application de gestion quotidienne pour propriétaires de chevaux.
+Application de gestion globale pour propriétaires et gestionnaires d'écuries, permettant de centraliser les soins, l'alimentation et l'inventaire.
 
 ## Fonctionnalités
 
-- **Suivi des événements** : Gestion des événements récurrents (dentiste, parage, etc.) avec système de rappels
-- **Gestion du matériel** : Liste du matériel à acheter régulièrement avec suivi des dates d'achat
+Multi-chevaux : Profils détaillés pour chaque cheval.
+
+Gestion des Produits & Stocks : Suivi des consommables (granulés, compléments) avec calcul automatique des besoins de rachat.
+
+Plan Alimentaire (Rations) : Configuration de rations personnalisées par cheval liées à l'inventaire des produits.
+
+Suivi des Soins (Events) : Historique des interventions (vétérinaire, ostéo, parage) avec rappels intelligents.
+
+Gestion Documentaire : Centralisation des factures, certificats et ordonnances par cheval.
 
 ## Technologies
 
-- **Backend** : Node.js, TypeScript, Express
-- **Base de données** : PostgreSQL
-- **Cache** : Redis
-- **Migrations** : Sqitch
-- **Containerisation** : Docker, Docker Compose
+Backend : Node.js 20+, TypeScript, Express
+
+Base de données : PostgreSQL 15 (Alpine)
+
+Migrations : Sqitch
+
+Containerisation : Docker & Docker Compose
+
+Cache : Redis (pour les sessions et calculs de stock)
 
 ## Structure du projet
-
 ```
 horse-care-app/
-├── back/              # Code backend
-│   ├── src/          # Code source TypeScript
-│   ├── dist/         # Code compilé (généré)
-│   ├── package.json
-│   ├── tsconfig.json
+├── back/              # API Express en TypeScript
+│   ├── src/           # Modèles, Contrôleurs, Services
 │   └── Dockerfile
-├── migrations/       # Migrations Sqitch
-│   ├── init/
-│   │   ├── deploy/
-│   │   ├── revert/
-│   │   └── verify/
-│   ├── sqitch.conf
-│   ├── sqitch.plan
+├── migrations/       # Gestion du schéma SQL (Sqitch)
+│   ├── deploy/       # Scripts de création
+│   ├── revert/       # Scripts d'annulation
+│   ├── verify/       # Tests de schéma
+│   ├── sqitch.plan   # Chef d'orchestre des migrations
 │   └── run-migrations.sh
 └── docker-compose.yml
 ```
 
-## Installation
+## Installation Rapide
 
 ### Prérequis
+Docker Desktop ou Docker Engine
 
-- Docker et Docker Compose installés
-- Sqitch (pour les migrations locales)
-- Node.js 20+ (pour le développement local)
+Node.js 20 (pour le dev local)
 
-### Démarrage avec Docker
-
-1. Cloner le projet
-
-2. Démarrer les services :
-
-```bash
+### Démarrage Express
+```Bash
+# 1. Lancer l'infrastructure (DB + Redis + API)
 docker-compose up -d
-```
 
-Cela démarre :
-
-- PostgreSQL sur le port 5432
-- Exécute les migrations Sqitch
-- L'API backend sur le port 3000
-
-### Développement local
-
-1. Installer les dépendances du backend :
-
-```bash
-cd back
-yarn install
-```
-
-2. Démarrer PostgreSQL (via Docker) :
-
-```bash
-docker-compose up -d postgres
-```
-
-3. Créer un fichier `.env` dans le dossier `back/` :
-
-```
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=horse_care_db
-DB_USER=horse_user
-DB_PASSWORD=horse_password
-REDIS_HOST=localhost
-REDIS_PORT=6379
-PORT=3000
-NODE_ENV=development
-```
-
-4. Exécuter les migrations Sqitch :
-
-```bash
-cd migrations
-export DB_USER=horse_user
-export DB_PASSWORD=horse_password
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_NAME=horse_care_db
-sqitch deploy db:pg://horse_user:horse_password@localhost:5432/horse_care_db
-```
-
-Ou utiliser le script :
-
-```bash
+# 2. Exécuter les migrations et le seed (données de test)
 cd migrations
 ./run-migrations.sh
 ```
 
-5. Démarrer le serveur de développement :
-
-```bash
-cd back
-yarn dev
-```
-
-## Migrations avec Sqitch
-
-### Commandes Sqitch utiles
-
-- Déployer toutes les migrations :
-
-```bash
-sqitch deploy db:pg://user:password@host:port/database
-```
-
-- Vérifier l'état des migrations :
-
-```bash
-sqitch status db:pg://user:password@host:port/database
-```
-
-- Revenir en arrière (revert) :
-
-```bash
-sqitch revert db:pg://user:password@host:port/database
-```
-
-- Vérifier les migrations :
-
-```bash
-sqitch verify db:pg://user:password@host:port/database
-```
-
-### Créer une nouvelle migration
-
-1. Créer un nouveau changement :
-
-```bash
-cd migrations
-sqitch add nom_de_la_migration --note "Description de la migration"
-```
-
-2. Ajouter le SQL dans :
-   - `migrations/nom_de_la_migration/deploy/nom_de_la_migration.sql`
-   - `migrations/nom_de_la_migration/revert/nom_de_la_migration.sql`
-   - `migrations/nom_de_la_migration/verify/nom_de_la_migration.sql`
-
-## API Endpoints
-
-### Documentation Swagger
-
-Une documentation Swagger est disponible sur `http://localhost:3000/api/docs`.
-
-### Événements
-
-- `GET /api/events` - Liste tous les événements
-- `GET /api/events/reminders` - Liste les événements avec rappels à venir
-- `GET /api/events/:id` - Récupère un événement par ID
-- `POST /api/events` - Crée un nouvel événement
-- `PUT /api/events/:id` - Met à jour un événement
-- `DELETE /api/events/:id` - Supprime un événement
-
-### Matériel
-
-- `GET /api/materials` - Liste tous les matériels actifs
-- `GET /api/materials/due-for-purchase` - Liste les matériels à acheter
-- `GET /api/materials/:id` - Récupère un matériel par ID
-- `POST /api/materials` - Crée un nouveau matériel
-- `PUT /api/materials/:id` - Met à jour un matériel
-- `DELETE /api/materials/:id` - Désactive un matériel
-- `POST /api/materials/:id/purchase` - Marque un matériel comme acheté
-
-## Structure de la base de données
-
-### Table `events`
-
-- `id` (UUID) - Identifiant unique
-- `name` (VARCHAR) - Nom de l'événement
-- `description` (TEXT) - Description
-- `event_date` (DATE) - Date de l'événement
-- `reminder_enabled` (BOOLEAN) - Rappel activé
-- `reminder_interval_months` (INTEGER) - Intervalle de rappel en mois
-- `reminder_interval_years` (INTEGER) - Intervalle de rappel en années
-- `last_reminder_date` (DATE) - Dernière date de rappel
-- `next_reminder_date` (DATE) - Prochaine date de rappel
-- `created_at` (TIMESTAMP) - Date de création
-- `updated_at` (TIMESTAMP) - Date de mise à jour
-
-### Table `materials`
-
-- `id` (UUID) - Identifiant unique
-- `name` (VARCHAR) - Nom du matériel
-- `description` (TEXT) - Description
-- `last_purchase_date` (DATE) - Dernière date d'achat
-- `purchase_interval_months` (INTEGER) - Intervalle d'achat en mois
-- `purchase_interval_years` (INTEGER) - Intervalle d'achat en années
-- `estimated_cost` (DECIMAL) - Coût estimé
-- `is_active` (BOOLEAN) - Matériel actif
-- `created_at` (TIMESTAMP) - Date de création
-- `updated_at` (TIMESTAMP) - Date de mise à jour
+L'API est maintenant accessible sur http://localhost:3000.

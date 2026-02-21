@@ -42,7 +42,7 @@ const props = defineProps<{
 const STOCK_TYPES = ["Granulés", "Complément"];
 
 const isStockManaged = (product: Product) =>
-  STOCK_TYPES.includes(product.type || "");
+  STOCK_TYPES.includes(product.category || "");
 
 const getEndDate = (product: Product): Date | null => {
   if (!isStockManaged(product)) return null;

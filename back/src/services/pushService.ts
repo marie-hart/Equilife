@@ -17,22 +17,31 @@ const REMINDER_POLL_INTERVAL_MS = 5 * 60 * 1000;
 
 const ensureTables = async () => {
     await pool.query(`
-    CREATE TABLE IF NOT EXISTS push_subscriptions (
-      endpoint TEXT PRIMARY KEY,
-      p256dh TEXT NOT NULL,
-      auth TEXT NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-  `);
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            endpoint TEXT PRIMARY KEY,
+            p256dh TEXT NOT NULL,
+            auth TEXT NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+    `);
 
     await pool.query(`
-    CREATE TABLE IF NOT EXISTS push_notifications (
-      event_id TEXT NOT NULL,
-      reminder_date TIMESTAMPTZ NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      PRIMARY KEY (event_id, reminder_date)
-    );
-  `);
+        CREATE TABLE IF NOT EXISTS push_notifications (
+            event_id TEXT NOT NULL,
+            reminder_date TIMESTAMPTZ NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            PRIMARY KEY (event_id, reminder_date)
+        );
+    `);
+
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS product_stock_notifications (
+            product_id TEXT NOT NULL,
+            notification_type TEXT NOT NULL, -- 'J14' | 'J0'
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            PRIMARY KEY (product_id, notification_type)
+        );
+    `);
 };
 
 const isPushConfigured = (): boolean =>
@@ -123,6 +132,123 @@ const fetchDueReminders = async () => {
     }
 };
 
+const fetchLowStockProducts = async () => {
+  const result = await pool.query(`
+    SELECT
+      p.id,
+      p.name,
+      p.purchase_date,
+      p.quantity_purchased,
+      p.daily_usage,
+      p.unit
+    FROM products p
+    WHERE p.category IN ('Granulés', 'Complément')
+      AND p.purchase_date IS NOT NULL
+      AND p.quantity_purchased IS NOT NULL
+      AND p.daily_usage IS NOT NULL
+  `);
+
+  return result.rows;
+};
+
+const computeRemainingDays = (product: any): number | null => {
+  const start = new Date(product.purchase_date);
+  const totalDays =
+    product.quantity_purchased / product.daily_usage;
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + totalDays);
+
+  const diff = Math.ceil(
+    (end.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  );
+
+  return diff;
+};
+
+const alreadyNotified = async (
+  productId: string,
+  type: "J14" | "J0"
+): Promise<boolean> => {
+  const result = await pool.query(
+    `
+    SELECT 1
+    FROM product_stock_notifications
+    WHERE product_id = $1
+      AND notification_type = $2
+    `,
+    [productId, type]
+  );
+
+  return (result.rowCount ?? 0) > 0;
+};
+
+const markProductNotified = async (
+  productId: string,
+  type: "J14" | "J0"
+) => {
+  await pool.query(
+    `
+    INSERT INTO product_stock_notifications
+      (product_id, notification_type)
+    VALUES ($1, $2)
+    ON CONFLICT DO NOTHING
+    `,
+    [productId, type]
+  );
+};
+
+export const startProductStockPushScheduler = () => {
+  if (!isPushConfigured()) return;
+
+  const run = async () => {
+    const products = await fetchLowStockProducts();
+
+    for (const product of products) {
+      const remaining = computeRemainingDays(product);
+      if (remaining === null) continue;
+
+      // 🔔 J-14
+      if (remaining === 14) {
+        const notified = await alreadyNotified(product.id, "J14");
+        if (!notified) {
+          await sendToAll({
+            title: "Stock bientôt épuisé",
+            body: `${product.name} : plus que 14 jours`,
+            tag: `stock-${product.id}-J14`,
+            data: {
+              product_id: product.id,
+              type: "J14",
+            },
+          });
+
+          await markProductNotified(product.id, "J14");
+        }
+      }
+
+      // 🔴 J-0
+      if (remaining === 0) {
+        const notified = await alreadyNotified(product.id, "J0");
+        if (!notified) {
+          await sendToAll({
+            title: "Rupture de stock",
+            body: `${product.name} est épuisé`,
+            tag: `stock-${product.id}-J0`,
+            data: {
+              product_id: product.id,
+              type: "J0",
+            },
+          });
+
+          await markProductNotified(product.id, "J0");
+        }
+      }
+    }
+  };
+
+  void run();
+  setInterval(() => void run(), 6 * 60 * 60 * 1000);
+};
 
 const sendToAll = async (payload: Record<string, unknown>) => {
     if (!isPushConfigured()) return;

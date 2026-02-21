@@ -207,10 +207,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onMounted, ref } from "vue"
 import { useRouter, useRoute } from "vue-router";
 import { rationsApi } from "@/api/rations";
-import { materialsApi } from "@/api/materials";
+import { productApi } from "@/api/product";
 import { toDateInputValue } from "@/libs/date";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
@@ -308,7 +308,7 @@ const resetForm = () => {
 // API
 const loadProducts = async () => {
     try {
-        products.value = await materialsApi.getAll(false);
+        products.value = await productApi.getAll(false);
     } catch (error) {
         console.error("Error loading products:", error);
     }

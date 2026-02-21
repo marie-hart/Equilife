@@ -265,33 +265,16 @@ export class HorseRepository {
     }
 
     async delete(id: string): Promise<boolean> {
-        const client = await pool.connect();
-        try {
-            await client.query("BEGIN");
+        const result = await pool.query(
+            "DELETE FROM horses WHERE id = $1",
+            [id],
+        );
 
-            await client.query("DELETE FROM events WHERE horse_id = $1", [id]);
-
-            await client.query(
-                `DELETE FROM materials
-         WHERE horse_id = $1
-            OR id IN (SELECT material_id FROM material_horses WHERE horse_id = $1)`,
-                [id],
-            );
-
-            const result = await client.query(
-                "DELETE FROM horses WHERE id = $1",
-                [id],
-            );
-
-            await client.query("COMMIT");
+        const deleted = result.rowCount !== null && result.rowCount > 0;
+        if (deleted) {
             this.invalidateCache(id);
-            return result.rowCount !== null && result.rowCount > 0;
-        } catch (error) {
-            await client.query("ROLLBACK");
-            throw error;
-        } finally {
-            client.release();
         }
+        return deleted;
     }
 
     private invalidateCache(horseId?: string): void {

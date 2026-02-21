@@ -17,7 +17,7 @@
       <!-- TYPE -->
       <v-col cols="12" md="6">
         <v-select
-          v-model="localForm.type"
+          v-model="localForm.category"
           :items="typeOptions"
           label="Type *"
           density="comfortable"
@@ -173,7 +173,7 @@ watch(
 const STOCK_TYPES = ["Granulés", "Complément"];
 
 const isStockManaged = computed(() =>
-  STOCK_TYPES.includes(localForm.type || "")
+  STOCK_TYPES.includes(localForm.category || "")
 );
 
 const typeOptions = [
@@ -191,7 +191,7 @@ const validate = () => {
   Object.keys(errors).forEach(k => delete errors[k]);
 
   if (!localForm.name) errors.name = ["Champ obligatoire"];
-  if (!localForm.type) errors.type = ["Champ obligatoire"];
+  if (!localForm.category) errors.type = ["Champ obligatoire"];
 
   if (isStockManaged.value) {
     if (!localForm.purchase_date)

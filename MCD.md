@@ -1,213 +1,109 @@
-# Modèle Conceptuel de Données (MCD) - Application de Gestion de Soins Équin
+Modèle Conceptuel de Données (MCD) - Application Horse Care
+Vue d'ensemble
+Le Modèle Conceptuel de Données décrit les entités principales de l'application et leurs relations. Le modèle a évolué d'une gestion simple de listes vers un système centralisé autour du cheval.
 
-## Vue d'ensemble
+Entités Principales
+1. CHEVAL (HORSE)
+L'entité centrale de l'application.
 
-Le Modèle Conceptuel de Données décrit les entités principales de l'application et leurs relations, sans tenir compte des aspects d'implémentation technique.
+id (UUID, PK)
 
----
+nom (name) : Obligatoire.
 
-## Entités
+race (breed), date_naissance (birth_date).
 
-### 1. ÉVÉNEMENT (EVENT)
+2. PRODUIT (PRODUCT)
+Représente l'inventaire (consommables et matériel).
 
-Représente un événement de soin récurrent pour un cheval (visite dentiste, parage, vaccination, etc.).
+id (UUID, PK)
 
-**Attributs :**
+nom, marque (brand).
 
-- **id** : Identifiant unique (UUID) - Clé primaire
-- **nom** (name) : Nom de l'événement - Obligatoire
-- **description** : Description détaillée - Optionnel
-- **date_événement** (event_date) : Date de l'événement - Obligatoire
-- **rappel_activé** (reminder_enabled) : Indique si les rappels sont activés - Booléen, défaut: false
-- **intervalle_rappel_mois** (reminder_interval_months) : Intervalle de rappel en mois - Optionnel
-- **intervalle_rappel_années** (reminder_interval_years) : Intervalle de rappel en années - Optionnel
-- **dernière_date_rappel** (last_reminder_date) : Date du dernier rappel envoyé - Optionnel
-- **prochaine_date_rappel** (next_reminder_date) : Date du prochain rappel à envoyer - Optionnel
-- **créé_le** (created_at) : Date et heure de création - Automatique
-- **modifié_le** (updated_at) : Date et heure de dernière modification - Automatique
+categorie : Granulés, Complément, Friandises, Équipement, Pharmacie, Autres.
 
-**Règles métier :**
+suivi_stock : purchase_date, quantity_purchased, daily_usage, unit (kg, g, L).
 
-- Un événement doit avoir un nom et une date
-- Si `rappel_activé` est vrai, au moins un intervalle (mois ou années) doit être défini
-- `intervalle_rappel_mois` et `intervalle_rappel_années` sont mutuellement exclusifs (un seul doit être défini)
-- `prochaine_date_rappel` est calculée automatiquement à partir de `date_événement` et de l'intervalle
-- `modifié_le` est mis à jour automatiquement lors de toute modification
+besoin_rachat (needs_repurchase) : Booléen.
 
-### 2. MATÉRIEL (MATERIAL)
+3. ÉVÉNEMENT (EVENT)
+Soins, activités et rappels.
 
-Représente un matériel ou produit à acheter régulièrement (aliments, compléments, équipement, etc.).
+id (UUID, PK)
 
-**Attributs :**
+type : Soin ou Activité.
 
-- **id** : Identifiant unique (UUID) - Clé primaire
-- **nom** (name) : Nom du matériel - Obligatoire
-- **description** : Description détaillée - Optionnel
-- **dernière_date_achat** (last_purchase_date) : Date du dernier achat effectué - Optionnel
-- **intervalle_achat_mois** (purchase_interval_months) : Intervalle d'achat en mois - Optionnel
-- **intervalle_achat_années** (purchase_interval_years) : Intervalle d'achat en années - Optionnel
-- **coût_estimé** (estimated_cost) : Coût estimé du matériel - Optionnel, format décimal
-- **actif** (is_active) : Indique si le matériel est actif - Booléen, défaut: true
-- **créé_le** (created_at) : Date et heure de création - Automatique
-- **modifié_le** (updated_at) : Date et heure de dernière modification - Automatique
+date_evenement, rappel_active.
 
-**Règles métier :**
+product_id (FK) : Produit utilisé pendant le soin.
 
-- Un matériel doit avoir un nom
-- Si un intervalle d'achat est défini, `dernière_date_achat` devrait être renseignée pour calculer les prochains achats
-- `intervalle_achat_mois` et `intervalle_achat_années` sont mutuellement exclusifs (un seul doit être défini)
-- Un matériel inactif (`actif = false`) n'apparaît pas dans les listes actives par défaut
-- `modifié_le` est mis à jour automatiquement lors de toute modification
+horse_id (FK) : Cheval concerné.
 
----
+4. RATION
+Plan alimentaire structuré.
 
-## Relations
+id (UUID, PK)
 
-### Relations entre entités
+nom (ex: "Ration Hiver"), actif (is_active).
 
-**ÉVÉNEMENT** et **MATÉRIEL** sont des entités indépendantes qui ne partagent pas de relation directe dans le modèle actuel. Elles peuvent être considérées comme deux modules distincts de l'application.
+horse_id (FK).
 
----
+Relations et Cardinalités
+CHEVAL ↔ ÉVÉNEMENT (1:N) : Un cheval peut avoir plusieurs événements, un événement appartient à un seul cheval.
 
-## Diagramme MCD (Notation Merise)
+CHEVAL ↔ RATION (1:N) : Un cheval peut avoir plusieurs plans de rations (un seul actif), une ration appartient à un cheval.
 
-```
-┌─────────────────────────────────────┐
-│           ÉVÉNEMENT                 │
-├─────────────────────────────────────┤
-│ id (PK)                             │
-│ nom                                 │
-│ description                         │
-│ date_événement                      │
-│ rappel_activé                       │
-│ intervalle_rappel_mois              │
-│ intervalle_rappel_années            │
-│ dernière_date_rappel                │
-│ prochaine_date_rappel               │
-│ créé_le                             │
-│ modifié_le                          │
-└─────────────────────────────────────┘
+CHEVAL ↔ PRODUIT (N:N) : Via la table de liaison product_horses. Un produit peut servir à plusieurs chevaux (ex: un sac de granulés partagé), et un cheval utilise plusieurs produits.
 
-┌─────────────────────────────────────┐
-│           MATÉRIEL                  │
-├─────────────────────────────────────┤
-│ id (PK)                             │
-│ nom                                 │
-│ description                         │
-│ dernière_date_achat                 │
-│ intervalle_achat_mois               │
-│ intervalle_achat_années             │
-│ coût_estimé                         │
-│ actif                               │
-│ créé_le                             │
-│ modifié_le                          │
-└─────────────────────────────────────┘
-```
+RATION ↔ PRODUIT (N:N) : Via ration_items. Une ration contient plusieurs produits (ingrédients), et un produit peut entrer dans plusieurs rations.
 
----
+ÉVÉNEMENT ↔ PRODUIT (N:1) : Un événement de soin peut consommer un produit (ex: application d'une pommade).
 
-## Diagramme MCD (Mermaid)
-
-```mermaid
 erDiagram
-    EVENEMENT {
+    HORSE ||--o{ EVENT : "reçoit"
+    HORSE ||--o{ RATION : "consomme"
+    HORSE }o--o{ PRODUCT : "utilise (via product_horses)"
+    
+    RATION ||--|{ RATION_ITEM : "contient"
+    PRODUCT ||--o{ RATION_ITEM : "est ingrédient de"
+    
+    PRODUCT ||--o{ EVENT : "est utilisé pour"
+
+    HORSE {
         uuid id PK
         string name
-        text description
+        string breed
+        date birth_date
+    }
+
+    PRODUCT {
+        uuid id PK
+        string name
+        string category
+        decimal quantity_purchased
+        string unit
+        decimal daily_usage
+        boolean needs_repurchase
+    }
+
+    EVENT {
+        uuid id PK
+        string name
         date event_date
-        boolean reminder_enabled
-        integer reminder_interval_months
-        integer reminder_interval_years
-        date last_reminder_date
-        date next_reminder_date
-        timestamp created_at
-        timestamp updated_at
+        uuid horse_id FK
+        uuid product_id FK
     }
 
-    MATERIAL {
+    RATION {
         uuid id PK
         string name
-        text description
-        date last_purchase_date
-        integer purchase_interval_months
-        integer purchase_interval_years
-        decimal estimated_cost
         boolean is_active
-        timestamp created_at
-        timestamp updated_at
+        uuid horse_id FK
     }
-```
 
----
-
-## Cardinalités
-
-### ÉVÉNEMENT
-
-- Un événement est unique (identifié par son id)
-- Les événements sont indépendants les uns des autres
-
-### MATÉRIEL
-
-- Un matériel est unique (identifié par son id)
-- Les matériels sont indépendants les uns des autres
-
----
-
-## Contraintes d'intégrité
-
-### Contraintes d'entité
-
-- Chaque événement et chaque matériel doivent avoir un identifiant unique (UUID)
-- Le nom est obligatoire pour les deux entités
-
-### Contraintes de domaine
-
-- `date_événement`, `dernière_date_rappel`, `prochaine_date_rappel` : format DATE
-- `dernière_date_achat` : format DATE
-- `créé_le`, `modifié_le` : format TIMESTAMP
-- `rappel_activé`, `actif` : valeurs booléennes (true/false)
-- `intervalle_rappel_mois`, `intervalle_rappel_années`, `intervalle_achat_mois`, `intervalle_achat_années` : entiers positifs
-- `coût_estimé` : nombre décimal positif
-
-### Contraintes fonctionnelles
-
-- Pour un événement, si `rappel_activé = true`, alors au moins un intervalle doit être défini (mois OU années, pas les deux)
-- Pour un matériel, si un intervalle d'achat est défini, il est recommandé de renseigner `dernière_date_achat`
-- `prochaine_date_rappel` est calculée automatiquement : `date_événement + intervalle`
-- `modifié_le` est mis à jour automatiquement à chaque modification via un trigger
-
----
-
-## Évolutions possibles
-
-### Extensions futures du modèle
-
-1. **Entité CHEVAL** : Pour gérer plusieurs chevaux et associer les événements et matériels à des chevaux spécifiques
-2. **Entité UTILISATEUR** : Pour la gestion multi-utilisateurs et l'authentification
-3. **Entité RAPPEL** : Pour historiser les rappels envoyés
-4. **Entité ACHAT** : Pour créer un historique des achats de matériel
-5. **Entité CATÉGORIE** : Pour catégoriser les événements et matériels
-6. **Relation entre ÉVÉNEMENT et MATÉRIEL** : Si certains événements nécessitent l'achat de matériel spécifique
-
----
-
-## Notes techniques
-
-### Implémentation actuelle
-
-- Base de données : PostgreSQL
-- Identifiants : UUID v4 générés automatiquement
-- Index :
-  - Sur `event_date` pour améliorer les requêtes de tri
-  - Sur `next_reminder_date` pour les rappels à venir
-  - Sur `last_purchase_date` pour les matériels à acheter
-  - Sur `is_active` pour filtrer les matériels actifs
-- Triggers : Mise à jour automatique de `updated_at` via fonction PL/pgSQL
-- Cache : Redis utilisé pour mettre en cache les données fréquemment consultées
-
-### Formats de données
-
-- Dates : Format ISO 8601 (YYYY-MM-DD) pour les dates, TIMESTAMP pour les dates/heures
-- UUID : Format standard UUID v4
-- Décimal : DECIMAL(10, 2) pour les montants monétaires
+    RATION_ITEM {
+        uuid id PK
+        uuid ration_id FK
+        uuid product_id FK
+        string quantity
+        string[] frequency
+    }

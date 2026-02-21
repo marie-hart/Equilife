@@ -9,11 +9,13 @@ POST /api/events
 Content-Type: application/json
 
 {
-  "name": "Visite dentiste",
-  "description": "Contrôle dentaire annuel",
-  "event_date": "2024-01-15",
+  "name": "Soin musculaire",
+  "description": "Application gel après séance",
+  "event_date": "2024-02-21",
+  "horse_id": "uuid-du-cheval",
+  "product_id": "uuid-du-produit",
   "reminder_enabled": true,
-  "reminder_interval_years": 1
+  "reminder_interval_months": 1
 }
 ```
 
@@ -24,11 +26,10 @@ POST /api/events
 Content-Type: application/json
 
 {
-  "name": "Parage",
-  "description": "Parage des sabots",
-  "event_date": "2024-01-10",
-  "reminder_enabled": true,
-  "reminder_interval_months": 6
+  "name": "Balade forêt",
+  "event_date": "2024-02-20",
+  "horse_id": "uuid-du-cheval",
+  "reminder_enabled": false
 }
 ```
 
@@ -55,65 +56,56 @@ Content-Type: application/json
 }
 ```
 
-## Matériel
+## Produit
 
-### Créer un matériel avec intervalle d'achat
+### Créer un produit avec suivi de consommation
 
 ```bash
-POST /api/materials
+POST /api/products
 Content-Type: application/json
 
 {
-  "name": "Aliment complémentaire",
-  "description": "Complément vitaminé",
-  "last_purchase_date": "2023-12-01",
-  "purchase_interval_months": 2,
-  "estimated_cost": 45.50
+  "name": "Granulés Performance",
+  "brand": "EquiFeed",
+  "category": "Granulés",
+  "purchase_date": "2024-01-15",
+  "quantity_purchased": 25.0,
+  "unit": "kg",
+  "daily_usage": 1.5,
+  "note": "Acheté chez le fournisseur habituel"
 }
 ```
 
-### Créer un matériel annuel
+### Créer un équipement
 
 ```bash
-POST /api/materials
+POST /api/products
 Content-Type: application/json
 
 {
-  "name": "Couverture d'hiver",
-  "description": "Couverture imperméable",
-  "last_purchase_date": "2023-10-01",
-  "purchase_interval_years": 1,
-  "estimated_cost": 120.00
+  "name": "Couverture 200g",
+  "category": "Équipement",
+  "brand": "HorseWare",
+  "needs_repurchase": false
 }
 ```
 
-### Récupérer tous les matériels actifs
+### Récupérer tous les produits actifs
 
 ```bash
-GET /api/materials
+GET /api/products
 ```
 
-### Récupérer les matériels à acheter
+### Récupérer les produits à acheter
 
 ```bash
-GET /api/materials/due-for-purchase
+GET /api/products/due-for-purchase
 ```
 
-### Marquer un matériel comme acheté
+### Désactiver un produit
 
 ```bash
-POST /api/materials/{id}/purchase
-Content-Type: application/json
-
-{
-  "purchaseDate": "2024-01-20"
-}
-```
-
-### Désactiver un matériel
-
-```bash
-PUT /api/materials/{id}
+PUT /api/products/{id}
 Content-Type: application/json
 
 {
@@ -136,14 +128,64 @@ curl -X POST http://localhost:3000/api/events \
   }'
 ```
 
-### Lister tous les matériels
+### Lister tous les produits
 
 ```bash
-curl http://localhost:3000/api/materials
+curl http://localhost:3000/api/products
 ```
 
-### Récupérer les matériels à acheter
+### Récupérer les produits à acheter
 
 ```bash
-curl http://localhost:3000/api/materials/due-for-purchase
+curl http://localhost:3000/api/products/due-for-purchase
+```
+
+
+## Rations
+
+### Créer une ration pour un cheval
+
+```bash
+POST /api/rations
+Content-Type: application/json
+
+{
+  "horse_id": "uuid-du-cheval",
+  "name": "Ration Hiver",
+  "start_date": "2024-11-01",
+  "is_active": true
+}
+```
+
+### Ajouter un aliment à une ration
+
+```bash
+POST /api/rations/{ration_id}/items
+Content-Type: application/json
+
+{
+  "product_id": "uuid-du-produit",
+  "quantity": "2",
+  "unit": "L",
+  "frequency": ["Matin", "Soir"],
+  "type": "aliment"
+}
+```
+
+## Exemple avec curl
+
+### Mettre à jour le stock d'un produit
+
+```bash
+curl -X PUT http://localhost:3000/api/products/{id} \
+  -H "Content-Type: application/json" \
+  -d '{
+    "needs_repurchase": true,
+    "note": "Rupture de stock imminente"
+  }'
+  ```
+### Récupérer les événements d'un cheval spécifique
+
+```bash
+curl http://localhost:3000/api/events?horse_id={uuid}
 ```

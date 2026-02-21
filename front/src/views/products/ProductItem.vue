@@ -34,7 +34,7 @@
 
           <!-- TYPE -->
           <div class="text-caption text-grey-darken-1 mt-1">
-            {{ product.type }}
+            {{ product.category }}
           </div>
 
           <!-- AUTONOMIE -->
@@ -68,7 +68,7 @@ const props = defineProps<{ product: Product }>();
 const STOCK_TYPES = ["Granulés", "Complément"];
 
 const isStockManaged = computed(() =>
-  STOCK_TYPES.includes(props.product.type || "")
+  STOCK_TYPES.includes(props.product.category || "")
 );
 
 const endDate = computed(() => {

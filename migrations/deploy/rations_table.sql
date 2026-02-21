@@ -1,4 +1,6 @@
--- Table des rations
+BEGIN;
+
+-- Table des rations (Le plan alimentaire global d'un cheval)
 CREATE TABLE rations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     horse_id UUID NOT NULL REFERENCES horses(id) ON DELETE CASCADE,
@@ -6,36 +8,35 @@ CREATE TABLE rations (
     start_date DATE,
     end_date DATE,
     is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table des aliments d'une ration
+-- Table des éléments de la ration (Les produits spécifiques donnés)
 CREATE TABLE ration_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     ration_id UUID NOT NULL REFERENCES rations(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES materials(id) ON DELETE SET NULL,
-    quantity VARCHAR(80),
-    frequency TEXT[] DEFAULT '{}',
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL, -- Référence corrigée vers products
+    quantity VARCHAR(80), -- ex: "2L" ou "500g"
+    frequency TEXT[] DEFAULT '{}', -- ex: ARRAY['Matin', 'Midi', 'Soir']
     type VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT ration_items_type_check CHECK (type IN ('aliment', 'complement', 'autre') OR type IS NULL)
 );
 
--- Contraintes
-ALTER TABLE ration_items
-  ADD CONSTRAINT ration_items_type_check
-  CHECK (type IN ('aliment', 'complement', 'autre') OR type IS NULL);
+-- Triggers pour l'auto-update du champ updated_at
+CREATE TRIGGER update_rations_updated_at 
+    BEFORE UPDATE ON rations 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Triggers pour updated_at
-CREATE TRIGGER update_rations_updated_at BEFORE
-UPDATE
-    ON rations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_ration_items_updated_at 
+    BEFORE UPDATE ON ration_items 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_ration_items_updated_at BEFORE
-UPDATE
-    ON ration_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Index
+-- Index pour les performances de recherche
 CREATE INDEX idx_rations_horse_id ON rations(horse_id);
 CREATE INDEX idx_ration_items_ration_id ON ration_items(ration_id);
+CREATE INDEX idx_ration_items_product_id ON ration_items(product_id);
+
+COMMIT;

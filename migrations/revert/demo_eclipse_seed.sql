@@ -1,26 +1,9 @@
-DO $$
-DECLARE
-  eclipse_id UUID;
-BEGIN
-  SELECT id INTO eclipse_id
-  FROM horses
-  WHERE name = 'Eclipse' AND additional_info = 'demo_seed'
-  LIMIT 1;
+BEGIN;
 
-  IF eclipse_id IS NULL THEN
-    RETURN;
-  END IF;
+-- Supprime le cheval de démo, ce qui déclenche la suppression en cascade du reste
+DELETE FROM horses WHERE additional_info = 'demo_seed';
 
-  -- Supprimer les données liées
-  DELETE FROM ration_items
-  WHERE ration_id IN (SELECT id FROM rations WHERE horse_id = eclipse_id);
+-- Supprime les produits créés spécifiquement pour la démo
+DELETE FROM products WHERE note = 'demo_seed';
 
-  DELETE FROM rations WHERE horse_id = eclipse_id;
-  DELETE FROM documents WHERE horse_id = eclipse_id AND note = 'demo_seed';
-  DELETE FROM events WHERE horse_id = eclipse_id;
-
-  DELETE FROM material_horses WHERE horse_id = eclipse_id;
-  DELETE FROM materials WHERE note = 'demo_seed';
-
-  DELETE FROM horses WHERE id = eclipse_id;
-END $$;
+COMMIT;
