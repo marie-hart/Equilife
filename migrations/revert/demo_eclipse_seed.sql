@@ -1,9 +1,10 @@
 BEGIN;
 
--- Supprime le cheval de démo, ce qui déclenche la suppression en cascade du reste
-DELETE FROM horses WHERE additional_info = 'demo_seed';
-
--- Supprime les produits créés spécifiquement pour la démo
+DELETE FROM events WHERE name = 'Balade en extérieur' OR description = 'Soin musculaire';
+DELETE FROM ration_items WHERE type IN ('aliment', 'complement');
+DELETE FROM rations WHERE name = 'Ration hiver';
+DELETE FROM product_horses WHERE horse_id IN (SELECT id FROM horses WHERE name = 'Eclipse');
 DELETE FROM products WHERE note = 'demo_seed';
+DELETE FROM horses WHERE name = 'Eclipse';
 
 COMMIT;

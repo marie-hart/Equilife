@@ -1,127 +1,141 @@
 <template>
-  <v-form @submit.prevent="handleSubmit">
+  <v-form @submit.prevent="handleSubmit" class="product-form">
     <v-row dense>
-
-      <!-- NOM -->
-      <v-col cols="12" md="6">
-        <v-text-field
-          v-model="localForm.name"
-          label="Nom *"
-          density="comfortable"
-          variant="outlined"
-          rounded="lg"
-          :error-messages="errors.name"
-        />
-      </v-col>
-
-      <!-- TYPE -->
-      <v-col cols="12" md="6">
-        <v-select
-          v-model="localForm.category"
-          :items="typeOptions"
-          label="Type *"
-          density="comfortable"
-          variant="outlined"
-          rounded="lg"
-          :error-messages="errors.type"
-        />
-      </v-col>
-
-      <!-- MARQUE -->
-      <v-col cols="12" md="6">
-        <v-text-field
-          v-model="localForm.brand"
-          label="Marque"
-          density="comfortable"
-          variant="outlined"
-          rounded="lg"
-        />
-      </v-col>
-
-      <!-- ================= STOCK SECTION ================= -->
-      <template v-if="isStockManaged">
-
-        <v-col cols="12">
-          <div class="text-subtitle-1 font-weight-medium mt-4 mb-2">
-            Gestion du stock
-          </div>
-        </v-col>
-
-        <!-- DATE -->
-        <v-col cols="12" md="4">
-          <v-text-field
-            v-model="localForm.purchase_date"
-            label="Date de réception *"
-            type="date"
-            density="comfortable"
-            variant="outlined"
-            rounded="lg"
-            :error-messages="errors.purchase_date"
-          />
-        </v-col>
-
-        <!-- QUANTITE -->
-        <v-col cols="12" md="4">
-          <v-text-field
-            v-model.number="localForm.quantity_purchased"
-            label="Quantité achetée *"
-            type="number"
-            min="0"
-            density="comfortable"
-            variant="outlined"
-            rounded="lg"
-            :error-messages="errors.quantity_purchased"
-          />
-        </v-col>
-
-        <!-- CONSOMMATION -->
-        <v-col cols="12" md="4">
-          <v-text-field
-            v-model.number="localForm.daily_usage"
-            label="Consommation / jour *"
-            type="number"
-            min="0"
-            density="comfortable"
-            variant="outlined"
-            rounded="lg"
-            :error-messages="errors.daily_usage"
-          />
-        </v-col>
-
-        <!-- UNITE -->
-        <v-col cols="12" md="4">
-          <v-select
-            v-model="localForm.unit"
-            :items="unitOptions"
-            label="Unité"
-            density="comfortable"
-            variant="outlined"
-            rounded="lg"
-          />
-        </v-col>
-
-      </template>
-
-      <!-- NOTE -->
       <v-col cols="12">
+        <div class="text-overline mb-2 ps-1" :style="{ color: '#7B5B3E' }">Informations générales</div>
+        <v-card variant="flat" color="#F5EFE6" rounded="xl" class="pa-4 mb-4">
+          <v-row dense>
+            <v-col cols="12">
+              <v-text-field
+                v-model="localForm.name"
+                label="Nom du produit *"
+                placeholder="Ex: Granulés Performance"
+                variant="solo"
+                flat
+                bg-color="white"
+                rounded="lg"
+                density="comfortable"
+                :error-messages="errors.name"
+              />
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-select
+                v-model="localForm.category"
+                :items="typeOptions"
+                label="Catégorie *"
+                variant="solo"
+                flat
+                bg-color="white"
+                rounded="lg"
+                density="comfortable"
+                :error-messages="errors.type"
+              />
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model="localForm.brand"
+                label="Marque"
+                variant="solo"
+                flat
+                bg-color="white"
+                rounded="lg"
+                density="comfortable"
+              />
+            </v-col>
+          </v-row>
+        </v-card>
+      </v-col>
+
+      <v-fade-transition>
+        <v-col cols="12" v-if="isStockManaged">
+          <div class="text-overline mb-2 ps-1" :style="{ color: '#7B5B3E' }">Suivi des stocks</div>
+          <v-card variant="flat" color="#F5EFE6" rounded="xl" class="pa-4 mb-4">
+            <v-row dense>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="localForm.purchase_date"
+                  label="Date de réception *"
+                  type="date"
+                  variant="solo"
+                  flat
+                  bg-color="white"
+                  rounded="lg"
+                  density="comfortable"
+                  :error-messages="errors.purchase_date"
+                />
+              </v-col>
+
+              <v-col cols="6">
+                <v-text-field
+                  v-model.number="localForm.quantity_purchased"
+                  label="Quantité reçue *"
+                  type="number"
+                  variant="solo"
+                  flat
+                  bg-color="white"
+                  rounded="lg"
+                  density="comfortable"
+                  :error-messages="errors.quantity_purchased"
+                />
+              </v-col>
+
+              <v-col cols="6">
+                <v-select
+                  v-model="localForm.unit"
+                  :items="unitOptions"
+                  label="Unité"
+                  variant="solo"
+                  flat
+                  bg-color="white"
+                  rounded="lg"
+                  density="comfortable"
+                />
+              </v-col>
+
+              <v-col cols="12">
+                <v-text-field
+                  v-model.number="localForm.daily_usage"
+                  label="Consommation journalière *"
+                  placeholder="0.0"
+                  type="number"
+                  variant="solo"
+                  flat
+                  bg-color="white"
+                  rounded="lg"
+                  density="comfortable"
+                  prepend-inner-icon="mdi-silverware-fork-knife"
+                  :error-messages="errors.daily_usage"
+                />
+              </v-col>
+            </v-row>
+          </v-card>
+        </v-col>
+      </v-fade-transition>
+
+      <v-col cols="12">
+        <div class="text-overline mb-2 ps-1" :style="{ color: '#7B5B3E' }">Notes & Observations</div>
         <v-textarea
           v-model="localForm.note"
-          label="Note"
+          placeholder="Dosage spécifique, préférence du cheval..."
+          variant="solo"
+          flat
+          bg-color="#F5EFE6"
+          rounded="xl"
           density="comfortable"
-          variant="outlined"
-          rounded="lg"
           rows="3"
         />
       </v-col>
-
     </v-row>
 
-    <!-- ACTIONS -->
-    <div class="d-flex justify-end mt-4 ga-2">
+    <div class="d-flex ga-3 mt-6">
       <v-btn
         v-if="showCancel"
-        variant="outlined"
-        rounded="lg"
+        variant="text"
+        rounded="xl"
+        class="flex-grow-1 text-none"
+        color="#7B5B3E"
         @click="$emit('cancel')"
       >
         Annuler
@@ -129,15 +143,16 @@
 
       <v-btn
         variant="flat"
-        :style="{ backgroundColor: '#554338', color: 'white' }"
-        rounded="lg"
+        color="#2E4B36"
+        rounded="xl"
+        class="flex-grow-1 text-none font-weight-bold"
+        size="large"
         :loading="loading"
         type="submit"
       >
         {{ submitLabel }}
       </v-btn>
     </div>
-
   </v-form>
 </template>
 
@@ -163,6 +178,14 @@ const emit = defineEmits(["update:modelValue", "submit", "cancel"]);
 
 const localForm = reactive({ ...props.modelValue });
 const errors = reactive<Record<string, string[]>>({});
+
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    Object.assign(localForm, newVal);
+  },
+  { deep: true }
+);
 
 watch(
   () => localForm,

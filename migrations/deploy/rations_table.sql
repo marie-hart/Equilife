@@ -5,6 +5,7 @@ CREATE TABLE rations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     horse_id UUID NOT NULL REFERENCES horses(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
+    note TEXT,
     start_date DATE,
     end_date DATE,
     is_active BOOLEAN DEFAULT true,

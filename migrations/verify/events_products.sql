@@ -1,5 +1,0 @@
-BEGIN;
-
-SELECT product_id FROM events WHERE FALSE;
-
-ROLLBACK;

@@ -2,11 +2,7 @@
 %project=horse_care_db
 %uri=https://github.com/yourusername/horse-care-app
 
-init 2024-01-01T00:00:00Z Initial schema <init@sqitch.org>
-horses_table [init] 2024-01-01T00:01:00Z Votre Nom <votre@email.com>
-products [init] 2024-01-01T00:02:00Z Votre Nom <votre@email.com>
-horse_links [horses_table products] 2024-01-01T00:03:00Z Votre Nom <votre@email.com>
-events_products [init products] 2024-01-01T00:04:00Z Votre Nom <votre@email.com>
-rations_table [horses_table products] 2024-01-01T00:05:00Z Votre Nom <votre@email.com>
-documents_table [horses_table] 2024-01-01T00:06:00Z Votre Nom <votre@email.com>
-demo_eclipse_seed [horses_table products horse_links rations_table] 2024-01-01T00:07:00Z Votre Nom <votre@email.com>
+init 2024-05-20T10:00:00Z mariehdek <mariehdek@yahoo.fr> # Création de horses, products et fonctions de base
+horses_links [init] 2024-05-20T11:00:00Z mariehdek <mariehdek@yahoo.fr> # Ajout de la table events
+rations_table [init] 2024-01-01T00:05:00Z mariehdek <mariehdek@yahoo.fr> # Tables rations et ration_items
+demo_eclipse_seed [init horses_links rations_table] 2024-01-01T00:07:00Z mariehdek <mariehdek@yahoo.fr> # Données de test

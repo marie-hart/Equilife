@@ -79,14 +79,6 @@ BEGIN
   INSERT INTO events (name, description, event_date, horse_id, product_id, reminder_enabled, reminder_interval_months)
   VALUES ('Soin musculaire', 'Application gel après séance', CURRENT_DATE, eclipse_id, prod_soin_id, true, 1);
 
-  -- 6. Documents (Vérifiez que votre table documents existe déjà)
-  -- Si elle n'existe pas encore dans vos fichiers précédents, cette partie pourra être commentée.
-  INSERT INTO documents (horse_id, title, document_date, tag, file_path, note)
-  VALUES 
-    (eclipse_id, 'Certificat vétérinaire', CURRENT_DATE - INTERVAL '20 days', 'certificats', '/uploads/demo.pdf', 'demo_seed'),
-    (eclipse_id, 'Facture maréchal', CURRENT_DATE - INTERVAL '10 days', 'factures', '/uploads/demo.jpg', 'demo_seed')
-  ON CONFLICT DO NOTHING;
-
 END $$;
 
 COMMIT;

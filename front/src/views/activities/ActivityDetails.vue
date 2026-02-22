@@ -1,124 +1,129 @@
 <template>
-    <div class="page" :style="{ minHeight: '100vh' }">
-        <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-6 flex-wrap">
-                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
-                    Détails de l'événement
-                </v-card-title>
-                
-                <v-btn 
-                    variant="outlined" 
-                    :to="{ name: 'Dashboard' }"
-                    rounded="lg"
-                    class="text-none"
-                    :style="{ color: '#554338', borderColor: '#d1c7bc' }"
-                >
-                    <v-icon icon="mdi-arrow-left" class="me-2" />
-                    Retour
-                </v-btn>
-            </div>
+  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top pb-10">
+    <v-container class="px-4 py-2">
+      <div class="d-flex align-center justify-space-between mb-8">
+        <div>
+          <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
+            Détails
+          </h1>
+          <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
+        </div>
+        
+        <v-btn 
+          variant="text" 
+          icon="mdi-arrow-left"
+          color="#2E4B36"
+          @click="router.back()"
+        ></v-btn>
+      </div>
 
-            <v-card 
-                class="pa-2 mb-6" 
-                variant="flat" 
-                rounded="lg"
-                :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
-            >
-                <v-card-text>
-                    <v-skeleton-loader
-                        v-if="isLoading"
-                        type="list-item-two-line, list-item-two-line, list-item-two-line"
-                    />
-                    
-                    <div v-else-if="event">
-                        <v-list density="comfortable" class="bg-transparent">
-                            <v-list-item class="border-b">
-                                <v-list-item-title class="text-caption text-grey font-weight-bold">Titre</v-list-item-title>
-                                <v-list-item-subtitle class="text-body-1" :style="{ color: '#3c3226' }">
-                                    {{ event.name }}
-                                </v-list-item-subtitle>
-                            </v-list-item>
-                            
-                            <v-list-item class="border-b">
-                                <v-list-item-title class="text-caption text-grey font-weight-bold">Description</v-list-item-title>
-                                <v-list-item-subtitle class="text-body-1" :style="{ color: '#3c3226' }">
-                                    {{ event.description || "-" }}
-                                </v-list-item-subtitle>
-                            </v-list-item>
-                            
-                            <v-list-item class="border-b">
-                                <v-list-item-title class="text-caption text-grey font-weight-bold">Date</v-list-item-title>
-                                <v-list-item-subtitle class="text-body-1" :style="{ color: '#3c3226' }">
-                                    {{ formatDateLong(event.event_date) }}
-                                </v-list-item-subtitle>
-                            </v-list-item>
-                            
-                            <v-list-item class="border-b">
-                                <v-list-item-title class="text-caption text-grey font-weight-bold">Type</v-list-item-title>
-                                <v-list-item-subtitle>
-                                    <v-chip size="small" variant="tonal" color="brown-darken-2">
-                                        {{ event.reminder_type || (event.is_care ? "soin" : "autres") }}
-                                    </v-chip>
-                                </v-list-item-subtitle>
-                            </v-list-item>
-                            
-                            <v-list-item>
-                                <v-list-item-title class="text-caption text-grey font-weight-bold">Cheval</v-list-item-title>
-                                <v-list-item-subtitle class="text-body-1" :style="{ color: '#3c3226' }">
-                                    {{ event.horse_id || "-" }}
-                                </v-list-item-subtitle>
-                            </v-list-item>
-                        </v-list>
-                    </div>
-                    
-                    <p v-else class="empty-state text-center text-grey-darken-1 pa-4">
-                        Événement introuvable.
-                    </p>
-                </v-card-text>
+      <v-skeleton-loader
+        v-if="isLoading"
+        type="article, actions"
+        bg-color="transparent"
+      />
+
+      <div v-else-if="event">
+        <v-card variant="flat" color="#2E4B36" theme="dark" rounded="xl" class="pa-6 mb-6 shadow-subtle">
+          <div class="d-flex justify-space-between align-start">
+            <div>
+              <div class="text-overline mb-1" style="color: rgba(255,255,255,0.7)">{{ event.activity_type || event.name }}</div>
+              <div class="text-h5 font-weight-bold">{{ formatDateLong(event.event_date) }}</div>
+            </div>
+            <v-avatar color="rgba(255,255,255,0.2)" size="48">
+              <v-icon size="28">{{ getActivityIcon(event.activity_type) }}</v-icon>
+            </v-avatar>
+          </div>
+        </v-card>
+
+        <v-row dense class="mb-4">
+          <v-col cols="6">
+            <v-card variant="flat" color="#F5EFE6" rounded="xl" class="pa-4 text-center">
+              <v-icon color="#7B5B3E" class="mb-1">mdi-clock-outline</v-icon>
+              <div class="text-caption" style="color: #7B5B3E">Durée</div>
+              <div class="text-subtitle-1 font-weight-bold" style="color: #2E4B36">
+                {{ event.activity_duration_minutes || '-' }} min
+              </div>
             </v-card>
-            
-            <div v-if="event && !isLoading" class="d-flex justify-end ga-4">
-                <v-btn
-                    variant="flat"
-                    rounded="lg"
-                    :to="{ name: 'ActivityEdit', params: { id } }"
-                    :style="{ backgroundColor: '#554338', color: 'white' }"
-                    class="text-none"
-                    size="large"
-                >
-                    Modifier
-                </v-btn>
-                <v-btn
-                    color="error"
-                    variant="flat"
-                    rounded="lg"
-                    @click="deleteDialogOpen = true"
-                    class="text-none"
-                    size="large"
-                >
-                    Supprimer
-                </v-btn>
-            </div>
-            <v-dialog v-model="deleteDialogOpen" max-width="420">
-                <v-card rounded="lg">
-                    <v-card-title class="font-weight-bold" :style="{ color: '#3c3226' }">Supprimer</v-card-title>
-                    <v-card-text>Confirmer la suppression de cet événement ?</v-card-text>
-                    <v-card-actions class="justify-end pa-4">
-                        <v-btn variant="outlined" rounded="lg" @click="deleteDialogOpen = false">
-                            Annuler
-                        </v-btn>
-                        <v-btn color="error" variant="flat" rounded="lg" @click="confirmDelete">
-                            Supprimer
-                        </v-btn>
-                    </v-card-actions>
-                </v-card>
-            </v-dialog>
+          </v-col>
+          <v-col cols="6">
+            <v-card variant="flat" color="#F5EFE6" rounded="xl" class="pa-4 text-center">
+              <v-icon color="#7B5B3E" class="mb-1">mdi-gauge</v-icon>
+              <div class="text-caption" style="color: #7B5B3E">Intensité</div>
+              <div class="text-subtitle-1 font-weight-bold" style="color: #2E4B36">
+                {{ intensityLabel(event.activity_intensity) }}
+              </div>
+            </v-card>
+          </v-col>
+        </v-row>
 
-            <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="2500">
-                {{ snackbar.message }}
-            </v-snackbar>
-        </main>
-    </div>
+        <div class="text-overline mb-2 ps-1" style="color: #7B5B3E">Note de séance</div>
+        <v-card variant="flat" color="white" rounded="xl" class="pa-5 mb-8 shadow-subtle border-light">
+          <p class="text-body-1 mb-0" style="color: #554338; line-height: 1.6; font-style: italic;">
+            "{{ event.activity_comment || event.description || 'Aucun commentaire pour cette séance.' }}"
+          </p>
+        </v-card>
+
+        <div class="d-flex ga-3">
+          <v-btn
+            variant="flat"
+            color="#2E4B36"
+            rounded="xl"
+            class="flex-grow-1 text-none font-weight-bold"
+            size="large"
+            prepend-icon="mdi-pencil"
+            :to="{ name: 'ActivityEdit', params: { id } }"
+          >
+            Modifier
+          </v-btn>
+          <v-btn
+            variant="tonal"
+            color="#B00020"
+            rounded="xl"
+            class="text-none"
+            size="large"
+            icon="mdi-trash-can-outline"
+            @click="deleteDialogOpen = true"
+          >
+          </v-btn>
+        </div>
+      </div>
+
+      <div v-else class="text-center py-12">
+        <v-icon size="64" color="#D1C7BC">mdi-alert-circle-outline</v-icon>
+        <p class="mt-4" style="color: #7B5B3E">Événement introuvable</p>
+        <v-btn variant="text" color="#2E4B36" class="mt-2" @click="router.back()">Retour</v-btn>
+      </div>
+
+      <v-dialog v-model="deleteDialogOpen" max-width="340">
+        <v-card color="#F5EFE6" rounded="xl" class="pa-4 text-center">
+          <v-card-text>
+            <v-avatar color="#F8D7DA" size="64" class="mb-4">
+              <v-icon color="#B00020" size="32">mdi-delete-outline</v-icon>
+            </v-avatar>
+            <h3 class="text-h6 font-weight-bold mb-2" style="color: #2E4B36">Supprimer l'activité ?</h3>
+            <p class="text-body-2 mb-6" style="color: #7B5B3E">Cette action est irréversible.</p>
+            <v-row dense>
+              <v-col cols="12">
+                <v-btn block flat rounded="pill" color="#2E4B36" class="text-none mb-2" @click="deleteDialogOpen = false">
+                  Annuler
+                </v-btn>
+              </v-col>
+              <v-col cols="12">
+                <v-btn block variant="text" rounded="pill" color="#B00020" class="text-none font-weight-bold" @click="confirmDelete">
+                  Confirmer la suppression
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+
+      <v-snackbar v-model="snackbar.show" :color="snackbar.color" rounded="pill">
+        <div class="text-center w-100">{{ snackbar.message }}</div>
+      </v-snackbar>
+    </v-container>
+  </v-sheet>
 </template>
 
 <script setup lang="ts">
@@ -133,46 +138,46 @@ const router = useRouter();
 const event = ref<Event | null>(null);
 const isLoading = ref(true);
 const deleteDialogOpen = ref(false);
-const snackbar = ref({
-    show: false,
-    message: "",
-    color: "success",
-});
+const snackbar = ref({ show: false, message: "", color: "#2E4B36" });
 
 const id = route.params.id as string;
 
+const intensityLabel = (value?: string): string => {
+    switch (value) {
+        case "legere": return "Légère";
+        case "soutenue": return "Soutenue";
+        default: return "Normale";
+    }
+};
+
+const getActivityIcon = (type?: string) => {
+  const map: Record<string, string> = {
+    'Travail sur le plat': 'mdi-horse-variant',
+    'Longe': 'mdi-sync',
+    'Obstacle': 'mdi-chevron-up-box',
+    'Balade': 'mdi-map-marker-distance',
+    'Repos': 'mdi-moon-waning-crescent'
+  };
+  return map[type || ''] || 'mdi-calendar-star';
+};
+
 const loadEvent = async () => {
     try {
-        const id = route.params.id as string;
         event.value = await eventsApi.getById(id);
     } catch (error) {
-        console.error("Error loading event:", error);
+        console.error(error);
     } finally {
         isLoading.value = false;
     }
 };
 
-const goBack = () => {
-    router.back();
-};
-
 const confirmDelete = async () => {
-    if (!event.value) return;
     try {
-        await eventsApi.delete(event.value.id);
-        snackbar.value = {
-            show: true,
-            message: "Événement supprimé.",
-            color: "success",
-        };
-        goBack();
+        await eventsApi.delete(id);
+        snackbar.value = { show: true, message: "Activité supprimée", color: "#2E4B36" };
+        setTimeout(() => router.back(), 1000);
     } catch (error) {
-        console.error("Error deleting event:", error);
-        snackbar.value = {
-            show: true,
-            message: "Suppression impossible.",
-            color: "error",
-        };
+        snackbar.value = { show: true, message: "Erreur lors de la suppression", color: "#B00020" };
     } finally {
         deleteDialogOpen.value = false;
     }
@@ -180,3 +185,12 @@ const confirmDelete = async () => {
 
 onMounted(loadEvent);
 </script>
+
+<style scoped>
+.shadow-subtle {
+  box-shadow: 0 4px 15px rgba(123, 91, 62, 0.05) !important;
+}
+.border-light {
+  border: 1px solid rgba(168, 159, 148, 0.2) !important;
+}
+</style>

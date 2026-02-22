@@ -42,10 +42,9 @@ export class ProductRepository {
     }
 
     query += `
-      GROUP BY products.id
-      ORDER BY last_purchase_date DESC NULLS LAST
+      GROUP BY products.id, products.last_purchase_date -- Ajoute la colonne ici
+      ORDER BY products.last_purchase_date DESC NULLS LAST
     `;
-
     const result = await pool.query(query, values);
     const products = result.rows.map(this.mapRow);
 

@@ -1,141 +1,190 @@
 <template>
-    <div class="page" :style="{ minHeight: '100vh' }">
-        <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-6">
-                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
-                    {{ isEditMode ? 'Modifier l\'activité' : 'Ajouter une activité' }}
-                </v-card-title>
-            </div>
-            
-            <v-card 
-                class="pa-2" 
-                variant="flat" 
-                rounded="lg"
-                :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
-            >
-                <v-card-text>
-                    <v-skeleton-loader
-                        v-if="isLoading"
-                        type="card, list-item-two-line"
-                    />
-                    
-                    <v-row v-else dense>
-                        <v-col cols="12" md="6">
-                            <v-select
-                                :model-value="horsesStore.horseId"
-                                @update:model-value="horsesStore.sethorseId"
-                                :items="horsesStore.horseOptions"
-                                label="Cheval *"
-                                density="comfortable"
-                                variant="outlined"
-                                bg-color="white"
-                                rounded="lg"
-                                :disabled="isEditMode"
-                                :error-messages="fieldErrors.horseId ? [fieldErrors.horseId] : undefined"
-                            />
-                        </v-col>
-                        
-                        <v-col cols="12" md="6">
-                            <v-select
-                                v-model="form.activityType"
-                                :items="activityTypes"
-                                label="Type d'activité *"
-                                density="comfortable"
-                                variant="outlined"
-                                bg-color="white"
-                                rounded="lg"
-                                :error-messages="fieldErrors.activityType ? [fieldErrors.activityType] : undefined"
-                            />
-                        </v-col>
-                        
-                        <v-col cols="12" md="3">
-                            <DatePickerField
-                                v-model="form.date"
-                                label="Date *"
-                                :error-messages="fieldErrors.date ? [fieldErrors.date] : undefined"
-                                class="rounded-lg"
-                            />
-                        </v-col>
-                        
-                        <v-col cols="12" md="3">
-                            <v-text-field
-                                v-model.number="form.duration"
-                                label="Durée (min)"
-                                type="number"
-                                min="0"
-                                density="comfortable"
-                                variant="outlined"
-                                bg-color="white"
-                                rounded="lg"
-                            />
-                        </v-col>
-                        
-                        <v-col cols="12" md="6">
-                            <v-select
-                                v-model="form.intensity"
-                                :items="intensityOptions"
-                                label="Intensité"
-                                density="comfortable"
-                                variant="outlined"
-                                bg-color="white"
-                                rounded="lg"
-                            />
-                        </v-col>
-                        
-                        <v-col cols="12">
-                            <v-textarea
-                                v-model="form.comment"
-                                label="Commentaire"
-                                density="comfortable"
-                                variant="outlined"
-                                bg-color="white"
-                                rounded="lg"
-                                rows="3"
-                            />
-                        </v-col>
-                    </v-row>
-                    
-                    <div class="d-flex justify-end mt-4">
-                           
-                <v-btn 
-                    variant="outlined" 
-                    @click="goBack"
-                    rounded="lg"
-                    class="mr-2"
-                    :style="{ color: '#554338', borderColor: '#d1c7bc' }"
-                >
-                    Annuler
-                </v-btn>
-                        <v-btn
-                            variant="flat"
-                            rounded="lg"
-                            :style="{ backgroundColor: '#554338', color: 'white' }"
-                            class="text-none"
-                            :loading="isSubmitting"
-                            @click="submitForm"
-                        >
-                            {{ isEditMode ? 'Enregistrer' : 'Ajouter' }}
-                        </v-btn>
-                    </div>
-                </v-card-text>
-            </v-card>
+  <v-sheet
+    color="#EDE4D8"
+    min-height="100vh"
+    class="pa-0 safe-area-top pb-10"
+  >
+    <v-container class="px-4 py-2">
+      <div class="d-flex align-center justify-space-between mb-6">
+        <div>
+          <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
+            {{ isEditMode ? 'Modifier' : 'Nouvelle activité' }}
+          </h1>
+          <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
+        </div>
+        
+        <v-btn 
+          variant="text" 
+          icon="mdi-close"
+          color="#2E4B36"
+          @click="goBack"
+        ></v-btn>
+      </div>
 
-            <v-snackbar
-                v-model="snackbar.show"
-                :color="snackbar.color"
-                timeout="2500"
-            >
-                {{ snackbar.message }}
-            </v-snackbar>
-        </main>
-    </div>
+      <v-card v-if="isLoading" color="#F5EFE6" variant="flat" rounded="xl" class="pa-4">
+        <v-skeleton-loader type="article" bg-color="transparent" />
+      </v-card>
+
+      <v-form v-else @submit.prevent="submitForm">
+        <v-row dense>
+          
+          <v-col cols="12">
+            <div class="text-overline mb-2 ps-1" style="color: #7B5B3E">L'essentiel</div>
+            <v-card variant="flat" color="#F5EFE6" rounded="xl" class="pa-4 mb-4 shadow-subtle">
+              <v-row dense>
+                <v-col cols="12">
+                  <v-select
+                    :model-value="horsesStore.horseId"
+                    @update:model-value="horsesStore.sethorseId"
+                    :items="horsesStore.horseOptions"
+                    label="Cheval *"
+                    variant="solo"
+                    flat
+                    bg-color="white"
+                    rounded="lg"
+                    density="comfortable"
+                    :disabled="isEditMode"
+                    prepend-inner-icon="mdi-horse"
+                    :error-messages="fieldErrors.horseId ? [fieldErrors.horseId] : undefined"
+                  />
+                </v-col>
+                
+                <v-col cols="12">
+                  <v-select
+                    v-model="form.activityType"
+                    :items="activityTypes"
+                    label="Type d'activité *"
+                    variant="solo"
+                    flat
+                    bg-color="white"
+                    rounded="lg"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-star-outline"
+                    :error-messages="fieldErrors.activityType ? [fieldErrors.activityType] : undefined"
+                  />
+                </v-col>
+              </v-row>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12">
+            <div class="text-overline mb-2 ps-1" style="color: #7B5B3E">Détails de la séance</div>
+            <v-card variant="flat" color="#F5EFE6" rounded="xl" class="pa-4 mb-4 shadow-subtle">
+              <v-row dense>
+                <v-col cols="12">
+                  <DatePickerField
+                    v-model="form.date"
+                    label="Date de la séance *"
+                    :error-messages="fieldErrors.date ? [fieldErrors.date] : undefined"
+                    @update:model-value="handleDateChange"
+                  />
+                </v-col>
+                
+                <v-col cols="6">
+                  <v-text-field
+                    v-model.number="form.duration"
+                    label="Durée (min)"
+                    type="number"
+                    variant="solo"
+                    flat
+                    bg-color="white"
+                    rounded="lg"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-clock-outline"
+                  />
+                </v-col>
+                
+                <v-col cols="6">
+                  <v-select
+                    v-model="form.intensity"
+                    :items="intensityOptions"
+                    label="Intensité"
+                    variant="solo"
+                    flat
+                    bg-color="white"
+                    rounded="lg"
+                    density="comfortable"
+                  />
+                </v-col>
+              </v-row>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12">
+            <div class="text-overline mb-2 ps-1" style="color: #7B5B3E">Commentaire & Ressenti</div>
+            <v-textarea
+              v-model="form.comment"
+              placeholder="Comment s'est passé la séance ?"
+              variant="solo"
+              flat
+              bg-color="#F5EFE6"
+              rounded="xl"
+              density="comfortable"
+              rows="3"
+              class="shadow-subtle"
+            />
+          </v-col>
+        </v-row>
+
+        <div class="d-flex ga-3 mt-6">
+          <v-btn
+            variant="text"
+            rounded="xl"
+            class="flex-grow-1 text-none font-weight-bold"
+            color="#7B5B3E"
+            @click="goBack"
+          >
+            Annuler
+          </v-btn>
+
+          <v-btn
+            variant="flat"
+            color="#2E4B36"
+            rounded="xl"
+            class="flex-grow-1 text-none font-weight-bold"
+            size="large"
+            :loading="isSubmitting"
+            @click="submitForm"
+          >
+            {{ isEditMode ? 'Enregistrer' : 'Ajouter' }}
+          </v-btn>
+        </div>
+      </v-form>
+
+      <v-snackbar
+        v-model="snackbar.show"
+        :color="snackbar.color"
+        rounded="pill"
+        elevation="10"
+      >
+        <div class="text-center w-100 font-weight-bold">{{ snackbar.message }}</div>
+      </v-snackbar>
+
+    </v-container>
+  </v-sheet>
 </template>
 
+<style scoped>
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 20px) !important;
+}
+
+.shadow-subtle {
+  box-shadow: 0 4px 15px rgba(123, 91, 62, 0.05) !important;
+  border: 1px solid rgba(168, 159, 148, 0.15) !important;
+}
+
+/* Style spécifique pour DatePickerField s'il n'est pas déjà personnalisé */
+:deep(.v-field--variant-solo) {
+  background-color: white !important;
+}
+</style>
+
 <script setup lang="ts">
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
-import { fromDateInputValue, toDateInputValue } from "@/libs/date";
+import { toDateInputValue, fromDateInputValue } from "@/libs/date";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import { useHorsesStore } from "@/stores/HorsesStore";
@@ -163,6 +212,11 @@ const snackbar = ref({
     message: "",
     color: "success",
 });
+
+const handleDateChange = (newVal: string) => {
+    console.log("Nouvelle date sélectionnée:", newVal);
+    form.value.date = newVal;
+};
 
 const activityTypes = [
     { title: "Travail sur le plat", value: "travail sur le plat" },
@@ -204,6 +258,12 @@ const loadActivity = async () => {
     }
 };
 
+const formatToInputDate = (date: string | Date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    return d.toISOString().split('T')[0];
+};
+
 const submitForm = async () => {
     const { errors, firstError } = await validateRequiredFieldsMap([
         { key: "horseId", label: "un cheval", value: horsesStore.horseId },
@@ -217,12 +277,16 @@ const submitForm = async () => {
         return;
     }
 
+    const localDate = new Date(form.value.date);
+
+    localDate.setHours(12, 0, 0);
+
     try {
         isSubmitting.value = true;
         const payload = {
             name: form.value.activityType,
             description: form.value.comment,
-            event_date: fromDateInputValue(form.value.date),
+            event_date: localDate.toISOString(),
             horse_id: horsesStore.horseId || "",
             reminder_enabled: false,
             reminder_type: "activité" as const,
@@ -255,6 +319,21 @@ const goBack = () => {
     }
     router.push("/horses");
 };
+
+watch(() => route.params.id, async (newId) => {
+    if (newId && isEditMode.value) {
+        await loadActivity();
+    } else {
+        // Reset pour le mode création
+        form.value = {
+            activityType: "",
+            date: formatToInputDate(new Date()), // Date du jour par défaut
+            duration: 0,
+            intensity: "normale",
+            comment: "",
+        };
+    }
+}, { immediate: true });
 
 onMounted(async () => {
     await horsesStore.loadHorses();

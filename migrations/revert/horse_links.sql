@@ -1,6 +1,0 @@
-BEGIN;
-
-DROP INDEX IF EXISTS idx_events_horse_id;
-ALTER TABLE events DROP COLUMN IF EXISTS horse_id;
-
-COMMIT;

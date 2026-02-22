@@ -1,95 +1,91 @@
 <template>
-    <div class="page" :style="{ minHeight: '100vh' }">
-        <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-6">
-                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
-                    Activités
-                </v-card-title>
-            </div>
-            
-            <div class="d-flex flex-column ga-4">
-                <div class="d-flex align-center justify-space-between ga-4">
-                    <v-btn 
-                        variant="outlined" 
-                        :to="{ name: 'Dashboard' }"
-                        rounded="lg"
-                        class="text-none"
-                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
-                    >
-                        <v-icon icon="mdi-arrow-left" class="me-2" />
-                        Retour
-                    </v-btn>
-                    <v-btn
-                        variant="flat"
-                        rounded="lg"
-                        :to="{ name: 'ActivityCreate', params: { id: horsesStore.horseId} }"
-                        :style="{ backgroundColor: '#554338', color: 'white' }"
-                        class="text-none"
-                    >
-                        <v-icon start icon="mdi-plus" />
-                        Ajouter
-                    </v-btn>
-                </div>
+  <v-sheet
+    color="#EDE4D8"
+    min-height="100vh"
+    class="pa-0 safe-area-top pb-10"
+  >
+    <v-container class="px-4 py-2">
+      
+      <div class="d-flex align-center justify-space-between mb-6">
+        <div>
+          <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
+            Activités
+          </h1>
+          <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
+        </div>
+      </div>
 
-                <v-card 
-                    class="pa-2" 
-                    variant="flat" 
-                    rounded="lg"
-                    :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
-                >
-                    <v-card-title class="text-subtitle-1 font-weight-bold" :style="{ color: '#3c3226' }">
-                        Filtres
-                    </v-card-title>
-                    <v-card-text class="pt-3">
-                        <v-row dense>
-                            <v-col cols="12" md="6">
-                                <v-select
-                                    v-model="horsesStore.horseId"
-                                    :items="horsesStore.horseFilterOptions"
-                                    label="Cheval"
-                                    density="comfortable"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                />
-                            </v-col>
-                        </v-row>
-                    </v-card-text>
-                </v-card>
+       <v-btn 
+          block 
+          color="#2E4B36"
+          size="large" 
+          rounded="pill" 
+          class="mb-6 text-none font-weight-bold" 
+          prepend-icon="mdi-plus"
+          elevation="1"
+          :to="{ name: 'ActivityCreate', params: { id: horsesStore.horseId} }"
+        >
+          Ajouter un produit
+        </v-btn>
 
-                <v-skeleton-loader
-                    v-if="isLoading"
-                    type="list-item-two-line, list-item-two-line, list-item-two-line"
-                />
-                
-                <ActivityList
-                    v-else
-                    :grouped-activities="groupedActivities"
-                    :card-max-width="cardMaxWidth"
-                    :get-activity-actions="getActivityActions"
-                    :intensity-label="intensityLabel"
-                />
-            </div>
+      <div class="mb-8">
+        <div class="text-overline mb-2 ps-1" style="color: #7B5B3E; letter-spacing: 1px;">Filtrer par compagnon</div>
+        <v-select
+          v-model="horsesStore.horseId"
+          :items="horsesStore.horseFilterOptions"
+          variant="solo"
+          flat
+          bg-color="#F5EFE6"
+          rounded="xl"
+          density="comfortable"
+          hide-details
+          prepend-inner-icon="mdi-horse"
+          class="shadow-subtle"
+        >
+          <template v-slot:selection="{ item }">
+            <span class="font-weight-bold" style="color: #2E4B36">{{ item.title }}</span>
+          </template>
+        </v-select>
+      </div>
 
-            <ConfirmDeleteDialog
-                v-model="isDeleteOpen"
-                title="Supprimer l'activité"
-                :message="deleteMessage"
-                @confirm="confirmDelete"
-            />
+      <div v-if="isLoading">
+        <v-card v-for="i in 3" :key="i" color="#F5EFE6" variant="flat" rounded="xl" class="pa-4 mb-4">
+          <v-skeleton-loader type="list-item-avatar-two-line" bg-color="transparent" />
+        </v-card>
+      </div>
+      
+      <ActivityList
+        v-else
+        :grouped-activities="groupedActivities"
+        :card-max-width="cardMaxWidth"
+        :get-activity-actions="getActivityActions"
+        :intensity-label="intensityLabel"
+      />
 
-            <v-snackbar
-                v-model="snackbar.show"
-                :color="snackbar.color"
-                timeout="2500"
-            >
-                {{ snackbar.message }}
-            </v-snackbar>
-        </main>
-    </div>
+      <ConfirmDeleteDialog
+        v-model="isDeleteOpen"
+        :title="deleteMessage"
+        message="Cette action supprimera définitivement l'entrée de votre journal."
+        @confirm="confirmDelete"
+      />
+
+      <v-snackbar
+        v-model="snackbar.show"
+        :color="snackbar.color"
+        rounded="pill"
+        elevation="24"
+      >
+        <div class="text-center w-100 font-weight-bold">
+          {{ snackbar.message }}
+        </div>
+      </v-snackbar>
+
+    </v-container>
+  </v-sheet>
 </template>
 
 <script setup lang="ts">
+/* ... Ta logique existante reste la même ... */
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useDisplay } from "vuetify";
@@ -102,7 +98,7 @@ import { ActivityList } from "@/views/activities";
 
 const route = useRoute();
 const { mdAndUp } = useDisplay();
-const horsesStore = useHorsesStore(); // Initialisation du Store
+const horsesStore = useHorsesStore();
     
 const activities = ref<Event[]>([]);
 const isLoading = ref(true);
@@ -111,7 +107,7 @@ const selectedActivity = ref<Event | null>(null);
 const snackbar = ref({
     show: false,
     message: "",
-    color: "success",
+    color: "#2E4B36", // Vert Equilife pour le succès
 });
 
 const cardMaxWidth = computed(() => (mdAndUp.value ? "520px" : "100%"));
@@ -144,13 +140,9 @@ const groupedActivities = computed<ActivityGroup[]>(() => {
 
 const intensityLabel = (value?: string): string => {
     switch (value) {
-        case "legere":
-            return "Légère";
-        case "soutenue":
-            return "Soutenu";
-        case "normale":
-        default:
-            return "Normal";
+        case "legere": return "Légère";
+        case "soutenue": return "Soutenu";
+        default: return "Normal";
     }
 };
 
@@ -162,23 +154,23 @@ const openDelete = (activity: Event) => {
 const getActivityActions = (activity: Event): ActivityAction[] => [
     {
         key: "view",
-        title: "Voir",
-        icon: "mdi-eye",
+        title: "Détails",
+        icon: "mdi-eye-outline",
         disabled: false,
         to:{ name: "ActivityDetails", params: { id: activity.id } },
     },
     {
         key: "edit",
-        title: "Éditer",
-        icon: "mdi-pencil",
+        title: "Modifier",
+        icon: "mdi-pencil-outline",
         disabled: false,
         to: { name: "ActivityEdit", params: { id: activity.id } },
     },
     {
         key: "delete",
         title: "Supprimer",
-        icon: "mdi-trash-can",
-        color: "error",
+        icon: "mdi-trash-can-outline",
+        color: "#B00020",
         disabled: false,
         onClick: () => openDelete(activity),
     },
@@ -186,8 +178,8 @@ const getActivityActions = (activity: Event): ActivityAction[] => [
 
 const deleteMessage = computed(() =>
     selectedActivity.value
-        ? `Confirmer la suppression de ${selectedActivity.value.name || "cette activité"} ?`
-        : "Confirmer la suppression de cette activité ?",
+        ? `Supprimer ${selectedActivity.value.activity_type || "l'activité"} ?`
+        : "Supprimer l'activité ?"
 );
 
 const confirmDelete = async () => {
@@ -200,15 +192,14 @@ const confirmDelete = async () => {
         isDeleteOpen.value = false;
         snackbar.value = {
             show: true,
-            message: "Activité supprimée.",
-            color: "success",
+            message: "Entrée supprimée",
+            color: "#2E4B36",
         };
     } catch (error) {
-        console.error("Error deleting activity:", error);
         snackbar.value = {
             show: true,
-            message: "Suppression impossible.",
-            color: "error",
+            message: "Erreur lors de la suppression",
+            color: "#B00020",
         };
     }
 };
@@ -216,11 +207,7 @@ const confirmDelete = async () => {
 const loadActivities = async () => {
     isLoading.value = true;
     try {
-        // Utilisation de la valeur du store pour filtrer
-        const horseFilter =
-            horsesStore.horseId !== "all"
-                ? horsesStore.horseId
-                : undefined;
+        const horseFilter = horsesStore.horseId !== "all" ? horsesStore.horseId : undefined;
         activities.value = await eventsApi.getAll(horseFilter as string);
     } catch (error) {
         console.error("Error loading activities:", error);
@@ -229,16 +216,21 @@ const loadActivities = async () => {
     }
 };
 
-
 onMounted(async () => {
     await horsesStore.loadHorses();
     await loadActivities();
 });
 
-watch(
-    () => horsesStore.horseId,
-    () => {
-        loadActivities();
-    },
-);
+watch(() => horsesStore.horseId, () => loadActivities());
 </script>
+
+<style scoped>
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 20px) !important;
+}
+
+.shadow-subtle {
+  box-shadow: 0 4px 15px rgba(123, 91, 62, 0.05) !important;
+  border: 1px solid rgba(168, 159, 148, 0.15) !important;
+}
+</style>

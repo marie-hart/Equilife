@@ -1,62 +1,34 @@
 <template>
-  <v-card
-    class="mb-3"
-    rounded="xl"
-    :to="{ name: 'ProductEdit', params: { id: product.id } }"
-    link
-    :style="{
-      backgroundColor: '#ffffff',
-      border: '1px solid #efe5d9'
-    }"
-  >
-    <v-card-text>
-      <div class="d-flex align-center justify-space-between">
+  <v-list-item class="py-2">
+    <template v-slot:prepend>
+      <v-avatar color="#EDE4D8" size="40" rounded="lg">
+        <v-icon :icon="categoryIcon" color="#2E4B36"></v-icon>
+      </v-avatar>
+    </template>
 
-        <div class="flex-grow-1">
+    <v-list-item-title class="font-weight-bold" style="color: #2E4B36">
+      {{ product.name }}
+    </v-list-item-title>
+    
+    <v-list-item-subtitle style="color: #7B5B3E">
+      {{ product.category }}
+    </v-list-item-subtitle>
 
-          <div class="d-flex align-center justify-space-between">
-
-            <!-- NOM -->
-            <div class="text-subtitle-1 font-weight-medium">
-              {{ product.name }}
-            </div>
-
-            <!-- CHIP -->
-            <v-chip
-              :color="chipColor"
-              size="small"
-              variant="flat"
-            >
-              {{ chipLabel }}
-            </v-chip>
-
-          </div>
-
-          <!-- TYPE -->
-          <div class="text-caption text-grey-darken-1 mt-1">
-            {{ product.category }}
-          </div>
-
-          <!-- AUTONOMIE -->
-          <div
-            v-if="remainingDays !== null"
-            class="text-caption mt-1"
-            :class="{
-              'text-red': status === 'rupture',
-              'text-orange': status === 'low'
-            }"
-          >
-            {{ remainingDays }} jours restants
-          </div>
-
-        </div>
-
-        <!-- CHEVRON -->
-        <v-icon icon="mdi-chevron-right" class="ms-3" />
-
+    <template v-slot:append>
+      <div class="d-flex align-center">
+        <v-chip :color="chipColor" size="small" variant="flat" class="me-2">
+          {{ chipLabel }}
+        </v-chip>
+        <v-btn
+          icon="mdi-chevron-right"
+          variant="text"
+          color="#A89F94"
+          size="small"
+          :to="{ name: 'ProductDetails', params: { id: product.id }}"
+        />
       </div>
-    </v-card-text>
-  </v-card>
+    </template>
+  </v-list-item>
 </template>
 
 <script setup lang="ts">
@@ -95,6 +67,18 @@ const status = computed(() => {
   if (today >= endDate.value) return "rupture";
   if (today >= lowDate) return "low";
   return "ok";
+});
+
+const categoryIcon = computed(() => {
+  const map: Record<string, string> = {
+    'Granulés': 'mdi-grain',
+    'Complément': 'mdi-pill',
+    'Friandises': 'mdi-apple',
+    'Équipement': 'mdi-toolbox-outline',
+    'Pharmacie': 'mdi-medical-bag',
+    'Autres': 'mdi-package-variant'
+  };
+  return map[props.product.category] || 'mdi-help-circle-outline';
 });
 
 const remainingDays = computed(() => {
