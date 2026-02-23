@@ -1,210 +1,244 @@
 <template>
-    <div class="page" :style="{ minHeight: '100vh' }">
-        <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-6">
-                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
-                    {{ pageTitle }}
-                </v-card-title>
+  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top pb-10">
+    <v-container class="px-4 py-2">
+      <div class="d-flex align-center justify-space-between mb-6">
+        <div>
+          <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
+            {{ isEditMode ? 'Modifier' : 'Nouvelle ration' }}
+          </h1>
+          <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
+        </div>
+        
+        <v-btn variant="text" icon="mdi-close" color="#2E4B36" @click="goBack"></v-btn>
+      </div>
+
+      <v-skeleton-loader v-if="isLoading" type="article, card" bg-color="transparent" />
+
+      <v-form v-else @submit.prevent="saveRation">
+        <v-row dense>
+          
+          <v-col cols="12">
+            <div class="text-overline mb-2 ps-1" style="color: #7B5B3E">Informations générales</div>
+            <v-card variant="flat" color="#F5EFE6" rounded="xl" class="pa-4 mb-4 shadow-subtle">
+              <v-row dense>
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="form.name"
+                    label="Nom de la ration (ex: Hiver)"
+                    variant="solo"
+                    flat
+                    bg-color="white"
+                    rounded="lg"
+                    density="comfortable"
+                    :error-messages="fieldErrors.name ? [fieldErrors.name] : undefined"
+                  />
+                </v-col>
+                
+                <v-col cols="12">
+                  <v-select
+                    :model-value="horsesStore.horseId"
+                    @update:model-value="horsesStore.sethorseId"
+                    :items="horsesStore.horseOptions"
+                    label="Cheval"
+                    variant="solo"
+                    flat
+                    bg-color="white"
+                    rounded="lg"
+                    density="comfortable"
+                    :disabled="isEditMode"
+                    prepend-inner-icon="mdi-horse"
+                    :error-messages="fieldErrors.horseId ? [fieldErrors.horseId] : undefined"
+                  />
+                </v-col>
+
+                <v-col cols="6">
+                  <DatePickerField v-model="form.startDate" label="Début" />
+                </v-col>
+                <v-col cols="6">
+                  <DatePickerField v-model="form.endDate" label="Fin (optionnel)" />
+                </v-col>
+
+                <v-col cols="12">
+                  <v-select
+                    v-model="form.isActive"
+                    :items="activeOptions"
+                    label="État de la ration"
+                    variant="solo"
+                    flat
+                    bg-color="white"
+                    rounded="lg"
+                    density="comfortable"
+                  />
+                </v-col>
+              </v-row>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12">
+            <div class="d-flex align-center justify-space-between mb-2 ps-1">
+              <div class="text-overline" style="color: #7B5B3E">Composition</div>
+              <v-btn 
+                variant="text" 
+                size="small" 
+                prepend-icon="mdi-plus-circle"
+                color="#2E4B36"
+                class="text-none font-weight-bold"
+                @click="addItem"
+              >
+                Ajouter
+              </v-btn>
             </div>
 
-            <v-card 
-                class="pa-2" 
-                variant="flat" 
-                rounded="lg"
-                :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
-            >
-                <v-card-text>
-                    <v-skeleton-loader
-                        v-if="isLoading"
-                        type="card, list-item-two-line"
+            <div class="d-flex flex-column ga-4">
+              <v-card 
+                v-for="(item, index) in form.items"
+                :key="item.key"
+                variant="flat"
+                color="#F5EFE6"
+                rounded="xl"
+                class="pa-4 shadow-subtle border-light"
+              >
+                <v-row dense>
+                  <v-col cols="12">
+                    <v-select
+                      v-model="item.productId"
+                      :items="productOptions"
+                      label="Produit"
+                      variant="solo"
+                      flat
+                      bg-color="white"
+                      rounded="lg"
+                      density="comfortable"
+                      hide-details
+                      class="mb-3"
                     />
-                    
-                    <template v-else>
-                        <v-row dense>
-                            <v-col cols="12" md="6">
-                                <v-text-field
-                                    v-model="form.name"
-                                    label="Nom de la ration"
-                                    density="comfortable"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                    :error-messages="fieldErrors.name ? [fieldErrors.name] : undefined"
-                                />
-                            </v-col>
-                            
-                            <v-col cols="12" md="6">
-                                <v-select
-                                    :model-value="horsesStore.horseId"
-                                    @update:model-value="horsesStore.sethorseId"
-                                    :items="horsesStore.horseOptions"
-                                    label="Cheval"
-                                    density="comfortable"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                    :disabled="isEditMode"
-                                    :error-messages="fieldErrors.horseId ? [fieldErrors.horseId] : undefined"
-                                />
-                            </v-col>
-                            
-                            <v-col cols="12" md="3">
-                                <DatePickerField
-                                    v-model="form.startDate"
-                                    label="Date de début"
-                                    class="rounded-lg"
-                                />
-                            </v-col>
-                            
-                            <v-col cols="12" md="3">
-                                <DatePickerField
-                                    v-model="form.endDate"
-                                    label="Date de fin"
-                                    class="rounded-lg"
-                                />
-                            </v-col>
-                            
-                            <v-col cols="12" md="6">
-                                <v-select
-                                    v-model="form.isActive"
-                                    :items="activeOptions"
-                                    label="État"
-                                    density="comfortable"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                />
-                            </v-col>
-                            
-                            <v-col cols="12">
-                                <v-textarea
-                                    v-model="form.note"
-                                    label="Notes"
-                                    density="comfortable"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                    rows="2"
-                                />
-                            </v-col>
-                        </v-row>
-
-                        <div class="d-flex align-center justify-space-between ga-2 mt-6 mb-4">
-                            <div class="text-subtitle-1 font-weight-bold" :style="{ color: '#3c3226' }">Aliments</div>
-                            <v-btn 
-                                variant="text" 
-                                size="small" 
-                                @click="addItem"
-                                class="text-none"
-                                :style="{ color: '#554338' }"
-                            >
-                                <v-icon start icon="mdi-plus" />
-                                Ajouter un aliment
-                            </v-btn>
-                        </div>
-
-                        <div class="d-flex flex-column ga-4">
-                            <v-card 
-                                v-for="(item, index) in form.items"
-                                :key="item.key"
-                                variant="outlined"
-                                rounded="lg"
-                                class="pa-4"
-                                :style="{ borderColor: '#efe5d9', backgroundColor: '#fdfaf6' }"
-                            >
-                                <v-row dense>
-                                    <v-col cols="12" md="4">
-                                        <v-select
-                                            v-model="item.productId"
-                                            :items="productOptions"
-                                            label="Produit"
-                                            density="comfortable"
-                                            variant="outlined"
-                                            bg-color="white"
-                                            rounded="lg"
-                                        />
-                                    </v-col>
-                                    <v-col cols="12" md="3">
-                                        <v-text-field
-                                            v-model="item.quantity"
-                                            label="Quantité"
-                                            density="comfortable"
-                                            variant="outlined"
-                                            bg-color="white"
-                                            rounded="lg"
-                                        />
-                                    </v-col>
-                                    <v-col cols="12" md="3">
-                                        <v-select
-                                            v-model="item.frequency"
-                                            :items="frequencyOptions"
-                                            label="Fréquence"
-                                            density="comfortable"
-                                            variant="outlined"
-                                            bg-color="white"
-                                            rounded="lg"
-                                            multiple
-                                            chips
-                                        />
-                                    </v-col>
-                                    <v-col cols="12" md="2">
-                                        <v-select
-                                            v-model="item.type"
-                                            :items="itemTypeOptions"
-                                            label="Type"
-                                            density="comfortable"
-                                            variant="outlined"
-                                            bg-color="white"
-                                            rounded="lg"
-                                        />
-                                    </v-col>
-                                </v-row>
-                                <div class="d-flex justify-end mt-2">
-                                    <v-btn
-                                        variant="text"
-                                        size="small"
-                                        color="error"
-                                        prepend-icon="mdi-delete"
-                                        @click="removeItem(index)"
-                                        class="text-none"
-                                    >
-                                        Supprimer
-                                    </v-btn>
-                                </div>
-                            </v-card>
-                        </div>
-                    </template>
-                </v-card-text>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field
+                      v-model="item.quantity"
+                      label="Quantité"
+                      placeholder="Ex: 2L"
+                      variant="solo"
+                      flat
+                      bg-color="white"
+                      rounded="lg"
+                      density="comfortable"
+                      hide-details
+                    />
+                  </v-col>
+                  <v-col cols="6">
+                    <v-select
+                      v-model="item.type"
+                      :items="itemTypeOptions"
+                      label="Catégorie"
+                      variant="solo"
+                      flat
+                      bg-color="white"
+                      rounded="lg"
+                      density="comfortable"
+                      hide-details
+                    />
+                  </v-col>
+                  <v-col cols="12">
+                    <v-select
+                      v-model="item.frequency"
+                      :items="frequencyOptions"
+                      label="Repas"
+                      multiple
+                      chips
+                      variant="solo"
+                      flat
+                      bg-color="white"
+                      rounded="lg"
+                      density="comfortable"
+                      hide-details
+                      class="mt-3"
+                    />
+                  </v-col>
+                </v-row>
                 
-                <v-card-actions class="justify-end pa-4">
-                    <v-btn 
-                        variant="outlined" 
-                        @click="goBack"
-                        rounded="lg"
-                        class="text-none"
-                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
-                    >
-                        Annuler
-                    </v-btn>
-                    <v-btn 
-                        variant="flat" 
-                        @click="saveRation"
-                        rounded="lg"
-                        class="text-none"
-                        :loading="isSubmitting"
-                        :style="{ backgroundColor: '#554338', color: 'white' }"
-                    >
-                        Enregistrer
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
+                <div class="d-flex justify-end mt-2">
+                  <v-btn
+                    variant="text"
+                    size="small"
+                    color="#B00020"
+                    prepend-icon="mdi-trash-can-outline"
+                    @click="removeItem(index)"
+                    class="text-none"
+                    v-if="form.items.length > 1"
+                  >
+                    Supprimer cet aliment
+                  </v-btn>
+                </div>
+              </v-card>
+            </div>
+          </v-col>
 
-            <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="2500">
-                {{ snackbar.message }}
-            </v-snackbar>
-        </main>
-    </div>
+          <v-col cols="12" class="mt-4">
+            <div class="text-overline mb-2 ps-1" style="color: #7B5B3E">Notes & Recommandations</div>
+            <v-textarea
+              v-model="form.note"
+              placeholder="Précisions pour l'écurie..."
+              variant="solo"
+              flat
+              bg-color="#F5EFE6"
+              rounded="xl"
+              rows="3"
+            />
+          </v-col>
+        </v-row>
+
+        <div class="d-flex ga-3 mt-8">
+          <v-btn
+            variant="text"
+            rounded="xl"
+            class="flex-grow-1 text-none font-weight-bold"
+            color="#7B5B3E"
+            @click="goBack"
+          >
+            Annuler
+          </v-btn>
+
+         <v-btn
+            variant="flat"
+            color="#2E4B36"
+            rounded="xl"
+            class="flex-grow-1 text-none font-weight-bold"
+            size="large"
+            :loading="isSubmitting"
+            :disabled="isSubmitting"
+            @click="saveRation"
+        >
+            Enregistrer
+        </v-btn>
+        </div>
+      </v-form>
+
+      <v-snackbar v-model="snackbar.show" :color="snackbar.color" rounded="pill">
+        <div class="text-center w-100 font-weight-bold">{{ snackbar.message }}</div>
+      </v-snackbar>
+    </v-container>
+  </v-sheet>
 </template>
+
+<style scoped>
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 20px) !important;
+}
+.shadow-subtle {
+  box-shadow: 0 4px 15px rgba(123, 91, 62, 0.05) !important;
+}
+.border-light {
+  border: 1px solid rgba(168, 159, 148, 0.15) !important;
+}
+/* Style pour les chips dans les selects multi */
+:deep(.v-chip) {
+  background-color: #2E4B36 !important;
+  color: white !important;
+  font-weight: bold !important;
+  font-size: 10px !important;
+}
+</style>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue"
@@ -258,13 +292,13 @@ const frequencyOptions = [
     { title: "Soir", value: "soir" },
 ];
 const itemTypeOptions = [
-    { title: "Aliment", value: "aliment" },
-    { title: "Complément", value: "complement" },
-    { title: "Autre", value: "autre" },
+    { title: "Granulés", value: "Granulés" },
+    { title: "Complément", value: "Complément" },
+    { title: "Autre", value: "Autres" },
 ];
 
 const productOptions = computed(() => {
-    const allowed = new Set(["Aliment", "Complément"]);
+    const allowed = new Set(["Granulés", "Complément"]);
     const seen = new Set<string>();
     const hasCategory = products.value.some((product) => Boolean(product.category));
     return products.value
@@ -280,12 +314,12 @@ const productOptions = computed(() => {
 
 // Gestion des items
 const addItem = () => {
-    form.value.items.push({
+    form.value.items.unshift({
         key: `${Date.now()}-${Math.random()}`,
         productId: "",
         quantity: "",
         frequency: [],
-        type: "aliment",
+        type: "Granulés",
     });
 };
 
@@ -305,7 +339,6 @@ const resetForm = () => {
     addItem();
 };
 
-// API
 const loadProducts = async () => {
     try {
         products.value = await productApi.getAll(false);
@@ -334,7 +367,7 @@ const loadRation = async () => {
                 productId: item.product_id || "",
                 quantity: item.quantity || "",
                 frequency: item.frequency || [],
-                type: item.type || "aliment",
+                type: item.type || "Granulés",
             })),
         };
         if (!form.value.items.length) addItem();
@@ -367,8 +400,8 @@ const saveRation = async () => {
         const payload = {
             horse_id: horsesStore.horseId || "",
             name: form.value.name.trim(),
-            start_date: form.value.startDate,
-            end_date: form.value.endDate,
+            start_date: form.value.startDate || null, 
+            end_date: form.value.endDate || null,
             note: form.value.note.trim(),
             is_active: form.value.isActive,
             items: validItems.map((item) => ({
@@ -404,20 +437,28 @@ const goBack = () => {
     router.push("/horses");
 };
 
-// Lifecycle
 onMounted(async () => {
     isLoading.value = true;
     try {
         await horsesStore.loadHorses();
         
-        if (!isEditMode.value) {
-            const horseIdFromUrl = route.query.horseId as string;
-            if (horseIdFromUrl && horseIdFromUrl !== horsesStore.horseId) {
-                horsesStore.sethorseId(horseIdFromUrl);
-            }
-            resetForm();
-        } else {
+        // On récupère l'ID du cheval depuis l'URL
+        const horseIdFromUrl = route.query.horseId as string;
+        
+        // Vérification : est-ce que cet ID existe vraiment dans notre liste de chevaux ?
+        const horseExists = horsesStore.horses.some(h => h.id === horseIdFromUrl);
+
+        if (horseIdFromUrl && horseExists) {
+            horsesStore.sethorseId(horseIdFromUrl);
+        } else if (horsesStore.horses.length > 0 && !isEditMode.value) {
+            // Si l'ID de l'URL est invalide, on prend le premier cheval de la liste par défaut
+            horsesStore.sethorseId(horsesStore.horses[0].id);
+        }
+
+        if (isEditMode.value) {
             await loadRation();
+        } else {
+            resetForm();
         }
         await loadProducts();
     } finally {

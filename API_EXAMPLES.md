@@ -68,7 +68,7 @@ Content-Type: application/json
   "name": "Granulés Performance",
   "brand": "EquiFeed",
   "category": "Granulés",
-  "purchase_date": "2024-01-15",
+  "last_purchase_date": "2024-01-15",
   "quantity_purchased": 25.0,
   "unit": "kg",
   "daily_usage": 1.5,

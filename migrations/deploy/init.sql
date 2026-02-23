@@ -31,19 +31,25 @@ CREATE TABLE horses (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TYPE product_category AS ENUM ('Granulés', 'Complément', 'Friandises', 'Équipement', 'Pharmacie', 'Autres');
+
 CREATE TABLE products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
+    description TEXT,
     brand VARCHAR(80),
     category VARCHAR(30) NOT NULL CHECK (category IN ('Granulés', 'Complément', 'Friandises', 'Équipement', 'Pharmacie', 'Autres')),
     note TEXT,
-    purchase_date DATE,
     last_purchase_date DATE,
+    purchase_interval_months INTEGER,
+    purchase_interval_years INTEGER,
     quantity_purchased DECIMAL(10, 2),
     daily_usage DECIMAL(10, 2),
     unit VARCHAR(10) CHECK (unit IN ('kg', 'g', 'L')),
     needs_repurchase BOOLEAN DEFAULT false,
+    estimated_cost DECIMAL(10, 2),
     is_active BOOLEAN DEFAULT true,
+    horse_id UUID,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

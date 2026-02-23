@@ -54,17 +54,28 @@
           <v-card variant="flat" color="#F5EFE6" rounded="xl" class="pa-4 mb-4">
             <v-row dense>
               <v-col cols="12">
-                <v-text-field
-                  v-model="localForm.purchase_date"
-                  label="Date de réception *"
-                  type="date"
-                  variant="solo"
-                  flat
-                  bg-color="white"
-                  rounded="lg"
-                  density="comfortable"
-                  :error-messages="errors.purchase_date"
-                />
+                <v-menu :close-on-content-click="false">
+                  <template v-slot:activator="{ props }">
+                    <v-text-field
+                      :model-value="formatDisplayDate(localForm.last_purchase_date || '')"
+                      label="Date de réception *"
+                      readonly
+                      v-bind="props"
+                      variant="solo"
+                      flat
+                      bg-color="white"
+                      rounded="lg"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-calendar"
+                      :error-messages="errors.last_purchase_date"
+                    />
+                  </template>
+                  <v-date-picker
+                    v-model="computedDate"
+                    color="#2E4B36"
+                    @update:model-value="onDateSelected"
+                  ></v-date-picker>
+                </v-menu>
               </v-col>
 
               <v-col cols="6">
@@ -208,23 +219,39 @@ const typeOptions = [
   "Autres"
 ];
 
+const formatDisplayDate = (date: string) => {
+  if (!date) return "";
+  const d = new Date(date);
+  return d.toLocaleDateString('fr-FR');
+};
+
+const computedDate = computed({
+  get: () => localForm.last_purchase_date ? new Date(localForm.last_purchase_date) : new Date(),
+  set: (val) => {
+    if (val) {
+      localForm.last_purchase_date = new Date(val).toISOString();
+    }
+  }
+});
+
+const onDateSelected = () => {
+  // Le menu se ferme automatiquement si close-on-content-click est true
+  // ou tu peux gérer un flag 'menuDate = false'
+};
+
 const unitOptions = ["kg", "L", "g"];
 
 const validate = () => {
   Object.keys(errors).forEach(k => delete errors[k]);
 
   if (!localForm.name) errors.name = ["Champ obligatoire"];
-  if (!localForm.category) errors.type = ["Champ obligatoire"];
+  
+  if (!localForm.category) errors.category = ["Champ obligatoire"];
 
   if (isStockManaged.value) {
-    if (!localForm.purchase_date)
-      errors.purchase_date = ["Champ obligatoire"];
-
-    if (!localForm.quantity_purchased)
-      errors.quantity_purchased = ["Champ obligatoire"];
-
-    if (!localForm.daily_usage)
-      errors.daily_usage = ["Champ obligatoire"];
+    if (!localForm.last_purchase_date) errors.last_purchase_date = ["Champ obligatoire"];
+    if (!localForm.quantity_purchased) errors.quantity_purchased = ["Champ obligatoire"];
+    if (!localForm.daily_usage) errors.daily_usage = ["Champ obligatoire"];
   }
 
   return Object.keys(errors).length === 0;

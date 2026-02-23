@@ -45,9 +45,9 @@ const isStockManaged = computed(() =>
 
 const endDate = computed(() => {
   if (!isStockManaged.value) return null;
-  if (!props.product.purchase_date || !props.product.quantity_purchased || !props.product.daily_usage) return null;
+  if (!props.product.last_purchase_date || !props.product.quantity_purchased || !props.product.daily_usage) return null;
 
-  const start = new Date(props.product.purchase_date);
+  const start = new Date(props.product.last_purchase_date);
   const totalDays = props.product.quantity_purchased / props.product.daily_usage;
 
   const end = new Date(start);

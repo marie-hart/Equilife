@@ -33,6 +33,8 @@ CREATE INDEX idx_horses_name ON horses(name);
 CREATE TRIGGER update_horses_updated_at BEFORE UPDATE ON horses 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TYPE product_category AS ENUM ('Granulés', 'Complément', 'Friandises', 'Équipement', 'Pharmacie', 'Autres');
+
 -- 4. Table PRODUCTS (Indépendante)
 CREATE TABLE products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -40,15 +42,15 @@ CREATE TABLE products (
     brand VARCHAR(80),
     category VARCHAR(30) NOT NULL,
     note TEXT,
-    purchase_date DATE,
+    last_purchase_date DATE,
     quantity_purchased DECIMAL(10, 2),
     daily_usage DECIMAL(10, 2),
     unit VARCHAR(10),
     needs_repurchase BOOLEAN DEFAULT false,
+    category product_category NOT NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT check_category CHECK (category IN ('Granulés', 'Complément', 'Friandises', 'Équipement', 'Pharmacie', 'Autres')),
     CONSTRAINT check_unit CHECK (unit IN ('kg', 'g', 'L'))
 );
 

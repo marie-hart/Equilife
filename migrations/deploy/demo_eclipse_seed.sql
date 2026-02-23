@@ -22,7 +22,7 @@ BEGIN
 
   -- 2. Insertion des Produits (Respectant les catégories TypeScript)
   -- Granulés
-  INSERT INTO products (name, category, brand, note, quantity_purchased, unit, daily_usage, needs_repurchase, purchase_date)
+  INSERT INTO products (name, category, brand, note, quantity_purchased, unit, daily_usage, needs_repurchase, last_purchase_date)
   VALUES ('Granulés Performance', 'Granulés', 'EquiFeed', 'demo_seed', 25.0, 'kg', 2.0, true, CURRENT_DATE - INTERVAL '40 days')
   RETURNING id INTO prod_aliment_id;
 
@@ -66,8 +66,8 @@ BEGIN
   -- Items de la ration (Lien vers products)
   INSERT INTO ration_items (ration_id, product_id, quantity, frequency, type)
   VALUES 
-    (v_ration_id, prod_aliment_id, '2', ARRAY['Matin', 'Soir'], 'aliment'),
-    (v_ration_id, prod_complement_id, '1', ARRAY['Soir'], 'complement')
+      (v_ration_id, prod_aliment_id, '2', ARRAY['Matin', 'Soir'], 'Granulés'),
+      (v_ration_id, prod_complement_id, '1', ARRAY['Soir'], 'Complément')
   ON CONFLICT DO NOTHING;
 
   -- 5. Événements / Soins

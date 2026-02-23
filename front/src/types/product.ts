@@ -24,7 +24,7 @@ export type ProductFormValue = {
   note?: string;
 
   // Stock (uniquement si Granulés / Complément)
-  purchase_date?: string;
+  last_purchase_date?: string;
   quantity_purchased?: number;
   daily_usage?: number;
   unit?: ProductUnit;
@@ -44,27 +44,38 @@ export interface Product {
   id: string;
   name: string;
   category: ProductCategory;
-  brand?: string;
-  note?: string;
+  brand: string | null;
+  note: string | null;
+  description?: string;
 
-  purchase_date?: string;
+  // Noms alignés sur le Backend / SQL
+  last_purchase_date: string | null; 
+  purchase_interval_months: number | null;
+  purchase_interval_years?: number;
+  estimated_cost?: number;
+  needs_repurchase: boolean;
+  
+  // Champs pour le suivi de stock (si géré côté front)
   quantity_purchased?: number;
-  needs_repurchase?: boolean;
   daily_usage?: number;
   unit?: ProductUnit;
 
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  horse_id: string | null;
+  is_active: boolean | null;
 }
 
+// Pour la création, on utilise les mêmes noms
 export interface CreateProductDto {
   name: string;
   category: ProductCategory;
   brand?: string;
   note?: string;
-
-  purchase_date?: string;
+  description?: string;
+  last_purchase_date?: string;
+  purchase_interval_months?: number;
+  estimated_cost?: number;
+  horse_id: string | null;
+  // Champs stock
   quantity_purchased?: number;
   daily_usage?: number;
   unit?: ProductUnit;

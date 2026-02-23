@@ -62,7 +62,7 @@ export interface Product {
   id: string;
   name: string;
   description?: string;
-  category?: "Aliment" | "Complément" | "Soin" | "Matériels" | "Autres";
+  category?: "Granulés" | "Complément" | "Soin" | "Matériels" | "Autres";
   brand?: string;
   note?: string;
   last_purchase_date?: Date;
@@ -80,12 +80,15 @@ export interface Product {
 export interface CreateProductDto {
   name: string;
   description?: string;
-  category?: "Aliment" | "Complément" | "Soin" | "Matériels" | "Autres";
+  category?: "Granulés" | "Complément" | "Soin" | "Matériels" | "Autres";
   brand?: string;
   note?: string;
   last_purchase_date?: string;
   purchase_interval_months?: number;
   purchase_interval_years?: number;
+  quantity_purchased?: number;
+  daily_usage?: number;
+  unit?: string;
   estimated_cost?: number;
   horse_id?: string;
   used_for_horses?: string[];
@@ -95,12 +98,15 @@ export interface CreateProductDto {
 export interface UpdateProductDto {
   name?: string;
   description?: string;
-  category?: "Aliment" | "Complément" | "Soin" | "Matériels" | "Autres";
+  category?: "Granulés" | "Complément" | "Soin" | "Matériels" | "Autres";
   brand?: string;
   note?: string;
   last_purchase_date?: string;
   purchase_interval_months?: number;
   purchase_interval_years?: number;
+  quantity_purchased?: number;
+  daily_usage?: number;
+  unit?: string;
   estimated_cost?: number;
   horse_id?: string;
   used_for_horses?: string[];
@@ -116,7 +122,7 @@ export interface Horse {
     breed?: string;
     coat?: string;
     birth_date?: Date;
-    age?: number; // Calculé automatiquement depuis birth_date
+    age?: number;
     stable_location?: string;
     feed?: string;
     additional_info?: string;
@@ -130,7 +136,7 @@ export interface CreateHorseDto {
     sex?: "Jument" | "Hongre" | "Etalon";
     breed?: string;
     coat?: string;
-    birth_date?: string; // Format: YYYY-MM-DD
+    birth_date?: string;
     stable_location?: string;
     feed?: string;
     additional_info?: string;
@@ -181,7 +187,6 @@ export interface CreateDocumentDto {
     note?: string;
 }
 
-// Types pour les rations
 export interface Ration {
     id: string;
     horse_id: string;
@@ -201,7 +206,7 @@ export interface RationItem {
     product_id?: string;
     quantity?: string;
     frequency: string[];
-    type?: "aliment" | "complement" | "autre";
+    type?: "Granulés" | "Complément" | "Autres";
     created_at: Date;
     updated_at: Date;
 }
@@ -217,7 +222,7 @@ export interface CreateRationDto {
         product_id?: string;
         quantity?: string;
         frequency?: string[];
-        type?: "aliment" | "complement" | "autre";
+        type?: "Granulés" | "Complément" | "Autres";
     }>;
 }
 
@@ -231,6 +236,6 @@ export interface UpdateRationDto {
         product_id?: string;
         quantity?: string;
         frequency?: string[];
-        type?: "aliment" | "complement" | "autre";
+        type?: "Granulés" | "Complément" | "Autres";
     }>;
 }

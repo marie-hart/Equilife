@@ -172,9 +172,9 @@ const isManaged = computed(() => {
 
 const remainingDays = computed(() => {
     const p = product.value;
-    if (!p || !p.purchase_date || !p.quantity_purchased || !p.daily_usage || p.daily_usage <= 0) return null;
+    if (!p || !p.last_purchase_date || !p.quantity_purchased || !p.daily_usage || p.daily_usage <= 0) return null;
 
-    const startDate = new Date(p.purchase_date).getTime();
+    const startDate = new Date(p.last_purchase_date).getTime();
     const today = new Date().getTime();
     const totalDaysDuration = (p.quantity_purchased / p.daily_usage) * (1000 * 60 * 60 * 24);
     const expiryDate = startDate + totalDaysDuration;
@@ -184,10 +184,10 @@ const remainingDays = computed(() => {
 });
 
 const formattedPurchaseDate = computed(() => {
-  if (!product.value?.purchase_date) return "Non renseignée";
+  if (!product.value?.last_purchase_date) return "Non renseignée";
   
   try {
-    const date = new Date(product.value.purchase_date);
+    const date = new Date(product.value.last_purchase_date);
 
     return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -195,7 +195,7 @@ const formattedPurchaseDate = computed(() => {
       year: 'numeric'
     });
   } catch (e) {
-    return product.value.purchase_date; 
+    return product.value.last_purchase_date; 
   }
 });
 
@@ -210,9 +210,9 @@ const stockInfo = computed(() => {
 
 const endDateFormatted = computed(() => {
     const p = product.value;
-    if (!p || !p.purchase_date || !p.quantity_purchased || !p.daily_usage) return null;
+    if (!p || !p.last_purchase_date || !p.quantity_purchased || !p.daily_usage) return null;
     
-    const start = new Date(p.purchase_date);
+    const start = new Date(p.last_purchase_date);
     const days = p.quantity_purchased / p.daily_usage;
     const end = new Date(start);
     end.setDate(start.getDate() + days);

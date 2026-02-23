@@ -176,23 +176,22 @@ export class RationRepository {
             }
             const result = await client.query(
                 `UPDATE rations
-         SET name = COALESCE($1, name),
-             start_date = COALESCE($2, start_date),
-             end_date = COALESCE($3, end_date),
-             note = COALESCE($4, note),
-             is_active = COALESCE($5, is_active)
-         WHERE id = $6
-         RETURNING *`,
+                SET name = COALESCE($1, name),
+                    start_date = $2,    -- On enlève COALESCE pour autoriser le NULL
+                    end_date = $3,      -- On enlève COALESCE pour autoriser le NULL
+                    note = $4,          -- On enlève COALESCE pour autoriser le NULL
+                    is_active = COALESCE($5, is_active)
+                WHERE id = $6
+                RETURNING *`,
                 [
                     data.name ?? null,
-                    data.start_date ?? null,
+                    data.start_date ?? null, // Si c'est null, ça videra la colonne en base
                     data.end_date ?? null,
                     data.note ?? null,
                     data.is_active ?? null,
                     id,
                 ],
             );
-
             if (result.rows.length === 0) {
                 await client.query("ROLLBACK");
                 return null;

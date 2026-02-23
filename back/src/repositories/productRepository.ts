@@ -2,7 +2,6 @@ import pool from "../config/database";
 import { Product, CreateProductDto, UpdateProductDto } from "../types";
 import cacheService from "../services/cacheService";
 import { CacheKeys } from "../services/cacheKeys";
-import { calculateNextPurchaseDate } from "../utils/dateUtils";
 
 export class ProductRepository {
   
@@ -48,7 +47,7 @@ export class ProductRepository {
     const result = await pool.query(query, values);
     const products = result.rows.map(this.mapRow);
 
-    await cacheService.set(cacheKey, products, 300); // Cache 5 min
+    await cacheService.set(cacheKey, products, 300);
     return products;
   }
 
@@ -75,72 +74,64 @@ export class ProductRepository {
   }
 
   async create(data: CreateProductDto): Promise<Product> {
-    const result = await pool.query(
-      `INSERT INTO products (name, description, category, brand, note, last_purchase_date, 
-                            purchase_interval_months, purchase_interval_years, estimated_cost, 
-                            horse_id, needs_repurchase)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-       RETURNING *`,
-      [
-        data.name, data.description ?? null, data.category ?? null,
-        data.brand ?? null, data.note ?? null, data.last_purchase_date ?? null,
-        data.purchase_interval_months ?? null, data.purchase_interval_years ?? null,
-        data.estimated_cost ?? null, data.horse_id ?? null, data.needs_repurchase ?? false,
-      ]
-    );
+  const result = await pool.query(
+    `INSERT INTO products (
+      name, brand, category, note, 
+      last_purchase_date, purchase_interval_months, 
+      quantity_purchased, daily_usage, unit, 
+      horse_id, needs_repurchase
+    )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     RETURNING *`,
+    [
+      data.name, 
+      data.brand ?? null, 
+      data.category, 
+      data.note ?? null,
+      data.last_purchase_date ?? null, 
+      data.purchase_interval_months ?? null,
+      data.quantity_purchased ?? null,
+      data.daily_usage ?? null,      
+      data.unit ?? "kg",             
+      data.horse_id ?? null, 
+      data.needs_repurchase ?? false
+    ]
+  );
 
-    const product = this.mapRow(result.rows[0]);
-    await this.invalidateProductCache(product);
-    return product;
-  }
+  const product = this.mapRow(result.rows[0]);
+  await this.invalidateProductCache(product);
+  return product;
+}
 
   async update(id: string, data: UpdateProductDto): Promise<Product | null> {
-    // 1. Récupérer l'état actuel du produit pour les calculs
     const currentProduct = await this.findById(id);
     if (!currentProduct) return null;
-
-    // 2. Préparer les données de rachat automatique
-    let autoNeedsRepurchase = data.needs_repurchase;
-
-    // Si on met à jour la date d'achat ou l'intervalle, on recalcule
-    const lastDate = data.last_purchase_date || currentProduct.last_purchase_date;
-    const intervalMonths = data.purchase_interval_months ?? currentProduct.purchase_interval_months;
-    const intervalYears = data.purchase_interval_years ?? currentProduct.purchase_interval_years;
-
-    if (lastDate && (intervalMonths || intervalYears)) {
-      const nextPurchaseDate = calculateNextPurchaseDate(
-        new Date(lastDate),
-        intervalMonths || 0,
-        intervalYears || 0
-      );
-
-      // Si la date actuelle est après la date de rachat prévue, on force needs_repurchase à true
-      if (new Date() >= nextPurchaseDate) {
-        autoNeedsRepurchase = true;
-      } else if (data.last_purchase_date) { 
-        // Si l'utilisateur vient de renseigner un achat récent, on repasse à false
-        autoNeedsRepurchase = false;
-      }
-    }
 
     const result = await pool.query(
       `UPDATE products SET
         name = COALESCE($1, name),
-        last_purchase_date = COALESCE($2, last_purchase_date),
-        purchase_interval_months = COALESCE($3, purchase_interval_months),
-        purchase_interval_years = COALESCE($4, purchase_interval_years),
-        needs_repurchase = COALESCE($5, needs_repurchase),
-        -- ... autres champs
+        category = COALESCE($2, category),
+        brand = COALESCE($3, brand),
+        note = COALESCE($4, note),
+        last_purchase_date = $5,             -- Pas de COALESCE ici pour permettre de vider la date
+        quantity_purchased = COALESCE($6, quantity_purchased),
+        daily_usage = COALESCE($7, daily_usage),
+        unit = COALESCE($8, unit),
+        purchase_interval_months = COALESCE($9, purchase_interval_months),
         updated_at = NOW()
-      WHERE id = $6
+      WHERE id = $10
       RETURNING *`,
       [
         data.name ?? null,
-        data.last_purchase_date ?? null,
+        data.category ?? null,
+        data.brand ?? null,
+        data.note ?? null,
+        data.last_purchase_date ?? null,     
+        data.quantity_purchased ?? null,      
+        data.daily_usage ?? null,             
+        data.unit ?? null,                    
         data.purchase_interval_months ?? null,
-        data.purchase_interval_years ?? null,
-        autoNeedsRepurchase ?? null, // Utilise la valeur calculée
-        id
+        id                                    
       ]
     );
 
@@ -150,7 +141,6 @@ export class ProductRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    // On récupère le produit avant de le désactiver pour savoir quel horseId invalider
     const product = await this.findById(id);
     
     const result = await pool.query(
@@ -168,21 +158,17 @@ export class ProductRepository {
    * Invalidation intelligente du cache
    */
   private async invalidateProductCache(product: Product): Promise<void> {
-    // 1. Invalide le produit spécifique
     await cacheService.delete(CacheKeys.productKey(product.id));
     
-    // 2. Invalide les listes globales (actives et inactives)
     await cacheService.delete(CacheKeys.productsListKey(true));
     await cacheService.delete(CacheKeys.productsListKey(false));
     await cacheService.delete(CacheKeys.productsDueKey());
 
-    // 3. Invalide les listes liées au cheval spécifique
     if (product.horse_id) {
         await cacheService.delete(CacheKeys.productsListKey(true, product.horse_id));
         await cacheService.delete(CacheKeys.productsListKey(false, product.horse_id));
         await cacheService.delete(CacheKeys.productsDueKey(product.horse_id));
         
-        // CRITIQUE : Si c'est un aliment, la ration du cheval doit être rafraîchie
         await cacheService.delete(CacheKeys.horseRationKey(product.horse_id));
     }
   }
@@ -210,7 +196,7 @@ export class ProductRepository {
     const total = details.reduce((sum, item) => sum + parseFloat(item.monthly_cost), 0);
 
     return {
-        total: Math.round(total * 100) / 100, // Arrondi à 2 décimales
+        total: Math.round(total * 100) / 100,
         details
     };
   }

@@ -8,6 +8,6 @@ import FeedingForm from '@/components/FeedingForm.vue';
 
 const route = useRoute()
 
-const rationId = route.params.id as string
+const rationId = route.params.rationId as string
 
 </script>

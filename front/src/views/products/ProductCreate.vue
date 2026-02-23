@@ -52,7 +52,8 @@ const router = useRouter()
 const isSubmitting = ref(false);
 const form = ref<CreateProductDto>({
     name: '',
-    category: 'Autres'
+    category: 'Autres',
+    horse_id: '',
 });
 
 const { horseId } = storeToRefs(useHorsesStore())
@@ -60,26 +61,37 @@ const { horseId } = storeToRefs(useHorsesStore())
 const createProduct = async () => {
   if (!form.value.name || !form.value.category) return;
 
-  const payload: CreateProductDto = {
-    name: form.value.name,
-    category: form.value.category,
-    brand: form.value.brand ?? "",
-    note: form.value.note ?? "",
-    purchase_date: form.value.purchase_date,
-    quantity_purchased: form.value.quantity_purchased,
-    daily_usage: form.value.daily_usage,
-    unit: form.value.unit,
-  };
+  isSubmitting.value = true;
+  try {
+    const payload: any = {
+      name: form.value.name,
+      description: null, // Attendu par le repo
+      category: form.value.category,
+      brand: form.value.brand || null,
+      note: form.value.note || null,
+      last_purchase_date: form.value.last_purchase_date ? new Date(form.value.last_purchase_date).toISOString() : null,
+      purchase_interval_months: (form.value as any).purchase_interval_months || null,
+      purchase_interval_years: null, // Attendu par le repo
+      estimated_cost: null, // Attendu par le repo
+      horse_id: horseId.value !== 'all' ? horseId.value : null,
+      needs_repurchase: false
+    };
 
-  await productApi.create(payload);
-  goBack();
+    console.log("Payload envoyé :", payload);
+    await productApi.create(payload);
+    goBack();
+  } catch (error: any) {
+    console.error("Erreur serveur :", error.response?.data);
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 
 const goBack = () => {
-    if (horseId) {
-        router.push({ name: "Products", params: { id: String(horseId) } });
-        return;
-    }
-    router.push("/horses");
+  if (horseId.value && horseId.value !== 'all') {
+    router.push({ name: "Products", query: { horseId: String(horseId.value) } });
+    return;
+  }
+  router.push("/horses");
 };
 </script>

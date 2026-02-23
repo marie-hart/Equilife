@@ -4,10 +4,11 @@ BEGIN;
 SELECT id, horse_id, is_active FROM rations WHERE FALSE;
 SELECT id, ration_id, product_id, frequency, type FROM ration_items WHERE FALSE;
 
--- 2. Vérifie la présence des contraintes dans le dictionnaire système (plus fiable)
+-- 2. Vérifie que la colonne 'type' utilise bien le type ENUM 'product_category'
 SELECT 1 / COUNT(*)
-FROM information_schema.table_constraints
+FROM information_schema.columns
 WHERE table_name = 'ration_items'
-  AND constraint_name = 'ration_items_type_check';
+  AND column_name = 'type'
+  AND udt_name = 'product_category';
 
 ROLLBACK;

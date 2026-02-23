@@ -7,10 +7,10 @@ export const isStockManaged = (product: Product) =>
 
 export const getEndDate = (product: Product): Date | null => {
   if (!isStockManaged(product)) return null;
-  if (!product.purchase_date || !product.quantity_purchased || !product.daily_usage)
+  if (!product.last_purchase_date || !product.quantity_purchased || !product.daily_usage)
     return null;
 
-  const start = new Date(product.purchase_date);
+  const start = new Date(product.last_purchase_date);
   const totalDays = product.quantity_purchased / product.daily_usage;
 
   const end = new Date(start);

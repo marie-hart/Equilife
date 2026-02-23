@@ -17,13 +17,12 @@ CREATE TABLE rations (
 CREATE TABLE ration_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     ration_id UUID NOT NULL REFERENCES rations(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES products(id) ON DELETE SET NULL, -- Référence corrigée vers products
-    quantity VARCHAR(80), -- ex: "2L" ou "500g"
-    frequency TEXT[] DEFAULT '{}', -- ex: ARRAY['Matin', 'Midi', 'Soir']
-    type VARCHAR(20),
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+    quantity VARCHAR(80),
+    frequency TEXT[] DEFAULT '{}',
+    type product_category,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT ration_items_type_check CHECK (type IN ('aliment', 'complement', 'autre') OR type IS NULL)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP 
 );
 
 -- Triggers pour l'auto-update du champ updated_at

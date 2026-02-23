@@ -1,76 +1,68 @@
 <template>
-    <div class="page" :style="{ minHeight: '100vh' }">
-        <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-6">
-                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
-                    Alimentation
-                </v-card-title>
-                
-                <v-btn
-                    color="#554338"
-                    variant="flat"
-                    rounded="lg"
-                    :to="{ name: 'FeedingCreate', params: { id: horsesStore.horseId } }"
-                    class="text-none"
-                >
-                    <v-icon icon="mdi-plus" class="me-2" />
-                     ration
-                </v-btn>
-            </div>
+  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top pb-10">
+    <v-container class="px-4 py-2">
+      
+      <div class="d-flex align-center justify-space-between mb-6">
+        <div>
+          <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
+            Alimentation
+          </h1>
+          <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
+        </div>
+      </div>
 
-            <div class="d-flex flex-column ga-4">
-                <v-card 
-                    variant="flat" 
-                    rounded="lg"
-                    class="pa-2"
-                    :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
-                >
-                    <v-card-text class="pa-2">
-                        <v-row dense align="center">
-                            <v-col cols="12" md="4">
-                                <div class="text-caption font-weight-bold mb-1" :style="{ color: '#554338' }">
-                                    FILTRER PAR CHEVAL
-                                </div>
-                                <v-select
-                                    v-model="horsesStore.horseId"
-                                    :items="horsesStore.horseFilterOptions"
-                                    density="comfortable"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                    hide-details
-                                />
-                            </v-col>
-                        </v-row>
-                    </v-card-text>
-                </v-card>
+       <v-btn 
+        block 
+        color="#2E4B36"
+        size="large" 
+        rounded="pill" 
+        class="mb-6 text-none font-weight-bold" 
+        prepend-icon="mdi-plus"
+        elevation="1"
+        :to="{ name: 'FeedingCreate', params: { id: horsesStore.horseId } }"
+      >
+        Ajouter un produit
+      </v-btn>
 
-                <v-skeleton-loader
-                    v-if="isLoading"
-                    type="list-item-two-line, list-item-two-line, list-item-two-line"
-                />
-                
-                <FeedingList
-                    v-else
-                    :rations="rations"
-                    :get-horse-name="horsesStore.getHorseNameById"
-                    :get-product-name="getProductName"
-                    :item-type-label="itemTypeLabel"
-                    @edit="openFeedingEdit"
-                    @share="shareRation"
-                    @delete="deleteRation"
-                />
-            </div>
+      <div class="mb-8">
+        <div class="text-overline mb-2 ps-1" style="color: #7B5B3E; letter-spacing: 1px;">Rations de :</div>
+        <v-select
+          v-model="horsesStore.horseId"
+          :items="horsesStore.horseFilterOptions"
+          variant="solo"
+          flat
+          bg-color="#F5EFE6"
+          rounded="xl"
+          density="comfortable"
+          hide-details
+          prepend-inner-icon="mdi-horse"
+          class="shadow-subtle"
+        />
+      </div>
 
-            <v-snackbar
-                v-model="snackbar.show"
-                :color="snackbar.color"
-                timeout="2500"
-            >
-                {{ snackbar.message }}
-            </v-snackbar>
-        </main>
-    </div>
+      <v-skeleton-loader
+        v-if="isLoading"
+        type="card, card"
+        bg-color="transparent"
+      />
+      
+      <FeedingList
+        v-else
+        :rations="rations"
+        :get-horse-name="horsesStore.getHorseNameById"
+        :get-product-name="getProductName"
+        :item-type-label="itemTypeLabel"
+        @edit="openFeedingEdit"
+        @share="shareRation"
+        @delete="deleteRation"
+      />
+
+      <v-snackbar v-model="snackbar.show" :color="snackbar.color" rounded="pill">
+        <div class="text-center w-100 font-weight-bold">{{ snackbar.message }}</div>
+      </v-snackbar>
+
+    </v-container>
+  </v-sheet>
 </template>
 
 <script setup lang="ts">
@@ -97,12 +89,12 @@ const snackbar = ref({
 
 const itemTypeLabel = (value?: string): string => {
     switch (value) {
-        case "aliment":
-            return "Aliment";
-        case "complement":
+        case "Granulés":
+            return "Granulés";
+        case "Complément":
             return "Complément";
         default:
-            return "Autre";
+            return "Autres";
     }
 };
 
@@ -120,11 +112,13 @@ const loadProducts = async () => {
 const loadRations = async () => {
     isLoading.value = true;
     try {
-        const horseFilter= horsesStore.horseId && horsesStore.horseId !== "all" 
+        const horseFilter = (horsesStore.horseId && horsesStore.horseId !== "all") 
             ? horsesStore.horseId 
             : undefined;
         
-        rations.value = await rationsApi.getAll(horseFilter);
+        const data = await rationsApi.getAll(horseFilter);
+        rations.value = data;
+        console.log("Rations chargées :", rations.value); 
     } catch (error) {
         console.error("Error loading rations:", error);
     } finally {
@@ -132,26 +126,6 @@ const loadRations = async () => {
     }
 };
 
-// --- Logique de chargement réactif ---
-watch(() => horsesStore.horseId, () => {
-    loadProducts();
-    loadRations();
-});
-
-onMounted(async () => {
-    await loadProducts();
-    await loadRations();
-});
-
-const openFeedingEdit = (ration: Ration) => {
-    router.push({
-        name: "FeedingEdit",
-        params: { id: ration.id },
-        query: { horseId: ration.horse_id },
-    });
-};
-
-// --- Actions ---
 const shareRation = async (ration: Ration) => {
     const items = ration.items
         .map((item) => {
@@ -166,7 +140,6 @@ const shareRation = async (ration: Ration) => {
         })
         .join("\n");
     
-    // Utilisation du store pour obtenir le nom du cheval de la ration spécifique
     const horseName = horsesStore.getHorseNameById(ration.horse_id) || "Cheval inconnu";
     const text = `Ration: ${ration.name}\nCheval: ${horseName}\n${items}`;
     try {
@@ -213,4 +186,23 @@ const deleteRation = async (ration: Ration) => {
         };
     }
 };
+
+const openFeedingEdit = (ration: Ration) => {
+    router.push({
+        name: "FeedingEdit",
+        params: { rationId: ration.id }, 
+        query: { horseId: ration.horse_id },
+    });
+}
+
+watch(() => horsesStore.horseId, () => {
+    loadProducts();
+    loadRations();
+});
+
+onMounted(async () => {
+    await loadProducts();
+    await loadRations();
+});
+
 </script>

@@ -39,9 +39,21 @@ const loadProduct = async () => {
 };
 
 const updateProduct = async () => {
-  const id = route.params.id as string;
-  await productApi.update(id, form.value);
-  goBack();
+  try {
+    isSubmitting.value = true;
+    
+    const { purchase_interval_months, ...payload } = form.value as any
+
+    const id = route.params.id as string;
+
+    await productApi.update(id, payload);
+    
+    goBack();
+  } catch (error) {
+    console.error("Erreur API:", error);
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 
 const goBack = () => {

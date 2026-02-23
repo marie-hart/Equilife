@@ -21,7 +21,7 @@ nom, marque (brand).
 
 categorie : Granulés, Complément, Friandises, Équipement, Pharmacie, Autres.
 
-suivi_stock : purchase_date, quantity_purchased, daily_usage, unit (kg, g, L).
+suivi_stock : last_purchase_date, quantity_purchased, daily_usage, unit (kg, g, L).
 
 besoin_rachat (needs_repurchase) : Booléen.
 

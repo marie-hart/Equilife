@@ -137,13 +137,13 @@ const fetchLowStockProducts = async () => {
     SELECT
       p.id,
       p.name,
-      p.purchase_date,
+      p.last_purchase_date,
       p.quantity_purchased,
       p.daily_usage,
       p.unit
     FROM products p
     WHERE p.category IN ('Granulés', 'Complément')
-      AND p.purchase_date IS NOT NULL
+      AND p.last_purchase_date IS NOT NULL
       AND p.quantity_purchased IS NOT NULL
       AND p.daily_usage IS NOT NULL
   `);
@@ -152,7 +152,7 @@ const fetchLowStockProducts = async () => {
 };
 
 const computeRemainingDays = (product: any): number | null => {
-  const start = new Date(product.purchase_date);
+  const start = new Date(product.last_purchase_date);
   const totalDays =
     product.quantity_purchased / product.daily_usage;
 

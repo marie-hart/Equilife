@@ -4,7 +4,7 @@ export interface RationItem {
     product_id?: string;
     quantity?: string;
     frequency: string[];
-    type?: "aliment" | "complement" | "autre";
+    type?: "Granulés" | "Complément" | "Autres";
     created_at: string;
     updated_at: string;
 }
@@ -25,15 +25,15 @@ export interface Ration {
 export interface CreateRationDto {
     horse_id: string;
     name: string;
-    start_date?: string;
-    end_date?: string;
+    start_date?: string | null;
+    end_date?: string | null;
     note?: string;
     is_active?: boolean;
     items: Array<{
         product_id?: string;
         quantity?: string;
         frequency?: string[];
-        type?: "aliment" | "complement" | "autre";
+        type?: "Granulés" | "Complément" | "Autres";
     }>;
 }
 
@@ -57,5 +57,5 @@ export type RationFormItem = {
     productId: string;
     quantity: string;
     frequency: string[];
-    type: "aliment" | "complement" | "autre";
+    type: "Granulés" | "Complément" | "Autres";
 };
