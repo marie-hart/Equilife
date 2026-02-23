@@ -1,106 +1,119 @@
 <template>
-    <v-card 
-        class="pa-4" 
-        variant="flat" 
-        rounded="lg"
-        :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
-    >
-        <form class="reminder-form" @submit.prevent="emit('submit')">
+  <v-card variant="flat" class="bg-transparent">
+    <form @submit.prevent="emit('submit')">
+      <v-row>
+        <v-col cols="12">
+          <div class="text-overline mb-2" style="color: #7B5B3E">Détails du rappel</div>
+          <v-card variant="flat" rounded="xl" class="pa-6 shadow-subtle border-light bg-white">
             <v-row dense>
-                <v-col v-if="showHorseSelect" cols="12" md="6">
-                    <v-select
-                        v-model="horseIds"
-                        :items="horseSelectOptions"
-                        label="Chevaux *"
-                        density="comfortable"
-                        variant="outlined"
-                        bg-color="white"
-                        rounded="lg"
-                        :multiple="multiple"
-                        :chips="multiple"
-                        :error-messages="
-                            errors?.horseIds ? [errors.horseIds] : undefined
-                        "
-                    />
-                </v-col>
-                <v-col cols="12" md="6">
-                    <v-select
-                        v-model="reminderType"
-                        :items="reminderTypeOptions"
-                        label="Type *"
-                        density="comfortable"
-                        variant="outlined"
-                        bg-color="white"
-                        rounded="lg"
-                        :error-messages="
-                            errors?.reminderType ? [errors.reminderType] : undefined
-                        "
-                    />
-                </v-col>
-                <v-col cols="12">
-                    <v-text-field
-                        v-model="description"
-                        label="Description *"
-                        placeholder="vaccin, maréchal, médicament..."
-                        density="comfortable"
-                        variant="outlined"
-                        bg-color="white"
-                        rounded="lg"
-                        :error-messages="
-                            errors?.description ? [errors.description] : undefined
-                        "
-                    />
-                </v-col>
-                <v-col cols="12" md="6">
-                    <DatePickerField
-                        v-model="date"
-                        label="Date *"
-                        density="comfortable"
-                        variant="outlined"
-                        bg-color="white"
-                        rounded="lg"
-                        :error-messages="errors?.date ? [errors.date] : undefined"
-                    />
-                </v-col>
-                
-                <v-col cols="12">
-                    <RecurrenceFields
-                        v-model="recurrence"
-                        :units="recurrenceUnits"
-                        density="comfortable"
-                        variant="outlined"
-                        bg-color="white"
-                        rounded="lg"
-                        :checkbox-md="12"
-                        :fields-md="6"
-                    />
-                </v-col>
+              <v-col v-if="showHorseSelect" cols="12">
+                <v-select
+                  v-model="horseIds"
+                  :items="horseSelectOptions"
+                  label="Chevaux concernés *"
+                  density="comfortable"
+                  variant="outlined"
+                  color="#2E4B36"
+                  rounded="lg"
+                  :multiple="multiple"
+                  :chips="multiple"
+                  :error-messages="errors?.horseIds ? [errors.horseIds] : undefined"
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="reminderType"
+                  :items="reminderTypeOptions"
+                  label="Catégorie *"
+                  density="comfortable"
+                  variant="outlined"
+                  color="#2E4B36"
+                  rounded="lg"
+                  :error-messages="errors?.reminderType ? [errors.reminderType] : undefined"
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <DatePickerField
+                  v-model="date"
+                  label="Date prévue *"
+                  density="comfortable"
+                  variant="outlined"
+                  color="#2E4B36"
+                  rounded="lg"
+                  :error-messages="errors?.date ? [errors.date] : undefined"
+                />
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="description"
+                  label="Description / Note *"
+                  placeholder="Ex: Vaccin grippe/tétanos, passage ostéo..."
+                  density="comfortable"
+                  variant="outlined"
+                  color="#2E4B36"
+                  rounded="lg"
+                  hide-details="auto"
+                  :error-messages="errors?.description ? [errors.description] : undefined"
+                />
+              </v-col>
             </v-row>
-            
-            <div class="d-flex align-center justify-end ga-3 mt-6 flex-wrap">
-                 <v-btn 
-                    variant="outlined" 
-                    @click="emit('cancel')"
-                    rounded="lg"
-                    class="text-none"
-                    :style="{ color: '#554338', borderColor: '#d1c7bc' }"
-                >
-                    Annuler
-                </v-btn>
-                <v-btn
-                    class="text-none"
-                    :style="{ backgroundColor: '#554338', color: 'white' }"
-                    variant="flat"
-                    rounded="lg"
-                    type="submit"
-                    :loading="loading"
-                >
-                    {{ submitLabel }}
-                </v-btn>
-            </div>
-        </form>
-    </v-card>
+          </v-card>
+        </v-col>
+
+        <v-col cols="12">
+          <div class="text-overline mb-2" style="color: #7B5B3E">Paramètres de répétition</div>
+          <v-card variant="flat" rounded="xl" class="pa-6 shadow-subtle border-light bg-white">
+            <RecurrenceFields
+              v-model="recurrence"
+              :units="recurrenceUnits"
+              density="comfortable"
+              variant="outlined"
+              rounded="lg"
+              :checkbox-md="12"
+              :fields-md="6"
+            />
+          </v-card>
+        </v-col>
+      </v-row>
+      
+      <div class="d-flex align-center justify-end ga-3 mt-8">
+        <v-btn 
+          variant="text" 
+          @click="emit('cancel')"
+          class="text-none font-weight-bold"
+          color="#554338"
+        >
+          Annuler
+        </v-btn>
+        <v-btn
+          min-width="140"
+          size="large"
+          class="text-none font-weight-black"
+          color="#2E4B36"
+          variant="flat"
+          rounded="xl"
+          type="submit"
+          :loading="loading"
+          elevation="4"
+        >
+          {{ submitLabel }}
+        </v-btn>
+      </div>
+    </form>
+  </v-card>
 </template>
+
+<style scoped>
+.shadow-subtle {
+  box-shadow: 0 4px 15px rgba(123, 91, 62, 0.08) !important;
+}
+.border-light {
+  border: 1px solid rgba(168, 159, 148, 0.15) !important;
+}
+:deep(.v-field__outline) {
+  --v-field-border-color: #d1c7bc;
+}
+</style>
 
 <script setup lang="ts">
 import { computed } from "vue";

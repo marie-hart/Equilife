@@ -1,56 +1,77 @@
 <template>
-    <v-card
-        variant="outlined"
-        rounded="lg"
-        flat
-        class="pa-4"
-        :style="{ border: 'none' }"
-    >
-        <v-row dense>
-            <v-col v-for="filter in filters" :key="filter.key" cols="12" md="4">
-                <v-select
-                    v-if="filter.type === 'select'"
-                    v-model="modelValue[filter.key]"
-                    :items="filter.options"
-                    :label="filter.label"
-                    hide-details="auto"
-                    density="compact"
-                    variant="outlined"
-                    rounded="lg"
-                />
-
-                <DatePickerField
-                    v-else-if="filter.type === 'date'"
-                    v-model="modelValue[filter.key]"
-                    :label="filter.label"
-                    hide-details="auto"
-                    variant="outlined"
-                    bg-color="white"
-                    rounded="lg"
-                />
-
-                <v-text-field
-                    v-else-if="filter.type === 'search'"
-                    v-model="modelValue[filter.key]"
-                    :label="filter.label"
-                    hide-details="auto"
-                    density="compact"
-                    variant="outlined"
-                    bg-color="white"
-                    rounded="lg"
-                />
-            </v-col>
-        </v-row>
-    </v-card>
+  <v-card variant="flat" class="bg-transparent mb-8">
+    <v-row dense align="center">
+      <v-col 
+        v-for="filter in filters" 
+        :key="filter.key" 
+        cols="12" 
+        sm="4"
+      >
+        <v-card 
+          variant="flat" 
+          rounded="xl" 
+          class="px-4 py-1 shadow-subtle border-light bg-white d-flex align-center"
+          min-height="56"
+        >
+          <v-icon 
+            :icon="getFilterIcon(filter.key)" 
+            size="20" 
+            color="#7B5B3E" 
+            class="me-3" 
+          />
+          
+          <v-select
+            v-model="modelValue[filter.key]"
+            :items="filter.options"
+            :label="filter.label"
+            variant="plain"
+            density="compact"
+            hide-details
+            class="filter-select"
+            color="#2E4B36"
+          />
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-card>
 </template>
 
 <script setup lang="ts">
-import { DatePickerField } from "@/components";
-import { FilterDefinition } from "@/types";
-defineProps<{
-    filters: readonly FilterDefinition<any>[];
-    modelValue: Record<string, any>;
+const props = defineProps<{
+  filters: any[];
+  modelValue: Record<string, any>;
 }>();
 
-defineEmits(["update:modelValue"]);
+// Helper pour ajouter une icône spécifique par type de filtre
+const getFilterIcon = (key: string) => {
+  switch (key) {
+    case 'horseId': return 'mdi-horse-variant';
+    case 'status': return 'mdi-list-status';
+    case 'type': return 'mdi-tag-outline';
+    default: return 'mdi-filter-variant';
+  }
+};
 </script>
+
+<style scoped>
+.shadow-subtle {
+  box-shadow: 0 4px 15px rgba(123, 91, 62, 0.08) !important;
+}
+
+.border-light {
+  border: 1px solid rgba(168, 159, 148, 0.2) !important;
+}
+
+/* On personnalise le select de Vuetify pour qu'il soit très discret */
+:deep(.filter-select .v-field__label) {
+  font-size: 0.75rem !important;
+  color: #7B5B3E !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+:deep(.filter-select .v-select__selection-text) {
+  font-weight: 600;
+  color: #2E4B36;
+}
+</style>

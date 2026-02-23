@@ -1,36 +1,42 @@
 <template>
-    <div class="page">
-        <main class="pa-4">
-            <v-card class="card" variant="flat">
-                <v-card-title>Créer un rappel</v-card-title>
-                <v-card-text>
-                    <v-skeleton-loader
-                        v-if="isLoading"
-                        type="card, list-item-two-line"
-                    />
-                    <ReminderForm
-                        v-else
-                        v-model="createForm"
-                        :horses="horsesStore.horses"
-                        :loading="isCreating"
-                        :errors="fieldErrors"
-                        submit-label="Ajouter"
-                        @submit="createReminder"
-                        @cancel="goBack"
-                    />
-                </v-card-text>
-            </v-card>
+  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top pb-10">
+    <v-container class="px-4 max-width-600">
+      <div class="d-flex align-center mb-8 mt-2">
+        <v-btn icon="mdi-arrow-left" variant="text" color="#2E4B36" @click="goBack" class="me-2" />
+        <div>
+          <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
+            Nouveau rappel
+          </h1>
+          <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
+        </div>
+      </div>
 
-            <v-snackbar
-                v-model="snackbar.show"
-                :color="snackbar.color"
-                timeout="2500"
-            >
-                {{ snackbar.message }}
-            </v-snackbar>
-        </main>
-    </div>
+      <v-skeleton-loader
+        v-if="isLoading"
+        type="article, actions"
+        bg-color="transparent"
+      />
+      
+      <ReminderForm
+        v-else
+        v-model="createForm"
+        :horses="horsesStore.horses"
+        :loading="isCreating"
+        :errors="fieldErrors"
+        submit-label="Enregistrer le rappel"
+        @submit="createReminder"
+        @cancel="goBack"
+      />
+    </v-container>
+    
+    </v-sheet>
 </template>
+
+<style scoped>
+.max-width-600 {
+  max-width: 600px;
+}
+</style>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
@@ -126,32 +132,22 @@ const createReminder = async () => {
     }
     try {
         isCreating.value = true;
-        const { recurrenceUnit } = createForm.value;
-        const recurrenceInterval = Number.isFinite(
-            createForm.value.recurrenceInterval,
-        )
-            ? createForm.value.recurrenceInterval
-            : 1;
-        const intervalDays =
-            createForm.value.isRecurring && recurrenceUnit === "days"
-                ? recurrenceInterval
-                : undefined;
-        const intervalMonths =
-            createForm.value.isRecurring && recurrenceUnit === "months"
-                ? recurrenceInterval
-                : undefined;
-        const intervalYears =
-            createForm.value.isRecurring && recurrenceUnit === "years"
-                ? recurrenceInterval
-                : undefined;
+        
+        const { horseIds, description, date, reminderType, isRecurring, recurrenceInterval, recurrenceUnit } = createForm.value;
+        const eventDate = fromDateInputValue(date);
+
+        const intervalDays = isRecurring && recurrenceUnit === "days" ? recurrenceInterval : undefined;
+        const intervalMonths = isRecurring && recurrenceUnit === "months" ? recurrenceInterval : undefined;
+        const intervalYears = isRecurring && recurrenceUnit === "years" ? recurrenceInterval : undefined;
+
         await Promise.all(
-            createForm.value.horseIds.map((horseId) =>
+            horseIds.map((horseId) =>
                 eventsApi.create({
-                    name: createForm.value.description,
-                    description: createForm.value.description,
-                    event_date: fromDateInputValue(createForm.value.date),
+                    name: description,
+                    description: description,
+                    event_date: eventDate,
                     horse_id: horseId,
-                    reminder_type: createForm.value.reminderType,
+                    reminder_type: reminderType,
                     reminder_enabled: true,
                     reminder_interval_days: intervalDays,
                     reminder_interval_months: intervalMonths,
@@ -160,36 +156,24 @@ const createReminder = async () => {
             ),
         );
         
-        // Reset form
-        const reminderType = createForm.value.reminderType;
-        createForm.value = {
-            horseIds: [],
-            description: "",
-            date: "",
-            reminderType: reminderType,
-            isRecurring: false,
-            recurrenceInterval: 1,
-            recurrenceUnit: "months",
-        };
-        
         snackbar.value = {
             show: true,
             message: "Rappel(s) créé(s).",
             color: "success",
         };
         
-        // Navigation back
-        goBack();
+        setTimeout(() => {
+            goBack();
+        }, 100); // Un léger délai permet à l'animation du bouton de se terminer
         
     } catch (error) {
+        isCreating.value = false; // Important : libérer le bouton en cas d'erreur
         console.error("Error creating reminder:", error);
         snackbar.value = {
             show: true,
             message: getErrorMessage(error),
             color: "error",
         };
-    } finally {
-        isCreating.value = false;
     }
 };
 

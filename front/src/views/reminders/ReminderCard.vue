@@ -41,7 +41,6 @@
             class="mb-2"
           >
             <v-card
-                :to="{ name: 'ActivityDetails', params: { id: reminder.id } }"
                 variant="tonal"
                 rounded="lg"
                 class="pa-2 d-flex align-center justify-space-between"
@@ -55,8 +54,6 @@
                         {{ formatDateLong(getReminderDate(reminder)) }}
                     </span>
                 </div>
-
-                <v-icon size="20" :style="{ color: '#554338' }">mdi-chevron-right</v-icon>
             </v-card>
           </div>
         </div>
