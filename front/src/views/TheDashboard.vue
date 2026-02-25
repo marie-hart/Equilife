@@ -1,123 +1,60 @@
 <template>
-    <div>
+    <v-sheet color="#EDE4D8" min-height="100vh" class="pb-10">
         <v-container fluid class="pa-3">
-            <v-skeleton-loader
-                v-if="isLoading"
-                type="card, card, card"
-            />
+            <v-skeleton-loader v-if="isLoading" type="card, article" bg-color="transparent" />
 
             <template v-else>
-                <div class="mb-4">
-                <v-card
-                    rounded="xl"
-                    elevation="2"
-                    >
-                    <HorseProfileCard
-                        :horseProfile="horsesStore.selectedHorse"
-                        :horses="horsesStore.horses"
-                    />
-
-                    <v-divider />
-
+                <v-card rounded="xl" elevation="0" class="mb-4 border-light overflow-hidden">
+                    <HorseProfileCard />
+                    <v-divider thickness="3" :style="{ borderColor: '#E6DCCB' }" />
                     <QuickNoteView />
                 </v-card>
-                </div>
-                 
-                <v-row v-if="smAndDown" dense>
-                    <v-col cols="12" sm="6">
-                        <v-card
+
+                <v-row dense class="mb-4">
+                    <v-col cols="6">
+                        <v-btn
                             :to="getActivitiesRoute()"
                             block
-                            rounded="xl"
-                            variant="tonal"
-                            elevation="4"
-                            style="background-color: #2E4B36; color: white"
-                            class="py-2 px-6"
+                            rounded="lg"
+                            height="48"
+                            color="#2E4B36"
+                            class="text-none"
+                            elevation="2"
                         >
-                            <div class="d-flex align-center ga-3">
-                                <img
-                                src="/equestre.svg"
-                                alt="Suivi d’entraînement"
-                                width="32"
-                                />
-                                <div>
-                                    <div class="text-subtitle-1 font-weight-medium">
-                                        Suivi d’entraînement
-                                    </div>
-                                    <div class="text-caption text-white">
-                                        Activités & séances
-                                    </div>
-                                </div>
-                            </div>
-                        </v-card>
+                            <v-icon start size="20">mdi-horse-variant</v-icon>
+                            Activités
+                        </v-btn>
                     </v-col>
-
-                    <v-col cols="12" sm="6">
-                        <v-card
+                    <v-col cols="6">
+                        <v-btn
                             :to="goToFeeding()"
-                            link
-                            rounded="xl"
-                            variant="tonal"
-                            elevation="4"
-                            style="background-color:#6b4f3a; color: white"
-                            class="py-2 px-6"
+                            block
+                            rounded="lg"
+                            height="48"
+                            color="#6B4F3A"
+                            class="text-none"
+                            elevation="2"
                         >
-                            <div class="d-flex align-center ga-3">
-                                <img
-                                src="/ration.svg"
-                                alt="Alimentation"
-                                width="32"
-                                />
-                                <div>
-                                    <div class="text-subtitle-1 font-weight-medium">
-                                        Alimentation
-                                    </div>
-                                    <div class="text-caption text-white">
-                                        Rations & repas
-                                    </div>
-                                </div>
-                            </div>
-                        </v-card>
+                            <v-icon start size="20">mdi-food-apple</v-icon>
+                            Rations
+                        </v-btn>
                     </v-col>
                 </v-row>
 
-                <div class="mt-4">
-                    <ReminderCard />
-                </div>
+                <ReminderCard />
             </template>
         </v-container>
-
-        <v-dialog v-model="deleteDialogOpen" max-width="420">
-            <v-card>
-                <v-card-title>Supprimer</v-card-title>
-                <v-card-text>
-                    Confirmer la suppression de
-                    <strong>{{ deleteLabel }}</strong> ?
-                </v-card-text>
-                <v-card-actions class="justify-end">
-                    <v-btn variant="outlined" @click="deleteDialogOpen = false">
-                        Annuler
-                    </v-btn>
-                    <v-btn
-                        color="error"
-                        variant="flat"
-                        @click="confirmDelete"
-                    >
-                        Supprimer
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-
-        <v-snackbar
-            v-model="snackbar.show"
-            :color="snackbar.color"
-            timeout="2500"
-        >
-            {{ snackbar.message }}
-        </v-snackbar>
-    </div>
+    </v-sheet>
 </template>
+
+<style scoped>
+.shadow-subtle {
+    box-shadow: 0 10px 30px rgba(46, 75, 54, 0.05) !important;
+}
+.border-light {
+    border: 1px solid rgba(168, 159, 148, 0.15) !important;
+}
+</style>
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from "vue";

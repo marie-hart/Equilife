@@ -104,30 +104,30 @@ export class HorseRepository {
 
         const result = await pool.query(
             `INSERT INTO horses (
-        name,
-        sex,
-        breed,
-        coat,
-        birth_date,
-        stable_location,
-        feed,
-        additional_info
-      ) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-       RETURNING 
-         id, 
-         name, 
-         sex,
-         breed, 
-         coat,
-         birth_date, 
-         calculate_age(birth_date) as age,
-         stable_location,
-         feed,
-         additional_info, 
-         photo_path, 
-         created_at, 
-         updated_at`,
+                name,
+                sex,
+                breed,
+                coat,
+                birth_date,
+                stable_location,
+                feed,
+                additional_info
+            ) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) -- Corrigé : on s'arrête à $8
+            RETURNING 
+                id, 
+                name, 
+                sex,
+                breed, 
+                coat,
+                birth_date, 
+                calculate_age(birth_date) as age,
+                stable_location,
+                feed,
+                additional_info, 
+                photo_path, 
+                created_at, 
+                updated_at`,
             [
                 data.name,
                 data.sex || null,

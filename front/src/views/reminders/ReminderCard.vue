@@ -1,73 +1,33 @@
 <template>
-    <SectionCard
-      title="Rappels"
-      icon="alarm-clock"
-    >
-    <template #action>
-      <v-btn   
-          icon="mdi-plus"
-          class="elevation-0 px-2"
-          size="small"
-          :style="{
-              backgroundColor: '#6B4F3A',
-              color: '#FAF9F7'
-          }"
-          :to="{ name: 'ReminderCreate', params: { id: horsesStore.horseId ?? undefined } }"
-      />
-    </template>
-    <v-card
-          variant="flat"
-          rounded="lg"
-          class="pa-2 border-md"
-    >
-      <div class="d-flex flex-column ga-4">
-        <v-chip
-          prepend-icon="mdi-alarm-light"
-          size="small"
-          variant="flat"
-          class="align-self-start"
-          :style="{
-            backgroundColor: '#E6DCCB',
-            color: '#3c3226'
-          }"
-        >
-            À prévoir
-        </v-chip>
-  
-        <div v-if="remindersUpcoming.length">
-          <div
-            v-for="reminder in remindersUpcoming.slice(0, 1)"
-            :key="reminder.id"
-            class="mb-2"
-          >
-            <v-card
-                variant="tonal"
-                rounded="lg"
-                class="pa-2 d-flex align-center justify-space-between"
-                flat
-            >
+    <v-card rounded="xl" elevation="0" class="pa-4 border-light bg-white">
+      <div class="d-flex align-center justify-space-between mb-3">
+        <div class="d-flex align-center ga-2">
+            <v-icon icon="mdi-alarm-check" size="24" color="#2E4B36" />
+            <span class="text-h6 font-weight-bold" :style="{ color: '#2E4B36' }">Rappels</span>
+        </div>
+        <v-btn 
+            icon="mdi-plus" 
+            size="small" 
+            color="#2E4B36"
+            elevation="1"
+            :to="{ name: 'ReminderCreate', params: { id: horsesStore.horseId ?? undefined } }"
+        />
+      </div>
+
+      <div v-if="remindersUpcoming.length" class="ga-2 d-flex flex-column">
+        <div v-for="reminder in remindersUpcoming.slice(0, 2)" :key="reminder.id">
+            <v-card variant="tonal" color="#6B4F3A" rounded="lg" class="pa-2 d-flex align-center">
+                <v-icon icon="mdi-calendar-clock" size="16" class="me-2" />
                 <div class="d-flex flex-column">
-                    <span class="text-body-2 font-weight-medium">
-                        {{ reminder.name }}
-                    </span>
-                    <span class="text-caption" :style="{ color: '#6B4F3A' }">
+                    <span class="text-caption font-weight-bold">{{ reminder.name }}</span>
+                    <span class="text-overline" :style="{ fontSize: '0.6rem !important', lineHeight: 1}">
                         {{ formatDateLong(getReminderDate(reminder)) }}
                     </span>
                 </div>
             </v-card>
-          </div>
         </div>
-  
-        <v-alert
-          v-else
-          type="info"
-          variant="tonal"
-          density="comfortable"
-          text="Aucun rappel à prévoir"
-        />
-      </div>
-    </v-card>
-    <div class="d-flex justify-center">
+        
+       <div class="d-flex justify-center">
           <v-btn
             rounded="xl"
             variant="flat"
@@ -82,13 +42,16 @@
             <v-icon end>mdi-arrow-right</v-icon>
           </v-btn>
         </div>
-    </SectionCard>
-  </template>
-  
+      </div>
+
+      <v-alert v-else type="info" variant="tonal" density="compact" class="text-caption">
+        Aucun rappel à prévoir
+      </v-alert>
+    </v-card>
+</template>
   
   <script setup lang="ts">
   import { computed, onMounted, watch } from "vue";
-  import { SectionCard } from "@/components";
   import { useHorsesStore } from "@/stores/HorsesStore";
   import { eventsApi } from "@/api/events";
   import {

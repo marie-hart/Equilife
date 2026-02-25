@@ -21,7 +21,7 @@
         elevation="1"
         :to="{ name: 'FeedingCreate', params: { id: horsesStore.horseId } }"
       >
-        Ajouter un produit
+        Ajouter une ration
       </v-btn>
 
       <div class="mb-8">

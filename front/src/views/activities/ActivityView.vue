@@ -25,7 +25,7 @@
           elevation="1"
           :to="{ name: 'ActivityCreate', params: { id: horsesStore.horseId} }"
         >
-          Ajouter un produit
+          Ajouter une activité
         </v-btn>
 
       <div class="mb-8">

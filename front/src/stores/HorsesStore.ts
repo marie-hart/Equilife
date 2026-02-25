@@ -16,7 +16,7 @@ export const useHorsesStore = defineStore('horses', () => {
         if (horse.id === horseId.value) {
             return {
                 ...horse,
-                photoBase64: getStoredHorsePhoto()
+                photoBase64: getStoredHorsePhoto(horse.id)
             };
         }
         return horse;
@@ -57,95 +57,91 @@ export const useHorsesStore = defineStore('horses', () => {
         deleteHorse,
     }
 
- function getHorseNameById(id?: string): string {
-    if (!id) return "Cheval inconnu";
-    return horseById.value.get(id)?.name ?? "Cheval inconnu";
-}
-       
-
-function getHorseName() {
-    if (!horseId.value) {
-        return "Cheval inconnu";
+    function getHorseNameById(id?: string): string {
+        if (!id) return "Cheval inconnu";
+        return horseById.value.get(id)?.name ?? "Cheval inconnu";
     }
-        return horseById.value.get(horseId.value)?.name ?? "Cheval inconnu";
-};
-
-async function loadHorses() {
-        const data = await horsesApi.getAll();
-        // 4. Enrichir tous les chevaux chargés
-        horses.value = data.map(enrichHorseWithStoredPhoto);
-        return horses.value;
-};
-
-async function loadHorseById(id: string): Promise<HorseWithPhoto | undefined> {
-        let horse = horses.value.find(h => h.id === id);
         
-        // Si pas en mémoire, charger du back
-        if (!horse) {
-            const apiHorse = await horsesApi.getById(id);
-            if (apiHorse) {
-                horse = enrichHorseWithStoredPhoto(apiHorse);
-                const index = horses.value.findIndex(h => h.id === id);
-                if (index !== -1) horses.value[index] = horse;
-                else horses.value.push(horse);
-            }
-        } else {
-            // Si déjà en mémoire, s'assurer que le base64 est à jour
-            const index = horses.value.findIndex(h => h.id === id);
-            horses.value[index] = enrichHorseWithStoredPhoto(horse);
+
+    function getHorseName() {
+        if (!horseId.value) {
+            return "Cheval inconnu";
         }
-        
-        return horse;
-}
+            return horseById.value.get(horseId.value)?.name ?? "Cheval inconnu";
+    };
 
-async function createHorse(data: CreateHorseDto): Promise<Horse> {
-    const newHorse = await horsesApi.create(data);
-    horses.value.push(newHorse);
-    return newHorse;
-}
+    async function loadHorses() {
+            const data = await horsesApi.getAll();
+            horses.value = data.map(enrichHorseWithStoredPhoto);
+            return horses.value;
+    };
 
-async function updateHorse(id: string, data: CreateHorseDto): Promise<Horse> {
-    const updatedHorse = await horsesApi.update(id, data);
-    const index = horses.value.findIndex(h => h.id === id);
-    if (index !== -1) horses.value[index] = updatedHorse;
-    return updatedHorse;
-}
-
-async function deleteHorse(horseId: string) {
-    await horsesApi.delete(horseId);
-
-    horses.value = horses.value.filter((h) => h.id !== horseId);
-}
-
-function sethorseId(id: string | null) {
-    horseId.value = id;
-    setStoredHorseId(id || '');
-        
-    // 6. Lors du changement d'ID, rafraîchir les photos
-    horses.value = horses.value.map(enrichHorseWithStoredPhoto);
-}
-
-    // 4. Modifier l'action uploadHorsePhoto
-    async function uploadHorsePhoto(id: string, file: File): Promise<void> {
-        // Uploader vers le backend
-        await horsesApi.uploadPhoto(id, file);
-
-        // Convertir en Base64 pour le localStorage
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-            const base64String = reader.result as string;
-            setStoredHorsePhoto(base64String);
+    async function loadHorseById(id: string): Promise<HorseWithPhoto | undefined> {
+            let horse = horses.value.find(h => h.id === id);
             
-            // 5. Mettre à jour directement dans le store
-            const horseIndex = horses.value.findIndex(h => h.id === id);
-            if (horseIndex !== -1) {
-                horses.value[horseIndex].photoBase64 = base64String;
+            if (!horse) {
+                const apiHorse = await horsesApi.getById(id);
+                if (apiHorse) {
+                    horse = enrichHorseWithStoredPhoto(apiHorse);
+                    const index = horses.value.findIndex(h => h.id === id);
+                    if (index !== -1) horses.value[index] = horse;
+                    else horses.value.push(horse);
+                }
+            } else {
+                const index = horses.value.findIndex(h => h.id === id);
+                horses.value[index] = enrichHorseWithStoredPhoto(horse);
             }
-        };
-
-        // Recharger les données pour avoir la nouvelle URL back
-        await loadHorseById(id);
+            
+            return horse;
     }
+
+    async function createHorse(data: CreateHorseDto): Promise<Horse> {
+        const newHorse = await horsesApi.create(data);
+        horses.value.push(newHorse);
+        return newHorse;
+    }
+
+    async function updateHorse(id: string, data: CreateHorseDto): Promise<Horse> {
+        const updatedHorse = await horsesApi.update(id, data);
+        const index = horses.value.findIndex(h => h.id === id);
+        if (index !== -1) horses.value[index] = updatedHorse;
+        return updatedHorse;
+    }
+
+    async function deleteHorse(horseId: string) {
+        await horsesApi.delete(horseId);
+
+        horses.value = horses.value.filter((h) => h.id !== horseId);
+    }
+
+    function sethorseId(id: string | null) {
+        horseId.value = id;
+        setStoredHorseId(id || '');
+
+        horses.value = horses.value.map(enrichHorseWithStoredPhoto);
+    }
+
+    async function uploadHorsePhoto(id: string, file: File): Promise<void> {
+        try {
+            await horsesApi.uploadPhoto(id, file);
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const base64String = reader.result as string;
+                
+                localStorage.setItem(`horse_photo_${id}`, base64String);
+                
+                const horseIndex = horses.value.findIndex(h => h.id === id);
+                if (horseIndex !== -1) {
+                    horses.value[horseIndex].photoBase64 = base64String;
+                }
+            };
+
+            await loadHorseById(id);
+        } catch (error) {
+            console.error("Erreur upload photo:", error);
+        }   
+}
     
 })

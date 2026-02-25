@@ -12,6 +12,7 @@ export interface Horse {
     feed?: string;
     additional_info?: string;
     photo_path?: string;
+    photoBase64?: string | null;
     created_at: string;
     updated_at: string;
 }

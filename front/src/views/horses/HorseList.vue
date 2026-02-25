@@ -101,108 +101,109 @@ const goToDashboard = (horseId: string) => {
             cols="12"
             sm="6"
             md="4"
-            lg="3"
-            class="d-flex"
+            class="pa-3"
         >
-        
             <v-card
-                class="d-flex flex-column w-100 pa-4"
-                variant="tonal"
-                rounded="lg"
-                flat
-                :height="cardHeight"
-                :style="{ 
-                    maxWidth: cardMaxWidth,
-                    backgroundColor: '#fdfaf6',
-                    color: '#554338',
-                    border: 'none',
-                    position: 'relative' 
-                }"
+                variant="flat"
+                rounded="xl"
+                class="horse-card pa-5 shadow-subtle border-light bg-white"
+                @click="goToDashboard(horse.id)"
             >
-                <div class="d-flex align-center justify-space-between mb-3">
-                    <div 
-                        class="text-h6 font-weight-bold" 
-                        :style="{ color: '#3c3226' }"
-                    >
+                <div class="d-flex align-center justify-space-between mb-4">
+                    <div class="text-h5 font-weight-black" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
                         {{ horse.name }}
                     </div>
-
-                    <ActionButtons
-                        mode="auto"
-                        button-size="x-small"
-                        menu-button-size="x-small"
-                        :actions="getHorseActions(horse)"
-                    />
+                    <div @click.stop>
+                        <ActionButtons
+                            mode="auto"
+                            button-size="small"
+                            :actions="getHorseActions(horse)"
+                        />
+                    </div>
                 </div>
 
-                <div 
-                    class="d-flex align-start justify-space-between ga-3 flex-grow-1"
-                >
-                    <div class="flex-grow-1">
-                        <div class="text-body-2 text-grey-darken-1">
-                            <v-chip
-                                v-if="horse.breed"
-                                size="small"
-                                variant="outlined"
-                                class="mr-1"
-                            >
+                <div class="d-flex align-center mb-6">
+                    <v-avatar size="90" class="elevation-4 border-white-large">
+                        <v-img
+                            :src="horse.photoBase64 || horse.photo_path || '/avatar.jpg'"
+                            cover
+                        />
+                    </v-avatar>
+
+                    <div class="ms-4">
+                        <div class="d-flex flex-wrap ga-1">
+                            <v-chip v-if="horse.breed" size="x-small" color="#7B5B3E" variant="tonal" class="font-weight-bold">
                                 {{ horse.breed }}
                             </v-chip>
-                            <v-chip
-                                v-if="horse.age"
-                                size="small"
-                                variant="outlined"
-                            >
+                            <v-chip v-if="horse.age" size="x-small" color="#2E4B36" variant="tonal" class="font-weight-bold">
                                 {{ horse.age }} ans
                             </v-chip>
                         </div>
-
-                        <div
-                            v-if="horse.additional_info"
-                            class="text-caption text-grey-darken-1 ma-2"
-                        >
+                        <div v-if="horse.additional_info" class="text-caption text-truncate-2 mt-2" style="color: #8C7E6D; max-width: 150px;">
                             {{ horse.additional_info }}
                         </div>
                     </div>
+                </div>
 
-                    <v-avatar size="80" class="mr-4">
-                        <v-img
-                        :src="horse.photoBase64 || horse.photo_path || '/avatar.jpg'"
-                        cover
-                        />
-                        <!-- <v-icon v-else size="32">mdi-horse</v-icon> -->
-                    </v-avatar>
-                </div>
-                
-                <div class="d-flex justify-center mt-2">                
-                    <v-btn
-                        variant="flat"
-                        class="text-none rounded-lg"
-                        :style="{ color: '#554338', backgroundColor: '#efe5d9' }"
-                        @click="goToDashboard(horse.id)"
-                    >
-                        Mon Dashboard
-                        <v-icon end>mdi-arrow-right</v-icon>
-                    </v-btn>
-                </div>
+                <v-btn
+                    block
+                    variant="flat"
+                    rounded="lg"
+                    color="#F3EEE7"
+                    class="text-none font-weight-bold"
+                    style="color: #554338 !important;"
+                >
+                    Dashboard
+                    <v-icon end size="18">mdi-arrow-right</v-icon>
+                </v-btn>
             </v-card>
         </v-col>
     </v-row>
-    <p v-else class="empty-state text-center mt-10">Aucun cheval enregistré</p>
+
+    <div v-else class="text-center py-16">
+        <v-icon size="100" color="#BDB4A8">mdi-horse-variant</v-icon>
+        <p class="text-h6 mt-4 font-weight-medium" style="color: #8C7E6D">Aucun compagnon enregistré</p>
+    </div>
 
     <v-dialog v-model="isDeleteDialogOpen" max-width="400">
-        <v-card class="pa-4">
-            <v-card-title>Supprimer</v-card-title>
-            <v-card-text>{{ deleteMessage }}</v-card-text>
+        <v-card rounded="xl" class="pa-4">
+            <v-card-title class="text-h6 font-weight-bold" color="#2E4B36">Supprimer la fiche ?</v-card-title>
+            <v-card-text style="color: #554338">{{ deleteMessage }}</v-card-text>
             <v-card-actions>
                 <v-spacer />
-                <v-btn variant="text" @click="isDeleteDialogOpen = false">Annuler</v-btn>
-                <v-btn color="error" :loading="isDeleting" @click="confirmDelete">Supprimer</v-btn>
+                <v-btn variant="text" color="#554338" class="text-none" @click="isDeleteDialogOpen = false">Annuler</v-btn>
+                <v-btn color="error" variant="flat" rounded="xl" class="text-none px-6" :loading="isDeleting" @click="confirmDelete">Supprimer</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color">
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" rounded="lg">
         {{ snackbar.message }}
     </v-snackbar>
 </template>
+
+<style scoped>
+.shadow-subtle {
+    box-shadow: 0 10px 30px rgba(46, 75, 54, 0.05) !important;
+}
+.border-light {
+    border: 1px solid rgba(168, 159, 148, 0.15) !important;
+}
+.border-white-large {
+    border: 4px solid white !important;
+}
+.horse-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+.horse-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 40px rgba(46, 75, 54, 0.1) !important;
+}
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>

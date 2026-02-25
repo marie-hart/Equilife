@@ -2,7 +2,6 @@
   <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top pb-10">
     <v-container class="px-4 max-width-600">
       <div class="d-flex align-center mb-8 mt-2">
-        <v-btn icon="mdi-arrow-left" variant="text" color="#2E4B36" @click="goBack" class="me-2" />
         <div>
           <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
             Nouveau rappel

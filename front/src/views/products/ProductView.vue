@@ -4,15 +4,15 @@
     min-height="100vh"
     class="pa-0 safe-area-top"
   >
-    <v-container class="px-4 py-2">
+    <v-container>
       
-      <div class="mb-4">
-        <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
-          Produits
-        </h1>
-        <p class="text-body-2" style="color: #7B5B3E;">
-          Gérez les produits de vos chevaux
-        </p>
+      <div class="d-flex align-center justify-space-between mb-8 mt-2 px-2">
+        <div>
+          <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
+            Produits
+          </h1>
+          <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
+        </div>
       </div>
 
       <v-btn 

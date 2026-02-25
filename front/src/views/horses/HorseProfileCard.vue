@@ -37,6 +37,11 @@
                 :key="horse.id"
                 @click="horsesStore.sethorseId(horse.id)"
               >
+                <template #prepend> 
+                  <v-avatar size="32" class="me-2"> 
+                    <v-img :src="horse.photoBase64 || horse.photo_path || '/avatar.jpg'" cover /> 
+                  </v-avatar> 
+                </template> 
                 <v-list-item-title>
                   {{ horse.name }}
                 </v-list-item-title>

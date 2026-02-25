@@ -22,24 +22,27 @@ export const setStoredHorseId = (id: string) => {
     }
 }
 
-export const getStoredHorsePhoto = () => {
+
+const getHorsePhotoKey = (horseId: string) => `horse_photo_${horseId}`;
+
+export const setStoredHorsePhoto = (horseId: string, photoBase64: string | null) => {
     try {
-        return localStorage.getItem(SELECTED_HORSE_PHOTO_KEY);
+        const key = getHorsePhotoKey(horseId);
+        if (photoBase64) {
+            localStorage.setItem(key, photoBase64);
+        } else {
+            localStorage.removeItem(key);
+        }
     } catch (error) {
-        console.warn("Unable to read horse photo from storage:", error);
-        return null;
+        console.warn(`Unable to set horse photo for ID ${horseId} in storage:`, error);
     }
 };
 
-export const setStoredHorsePhoto = (photoBase64: string | null) => {
+export const getStoredHorsePhoto = (horseId: string): string | null => {
     try {
-        if (photoBase64) {
-            localStorage.setItem(SELECTED_HORSE_PHOTO_KEY, photoBase64);
-        } else {
-            localStorage.removeItem(SELECTED_HORSE_PHOTO_KEY);
-        }
-    } catch (error) {
-        console.warn("Unable to set horse photo in storage:", error);
+        return localStorage.getItem(getHorsePhotoKey(horseId));
+    } catch {
+        return null;
     }
 };
 
