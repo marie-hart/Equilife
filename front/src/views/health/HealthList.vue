@@ -1,70 +1,86 @@
 <template>
-    <div>
-        <div class="text-h6 mb-2 font-weight-bold" :style="{ color: '#6B4F3A' }">Liste des soins</div>
-        <div class="pt-2">
-            <div v-if="items.length" class="d-flex flex-column ga-2">
-                <v-card
-                    v-for="care in items"
-                    :key="care.id"
-                    variant="tonal"
-                    rounded="lg"
-                    flat
-                    class="pa-3"
-                    :style="{
-                        backgroundColor: '#fdfaf6',
-                        color: '#554338',
-                        border: 'none'
-                    }"
-                >
-                    <v-row class="w-100 align-center" dense>
-                        <v-col cols="4" class="text-caption d-md-none" :style="{ color: '#7a6e61' }">
-                            {{ formatDateMobile(care.event_date) }}
-                        </v-col>
-                        <v-col cols="6" class="d-md-none">
-                            <div class="text-subtitle-2 font-weight-medium">{{ care.name }}</div>
-                            <div class="text-body-2" :style="{ color: '#7a6e61' }">
-                                {{ getHorseName(String(care.horse_id)) }}
-                            </div>
-                            <div class="text-caption" v-if="recurrenceLabel(care) !== '-'" :style="{ color: '#7a6e61' }">
-                                {{ recurrenceLabel(care) }}
-                            </div>
-                        </v-col>
-                        <v-col cols="2" class="d-md-none text-right">
-                            <ActionButtons
-                                mode="auto"
-                                button-size="x-small"
-                                menu-button-size="x-small"
-                                :actions="getCareActions(care)"
-                            />
-                        </v-col>
+  <div v-if="items.length" class="care-list-container">
+    <div class="d-flex flex-column ga-3">
+      <v-card
+        v-for="care in items"
+        :key="care.id"
+        variant="flat"
+        rounded="xl"
+        class="pa-3 shadow-subtle border-light bg-white"
+      >
+        <div class="d-flex align-center">
+          <div class="status-indicator" :style="{ backgroundColor: '#2E4B36' }"></div>
+          
+          <div class="flex-grow-1 ms-3">
+            <div class="d-flex justify-space-between align-start">
+              <div>
+                <div class="text-caption font-weight-bold mb-1" style="color: #7B5B3E">
+                  {{ $vuetify.display.mdAndUp ? formatDate(care.event_date) : formatDateMobile(care.event_date) }}
+                </div>
+                
+                <h3 class="text-subtitle-1 font-weight-black leading-tight" style="color: #2E4B36">
+                  {{ care.name }}
+                </h3>
+              </div>
 
-                        <v-col cols="2" class="text-caption d-none d-md-block" :style="{ color: '#7a6e61' }">
-                            {{ formatDate(care.event_date) }}
-                        </v-col>
-                        <v-col cols="3" class="text-subtitle-2 font-weight-medium d-none d-md-block">
-                            {{ care.name }}
-                        </v-col>
-                        <v-col cols="3" class="text-body-2 d-none d-md-block" :style="{ color: '#7a6e61' }">
-                            {{ getHorseName(String(care.horse_id)) }}
-                        </v-col>
-                        <v-col cols="2" class="text-body-2 d-none d-md-block" :style="{ color: '#7a6e61' }">
-                            {{ recurrenceLabel(care) }}
-                        </v-col>
-                        <v-col cols="2" class="text-right d-none d-md-block">
-                            <ActionButtons
-                                class="d-flex justify-end ga-2"
-                                mode="inline"
-                                button-size="x-small"
-                                :actions="getCareActions(care)"
-                            />
-                        </v-col>
-                    </v-row>
-                </v-card>
+              <v-chip
+                v-if="recurrenceLabel(care) !== '-'"
+                size="x-small"
+                variant="tonal"
+                color="#7B5B3E"
+                class="font-weight-bold"
+              >
+                <v-icon start size="12">mdi-refresh</v-icon>
+                {{ recurrenceLabel(care) }}
+              </v-chip>
             </div>
-            <p v-else class="empty-state text-center py-4" :style="{ color: '#7a6e61' }">Aucun soin pour le moment.</p>
+
+            <div class="d-flex align-center mt-2">
+              <v-icon size="14" color="#a89f94" class="me-1">mdi-horse</v-icon>
+              <span class="text-caption font-weight-medium" style="color: #554338">
+                {{ getHorseName(String(care.horse_id)) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="ms-2">
+            <ActionButtons
+              mode="auto"
+              button-size="small"
+              menu-button-size="small"
+              :actions="getCareActions(care)"
+              color="#a89f94"
+            />
+          </div>
         </div>
+      </v-card>
     </div>
+  </div>
+  
+  <div v-else class="text-center pa-10 bg-white rounded-xl mt-4 border-light">
+    <v-icon size="48" color="#EFE5D9" class="mb-2">mdi-medication-outline</v-icon>
+    <p class="text-subtitle-1 font-weight-bold" style="color: #7a6e61">Historique vide</p>
+    <p class="text-caption" style="color: #a89f94">Aucun soin enregistré pour le moment.</p>
+  </div>
 </template>
+
+<style scoped>
+.status-indicator {
+  width: 3px;
+  height: 35px;
+  border-radius: 10px;
+  opacity: 0.6;
+}
+.shadow-subtle {
+  box-shadow: 0 4px 15px rgba(123, 91, 62, 0.06) !important;
+}
+.border-light {
+  border: 1px solid rgba(168, 159, 148, 0.15) !important;
+}
+.leading-tight {
+  line-height: 1.2;
+}
+</style>
 
 <script setup lang="ts">
 import { ActionButtons } from "@/components";

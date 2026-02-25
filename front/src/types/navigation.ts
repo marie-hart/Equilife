@@ -14,7 +14,7 @@ export type NavItem = {
     routeName:
         | "HorseDashboardView"
         | "Reminders"
-        | "HorseHealth"
+        | "HealthView"
         | "HorseActivities"
         // | "HorseDocuments"
         | "FeedingView"

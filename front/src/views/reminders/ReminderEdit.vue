@@ -22,7 +22,7 @@
           
           <v-col cols="12">
             <DatePickerField
-              v-model="form.date"
+              v-model="dateValue"
               label="Date"
               density="comfortable"
               variant="outlined"
@@ -117,6 +117,11 @@ const props = defineProps<{
     errors: Record<string, string>;
     recurrenceUnits: { title: string; value: RecurrenceUnit }[];
 }>();
+
+const dateValue = computed({
+  get: () => props.form.date || '', 
+  set: (val) => props.form.date = val
+});
 
 const emit = defineEmits(["update:modelValue", "save"]);
 

@@ -1,7 +1,7 @@
 <template>
-  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top pb-10">
+  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top">
     <v-container class="px-4">
-      <div class="d-flex align-center justify-space-between mb-8 mt-2">
+      <div class="d-flex align-center justify-space-between mb-6 mt-2">
         <div>
           <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
             Rappels
@@ -57,6 +57,7 @@
           :form="editForm"
           :errors="editErrors"
           :recurrence-units="recurrenceUnits"
+          :key="selectedReminder?.id || 'new'"
           @save="saveEdit"
       />
 
@@ -114,12 +115,10 @@ import type { Event, SelectOption, ReminderType } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import { getStatusKey, getStatusColor } from "@/libs/index";
 import { useFilters } from "@/composables/useFilters";
-import { ReminderEdit, ReminderList } from "@/views/reminders";
+import { ReminderEdit, ReminderList, ReminderForm } from '@/views/reminders';
 
 type RecurrenceUnit = "days" | "months" | "years";
-type ReminderStatus = "overdue" | "today" | "upcoming";
 
-// States
 const reminders = ref<Event[]>([]);
 const isLoading = ref(true);
 const isEditOpen = ref(false);
@@ -142,7 +141,6 @@ const snackbar = ref({ show: false, message: "", color: "success" });
 const router = useRouter();
 const horsesStore = useHorsesStore(); 
 
-// Options & Config
 const statusOptions = [
     { title: "Tous", value: "all" },
     { title: "En retard", value: "overdue" },
@@ -188,21 +186,21 @@ const applyReminderFilters = (items: Event[], overrides: any = {}) => {
 
 const filterDefinitions = computed(() => [
     { ...filters[0], options: horsesStore.horseFilterOptions },
-    { ...filters[1], options: statusOptions }, // Simplifié pour éviter les boucles de calcul
+    { ...filters[1], options: statusOptions }, 
     { ...filters[2], options: reminderTypeOptions },
 ]);
 
 const getTypeColor = (type?: ReminderType): string => {
     switch (type) {
         case "soin":
-            return "#D32F2F"; // Rouge pour le médical/soin
+            return "#D32F2F"; 
         case "activité":
-            return "#1976D2"; // Bleu pour l'exercice
+            return "#1976D2";
         case "alimentation":
-            return "#388E3C"; // Vert pour la nourriture
+            return "#388E3C"; 
         case "autres":
         default:
-            return "#7B5B3E"; // Brun pour le reste
+            return "#7B5B3E"; 
     }
 };
 
@@ -212,17 +210,15 @@ const filteredReminders = computed(() => {
     return result.sort((a, b) => {
         const dateA = new Date(getReminderDate(a)).getTime();
         const dateB = new Date(getReminderDate(b)).getTime();
-        const statusA = getStatusKey(a); // "overdue", "today", "upcoming"
+        const statusA = getStatusKey(a); 
         const statusB = getStatusKey(b);
 
-        // Définition des poids de priorité
         const priorityScore = {
             "overdue": 1,
             "today": 2,
             "upcoming": 3
         };
 
-        // 1. Trier par priorité de statut d'abord
         const scoreA = priorityScore[statusA as keyof typeof priorityScore] || 4;
         const scoreB = priorityScore[statusB as keyof typeof priorityScore] || 4;
 
@@ -230,7 +226,6 @@ const filteredReminders = computed(() => {
             return scoreA - scoreB;
         }
 
-        // 2. Si le statut est le même, trier par date chronologique
         return dateA - dateB;
     });
 });
@@ -243,7 +238,6 @@ const reminderTypeLabel = (type?: Event["reminder_type"]) => {
     return labels[type as keyof typeof labels] || "Autres";
 };
 
-// Actions Handler
 const handleReminderAction = ({ key, reminder }: { key: string, reminder: Event }) => {
     switch (key) {
         case 'done': markDone(reminder); break;
@@ -279,16 +273,16 @@ const markDone = async (reminder: Event) => {
 
 const editReminder = (reminder: Event) => {
     selectedReminder.value = reminder;
-    const hasMonthly = !!reminder.reminder_interval_months;
-    const hasYearly = !!reminder.reminder_interval_years;
     
-    editForm.value = {
-        description: reminder.description || reminder.name,
+   editForm.value = {
+        description: reminder.description || reminder.name || "",
         date: toDateInputValue(reminder.event_date),
-        isRecurring: hasMonthly || hasYearly || !!reminder.reminder_interval_days,
+        isRecurring: isReminderRecurring(reminder),
         recurrenceInterval: reminder.reminder_interval_years || reminder.reminder_interval_months || reminder.reminder_interval_days || 1,
-        recurrenceUnit: hasYearly ? "years" : hasMonthly ? "months" : "days",
+        recurrenceUnit: reminder.reminder_interval_years ? "years" : reminder.reminder_interval_months ? "months" : "days",
     };
+
+    editErrors.value = {};
     isEditOpen.value = true;
 };
 
@@ -301,10 +295,18 @@ const saveEdit = async () => {
         ]);
         if (firstError) { editErrors.value = errors; return; }
 
+        const date = new Date(editForm.value.date);
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+
+        const formattedDate = `${year}-${month}-${day}`;
+
         const payload = {
             name: editForm.value.description,
             description: editForm.value.description,
-            event_date: fromDateInputValue(editForm.value.date),
+            event_date: formattedDate,
             reminder_interval_days: editForm.value.isRecurring && editForm.value.recurrenceUnit === "days" ? editForm.value.recurrenceInterval : 0,
             reminder_interval_months: editForm.value.isRecurring && editForm.value.recurrenceUnit === "months" ? editForm.value.recurrenceInterval : 0,
             reminder_interval_years: editForm.value.isRecurring && editForm.value.recurrenceUnit === "years" ? editForm.value.recurrenceInterval : 0,

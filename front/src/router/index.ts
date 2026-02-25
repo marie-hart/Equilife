@@ -18,6 +18,7 @@ import ProductDetails from "@/views/products/ProductDetails.vue"
 import ProductEdit from "@/views/products/ProductEdit.vue";
 import Reminders from "@/views/reminders/ReminderView.vue";
 import ReminderCreate from "@/views/reminders/ReminderCreate.vue";
+import { HealthView } from "@/views/health";
 
 
 const router = createRouter({
@@ -79,8 +80,8 @@ const router = createRouter({
         },
         {
             path: "/horses/:id/health",
-            name: "HorseHealth",
-            component: Health,
+            name: "HealthView",
+            component: HealthView,
         },
         {
             path: "/horses/:id/health/new",

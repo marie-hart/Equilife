@@ -260,7 +260,6 @@ const route = useRoute()
 const horsesStore = useHorsesStore();
 
 const isEditMode = computed(() => Boolean(props.rationId));
-const pageTitle = computed(() => isEditMode.value ? "Modifier la ration" : "Créer une ration");
 
 const products = ref<Product[]>([]);
 const isSubmitting = ref(false);
@@ -281,7 +280,6 @@ const form = ref({
     items: [] as RationFormItem[],
 });
 
-// Options
 const activeOptions = [
     { title: "Active", value: true },
     { title: "Inactive", value: false },
@@ -312,7 +310,6 @@ const productOptions = computed(() => {
         .map((product) => ({ title: product.name, value: product.id }));
 });
 
-// Gestion des items
 const addItem = () => {
     form.value.items.unshift({
         key: `${Date.now()}-${Math.random()}`,
@@ -442,16 +439,13 @@ onMounted(async () => {
     try {
         await horsesStore.loadHorses();
         
-        // On récupère l'ID du cheval depuis l'URL
         const horseIdFromUrl = route.query.horseId as string;
-        
-        // Vérification : est-ce que cet ID existe vraiment dans notre liste de chevaux ?
+  
         const horseExists = horsesStore.horses.some(h => h.id === horseIdFromUrl);
 
         if (horseIdFromUrl && horseExists) {
             horsesStore.sethorseId(horseIdFromUrl);
         } else if (horsesStore.horses.length > 0 && !isEditMode.value) {
-            // Si l'ID de l'URL est invalide, on prend le premier cheval de la liste par défaut
             horsesStore.sethorseId(horsesStore.horses[0].id);
         }
 

@@ -1,127 +1,139 @@
 <template>
-    <div class="page" :style="{ minHeight: '100vh' }">
-        <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-6">
-                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">
-                    {{ isEdit ? "Modifier le soin" : "Ajouter un soin" }}
-                </v-card-title>
-            </div>
+  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top pb-10">
+    <v-container class="px-4">
+      
+      <div class="d-flex align-center mb-6 mt-2">
+        <v-btn icon="mdi-arrow-left" variant="text" color="#2E4B36" class="me-2" @click="goBack" />
+        <div>
+          <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
+            {{ isEdit ? "Modifier" : "Nouveau soin" }}
+          </h1>
+          <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
+        </div>
+      </div>
 
-            <v-card 
-                class="pa-2" 
-                variant="flat" 
+      <v-card variant="flat" rounded="xl" class="pa-4 shadow-subtle border-light bg-white">
+        <v-skeleton-loader v-if="isLoading" type="article, actions" />
+        
+        <v-form v-else @submit.prevent="handleSubmit">
+          <v-row dense>
+            <v-col cols="12">
+              <div class="text-caption font-weight-bold mb-2 ms-1" style="color: #7B5B3E">IDENTITÉ</div>
+              <v-select
+                v-model="form.horseIds"
+                :items="horseOptions"
+                label="Choisir le(s) cheval/chevaux *"
+                density="comfortable"
+                variant="outlined"
+                color="#2E4B36"
                 rounded="lg"
-                :style="{ backgroundColor: '#ffffff', border: '1px solid #efe5d9' }"
-            >
-                <v-card-text>
-                    <v-skeleton-loader
-                        v-if="isLoading"
-                        type="card, list-item-two-line"
-                    />
-                    <div v-else>
-                        <v-row dense>
-                            <v-col cols="12" md="6">
-                                <v-select
-                                    v-model="form.horseIds"
-                                    :items="horseOptions"
-                                    label="Chevaux *"
-                                    density="comfortable"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                    :multiple="!isEdit"
-                                    chips
-                                    closable-chips
-                                    :error-messages="fieldErrors.horseIds ? [fieldErrors.horseIds] : undefined"
-                                />
-                            </v-col>
-                            
-                            <v-col cols="12" md="6">
-                                <v-select
-                                    v-model="form.productId"
-                                    :items="productOptions"
-                                    label="Produit (soin)"
-                                    density="comfortable"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                    clearable
-                                />
-                            </v-col>
-                            
-                            <v-col cols="12" md="6">
-                                <v-text-field
-                                    v-model="form.careDescription"
-                                    label="Description du soin *"
-                                    placeholder="Ex: Maréchal, Ostéo..."
-                                    density="comfortable"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                    :error-messages="fieldErrors.careDescription ? [fieldErrors.careDescription] : undefined"
-                                />
-                            </v-col>
-                            
-                            <v-col cols="12" md="4">
-                                <DatePickerField
-                                    v-model="form.date"
-                                    label="Date *"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                    :error-messages="fieldErrors.date ? [fieldErrors.date] : undefined"
-                                />
-                            </v-col>
-                            
-                            <RecurrenceFields
-                                v-model="recurrence"
-                                :units="recurrenceUnits"
-                                :checkbox-md="4"
-                                :fields-md="4"
-                            />
-                            
-                            <v-col cols="12">
-                                <v-textarea
-                                    v-model="form.note"
-                                    label="Note libre"
-                                    density="comfortable"
-                                    variant="outlined"
-                                    bg-color="white"
-                                    rounded="lg"
-                                    rows="3"
-                                />
-                            </v-col>
-                        </v-row>
-                        
-                        <div class="d-flex justify-end mt-4">
-                            <v-btn 
-                                variant="outlined" 
-                                rounded="lg"
-                                class="mr-2"
-                                @click="goBack"
-                            >
-                                Annuler
-                            </v-btn>
-                            <v-btn
-                                variant="flat"
-                                :style="{ backgroundColor: '#554338', color: 'white' }"
-                                rounded="lg"
-                                class="text-none"
-                                :loading="isSubmitting"
-                                @click="handleSubmit"
-                            >
-                                {{ isEdit ? "Enregistrer" : "Ajouter" }}
-                            </v-btn>
-                        </div>
-                    </div>
-                </v-card-text>
-            </v-card>
+                :multiple="!isEdit"
+                chips
+                closable-chips
+                :error-messages="fieldErrors.horseIds"
+              />
+            </v-col>
+            
+            <v-col cols="12">
+               <div class="text-caption font-weight-bold mb-2 mt-2 ms-1" style="color: #7B5B3E">DÉTAILS DU SOIN</div>
+            </v-col>
 
-            <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="2500">
-                {{ snackbar.message }}
-            </v-snackbar>
-        </main>
-    </div>
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model="form.careDescription"
+                label="Type de soin *"
+                placeholder="Ex: Maréchal-ferrant, Vaccins..."
+                density="comfortable"
+                variant="outlined"
+                color="#2E4B36"
+                rounded="lg"
+                :error-messages="fieldErrors.careDescription"
+              />
+            </v-col>
+            
+            <v-col cols="12" md="6">
+              <v-select
+                v-model="form.productId"
+                :items="productOptions"
+                label="Produit utilisé (optionnel)"
+                density="comfortable"
+                variant="outlined"
+                color="#2E4B36"
+                rounded="lg"
+                clearable
+              />
+            </v-col>
+            
+            <v-col cols="12" md="6">
+              <DatePickerField
+                v-model="form.date"
+                label="Date du soin *"
+                density="comfortable"
+                variant="outlined"
+                color="#2E4B36"
+                rounded="lg"
+                :error-messages="fieldErrors.date"
+              />
+            </v-col>
+            
+            <v-col cols="12" class="mt-2">
+              <div class="pa-4 rounded-xl bg-grey-lighten-5 border-light">
+                <RecurrenceFields
+                  v-model="recurrence"
+                  :units="recurrenceUnits"
+                  :checkbox-md="12"
+                  :fields-md="6"
+                />
+              </div>
+            </v-col>
+            
+            <v-col cols="12" class="mt-4">
+              <v-textarea
+                v-model="form.note"
+                label="Notes & Observations"
+                placeholder="Comment s'est déroulé le soin ? Un conseil du pro ?"
+                density="comfortable"
+                variant="outlined"
+                color="#2E4B36"
+                rounded="lg"
+                rows="3"
+                hide-details
+              />
+            </v-col>
+          </v-row>
+          
+          <div class="d-flex flex-column ga-2 mt-8">
+            <v-btn
+              block
+              size="large"
+              variant="flat"
+              color="#2E4B36"
+              rounded="xl"
+              class="text-none font-weight-black shadow-subtle"
+              :loading="isSubmitting"
+              @click="handleSubmit"
+            >
+              {{ isEdit ? "Enregistrer les modifications" : "Enregistrer le soin" }}
+            </v-btn>
+            
+            <v-btn 
+              block
+              variant="text" 
+              color="#554338"
+              class="text-none font-weight-bold"
+              @click="goBack"
+            >
+              Annuler
+            </v-btn>
+          </div>
+        </v-form>
+      </v-card>
+
+      <v-snackbar v-model="snackbar.show" :color="snackbar.color" rounded="lg" elevation="10">
+        {{ snackbar.message }}
+      </v-snackbar>
+    </v-container>
+  </v-sheet>
 </template>
 
 <script setup lang="ts">
@@ -130,16 +142,14 @@ import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { DatePickerField, RecurrenceFields } from "@/components";
 import { productApi } from "@/api/product";
-import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { Product, Event, RecurrenceUnit, CreateEventDto } from "@/types";
 import { fromDateInputValue, toDateInputValue } from "@/libs/date";
 import { useHorsesStore } from "@/stores/HorsesStore";
 
 const route = useRoute();
 const router = useRouter();
-const horsesStore = useHorsesStore(); // Initialisation du Store
+const horsesStore = useHorsesStore();
 
-// État
 const isLoading = ref(true);
 const isSubmitting = ref(false);
 const products = ref<Product[]>([]);
@@ -147,10 +157,8 @@ const event = ref<Event | null>(null);
 const fieldErrors = ref<Record<string, string>>({});
 const snackbar = ref({ show: false, message: "", color: "success" });
 
-const eventId = computed(() => route.params.id as string | undefined);
 const isEdit = computed(() => Boolean(route.name === 'HealthEdit'));
 
-// Formulaire
 const form = ref({
     horseIds: [] as string[],
     productId: "",
@@ -193,33 +201,6 @@ const recurrence = computed({
     },
 });
 
-// Logique Métier
-const loadData = async () => {
-    isLoading.value = true;
-    try {
-        await horsesStore.loadHorses(); // Chargement via le store
-        await productApi.getAll(false).then(res => products.value = res);
-        
-        if (isEdit.value && eventId.value) {
-            const event = await eventsApi.getById(eventId.value);
-            fillForm(event);
-        } else {
-            // Initialisation création: logique du composable répliquée
-            const horseIdFromUrl = route.params.id as string;
-            if (horseIdFromUrl) {
-                form.value.horseIds = [horseIdFromUrl];
-            } else if (horsesStore.horseId && horsesStore.horseId !== "all") {
-                form.value.horseIds = [horsesStore.horseId];
-            }
-        }
-    } catch (error) {
-        console.error("Error loading data:", error);
-        snackbar.value = { show: true, message: "Erreur de chargement.", color: "error" };
-    } finally {
-        isLoading.value = false;
-    }
-};
-
 const fillForm = (event: Event) => {
     const hasMonthly = Boolean(event.reminder_interval_months);
     const hasYearly = Boolean(event.reminder_interval_years);
@@ -244,43 +225,38 @@ const fillForm = (event: Event) => {
 };
 
 const handleSubmit = async () => {
-    // 1. Validation des champs
-    const { errors, firstError } = await validateRequiredFieldsMap([
-        { key: "horseIds", label: "au moins un cheval", value: form.value.horseIds },
-        { key: "careDescription", label: "une description", value: form.value.careDescription.trim() },
-        { key: "date", label: "une date", value: form.value.date },
-    ]);
-
-    fieldErrors.value = errors;
-
-    if (firstError) {
-        snackbar.value = { show: true, message: firstError, color: "error" };
-        return;
-    }
-
     try {
         isSubmitting.value = true;
 
-        // Préparation du payload commun
+        const localDate = new Date(form.value.date);
+
+    localDate.setHours(12, 0, 0);
+
         const basePayload = {
             name: form.value.careDescription.trim(),
-            event_date: fromDateInputValue(form.value.date),
+            event_date: localDate.toISOString(),
             product_id: form.value.productId || undefined, 
             note: form.value.note.trim() || undefined,
+            is_care: true,
             
-            // Correction des noms de propriétés ici :
-            reminder_enabled: recurrence.value.isRecurring,
-            reminder_interval_value: recurrence.value.recurrenceInterval || undefined,
-            reminder_interval_unit: recurrence.value.recurrenceUnit || undefined,
+            reminder_enabled: form.value.isRecurring,
+            reminder_interval_days: form.value.isRecurring && form.value.recurrenceUnit === 'days' ? form.value.recurrenceInterval : 0,
+            reminder_interval_months: form.value.isRecurring && form.value.recurrenceUnit === 'months' ? form.value.recurrenceInterval : 0,
+            reminder_interval_years: form.value.isRecurring && form.value.recurrenceUnit === 'years' ? form.value.recurrenceInterval : 0,
         };
 
         if (isEdit.value) {
-            // Mode édition : on met à jour un seul soin
-            const eventId = route.params.eventId as string;
-            await eventsApi.update(eventId, {
+            const idToUpdate = route.params.id as string;
+
+            if (!idToUpdate || idToUpdate === "undefined") {
+                throw new Error("ID du soin manquant dans l'URL");
+            }
+
+            await eventsApi.update(idToUpdate, {
                 ...basePayload,
-                horse_id: form.value.horseIds[0] // En édition, un seul cheval
+                horse_id: form.value.horseIds[0] 
             });
+            
             snackbar.value = { show: true, message: "Soin mis à jour.", color: "success" };
         } else {
             await Promise.all(
@@ -291,14 +267,9 @@ const handleSubmit = async () => {
                     } as CreateEventDto)
                 )
             );
-            snackbar.value = { 
-                show: true, 
-                message: `${form.value.horseIds.length > 1 ? 'Soins ajoutés' : 'Soin ajouté'}.`, 
-                color: "success" 
-            };
+            snackbar.value = { show: true, message: "Soin(s) ajouté(s).", color: "success" };
         }
 
-        // Petit délai pour laisser l'utilisateur voir le message de succès
         setTimeout(() => goBack(), 1000);
 
     } catch (error) {
@@ -314,9 +285,8 @@ const handleSubmit = async () => {
 };
 
 const goBack = () => {
-    // On retourne à la vue santé du cheval (ou à la liste globale)
     if (horsesStore.horseId && horsesStore.horseId !== 'all') {
-        router.push({ name: 'HealthView', params: { id: horsesStore.horseId } });
+        router.push({ name: 'HealthView' });
     } else {
         router.push('/health');
     }
@@ -330,17 +300,6 @@ const loadProducts = async () => {
     }
 };
 
-const loadEvent = async () => {
-    try {
-        const id = route.params.id as string;
-        event.value = await eventsApi.getById(id);
-    } catch (error) {
-        console.error("Error loading event:", error);
-    } finally {
-        isLoading.value = false;
-    }
-};
-
 onMounted(async () => {
     isLoading.value = true;
     try {
@@ -349,14 +308,20 @@ onMounted(async () => {
             loadProducts()
         ]);
 
-        const horseIdFromQuery = route.query.horseId as string;
-        if (horseIdFromQuery && !isEdit.value) {
-            form.value.horseIds = [horseIdFromQuery];
-        }
-
         if (isEdit.value) {
-            await loadEvent(); 
+            const id = route.params.id as string;
+            const fetchedEvent = await eventsApi.getById(id);
+            event.value = fetchedEvent;
+            
+            fillForm(fetchedEvent); 
+        } else {
+            const horseIdFromQuery = route.query.horseId as string;
+            if (horseIdFromQuery) {
+                form.value.horseIds = [horseIdFromQuery];
+            }
         }
+    } catch (error) {
+        console.error("Erreur au montage:", error);
     } finally {
         isLoading.value = false;
     }

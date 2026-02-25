@@ -1,63 +1,93 @@
 <template>
-    <div class="page">
-        <main class="pa-4">
-            <div class="d-flex align-center justify-space-between ga-4 mb-4">
-                <v-card-title class="ma-0 text-h5 font-weight-bold" :style="{ color: '#3c3226' }">Soins</v-card-title>
-            </div>
-            <div class="d-flex flex-column ga-4">
-                <div class="d-flex align-center justify-space-between ga-4">
-                    <v-btn 
-                        variant="outlined" 
-                        :to="{ name: 'Dashboard' }"
-                        rounded="lg"
-                        class="text-none"
-                        :style="{ color: '#554338', borderColor: '#d1c7bc' }"
-                    >
-                        <v-icon icon="mdi-arrow-left" class="me-2" />
-                        Retour
-                    </v-btn>
-                    <v-btn
-                        class="text-none"
-                        variant="flat"
-                        rounded="lg"
-                        :to="{ name: 'HealthCreate', params: { id: horsesStore.horseId !== 'all' ? horsesStore.horseId : undefined } }"
-                        :style="{ backgroundColor: '#1F3D2B', color: 'white' }"
-                    >
-                        <v-icon start icon="mdi-plus" />
-                        Ajouter
-                    </v-btn>
+    <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top">
+        <v-container class="px-4 pb-10">
+        
+            <div class="d-flex align-center justify-space-between mb-6 mt-2">
+                <div>
+                    <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
+                        Santé
+                    </h1>
+                    <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
                 </div>
-
-                <FiltersPanel
-                    :filters="filterDefinitions"
-                    v-model="filterValues"
-                />
-                <v-skeleton-loader
-                    v-if="isLoading"
-                    type="list-item-two-line, list-item-two-line, list-item-two-line"
-                />
-                <HealthList
-                    v-else
-                    :items="filteredCares"
-                    :format-date="formatDateLong"
-                    :format-date-mobile="formatDateMobile"
-                    :get-horse-name="horsesStore.getHorseNameById"
-                    :recurrence-label="recurrenceLabel"
-                    :get-care-actions="getCareActions"
-                />
+                
+                <v-btn
+                    variant="flat"
+                    color="#2E4B36"
+                    rounded="xl"
+                    class="text-none font-weight-bold"
+                    elevation="4"
+                    :to="{ name: 'HealthCreate', params: { id: horsesStore.horseId !== 'all' ? horsesStore.horseId : undefined } }"
+                >
+                    <v-icon icon="mdi-plus" class="me-1" />
+                    Ajouter
+                </v-btn>
             </div>
-        </main>
-    </div>
-    <div class="page">
-        <main class="pa-4">
+
+            <FiltersPanel
+                :filters="filterDefinitions"
+                v-model="filterValues"
+                class="mb-6"
+            />
+
+            <div class="mb-4 d-flex align-center">
+                <v-icon icon="mdi-clipboard-pulse-outline" size="18" color="#7B5B3E" class="me-2" />
+                <span class="text-overline font-weight-bold" style="color: #7B5B3E">Carnet de santé</span>
+            </div>
+
+            <v-skeleton-loader
+                v-if="isLoading"
+                type="card, card, card"
+                bg-color="transparent"
+            />
+            
+            <HealthList
+                v-else
+                :items="filteredCares"
+                :format-date="formatDateLong"
+                :format-date-mobile="formatDateMobile"
+                :get-horse-name="horsesStore.getHorseNameById"
+                :recurrence-label="recurrenceLabel"
+                :get-care-actions="getCareActions"
+            />
+
+            <v-dialog v-model="isCareDoneOpen" max-width="420px">
+                <v-card rounded="xl" class="pa-4">
+                    <v-card-title class="text-h6 font-weight-bold" style="color: #2E4B36">
+                        Soin effectué
+                    </v-card-title>
+                    <v-card-text>
+                        <p class="text-body-2 mb-4" style="color: #7a6e61">
+                            Confirmez la date à laquelle le soin a été réalisé pour programmer le prochain.
+                        </p>
+                        <DatePickerField
+                            v-model="careDoneForm.date"
+                            label="Date de réalisation"
+                            variant="outlined"
+                            color="#2E4B36"
+                            rounded="lg"
+                        />
+                    </v-card-text>
+                    <v-card-actions class="px-4 pb-4">
+                        <v-spacer></v-spacer>
+                        <v-btn variant="text" color="#554338" class="text-none" @click="isCareDoneOpen = false">Annuler</v-btn>
+                        <v-btn variant="flat" color="#2E4B36" rounded="xl" class="text-none px-6" @click="saveCareDone">Valider</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
             <ConfirmDeleteDialog
                 v-model="isDeleteOpen"
                 title="Supprimer le soin"
                 :message="deleteMessage"
                 @confirm="confirmDelete"
             />
-        </main>
-    </div>
+
+            <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="2500" rounded="lg">
+                {{ snackbar.message }}
+            </v-snackbar>
+
+        </v-container>
+    </v-sheet>
 </template>
 
 <script setup lang="ts">
@@ -65,7 +95,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { eventsApi } from "@/api/events";
 import { useFilters } from "@/composables/useFilters";
 import { useHorsesStore } from "@/stores/HorsesStore"; 
-import type { CareAction, CareStatus, Event,  } from "@/types";
+import type { CareAction, CareStatus, Event } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import {
     formatDateLong,
@@ -74,7 +104,7 @@ import {
     startOfDay,
     toDateInputValue,
 } from "@/libs/date";
-import { ConfirmDeleteDialog, FiltersPanel } from "@/components";
+import { ConfirmDeleteDialog, FiltersPanel, DatePickerField } from "@/components";
 import { HealthList } from "@/views/health";
 
 const cares = ref<Event[]>([]);
@@ -178,7 +208,7 @@ const availableHorseOptions = computed(() => {
             .map((care) => care.horse_id)
             .filter((id): id is string => Boolean(id)),
     );
-    const base = horsesStore.horseFilterOptions; // UPDATED
+    const base = horsesStore.horseFilterOptions; 
     let options = base.filter(
         (option) => option.value === "all" || ids.has(option.value),
     );
@@ -282,29 +312,58 @@ const isCareRecurring = (care: Event): boolean =>
     );
 
 const markDone = async (care: Event) => {
+    selectedCare.value = care;
+
     if (isCareRecurring(care)) {
-        selectedCare.value = care;
         careDoneForm.value = {
-            date: toDateInputValue(care.event_date),
+            date: toDateInputValue(new Date()),
         };
         isCareDoneOpen.value = true;
-        return;
+    } else {
+        try {
+            await eventsApi.delete(care.id);
+            await loadCares();
+            snackbar.value = {
+                show: true,
+                message: "Soin effectué et supprimé.",
+                color: "success",
+            };
+        } catch (error) {
+            console.error("Erreur lors de la suppression du soin:", error);
+            snackbar.value = {
+                show: true,
+                message: "Action impossible.",
+                color: "error",
+            };
+        }
     }
+};
+
+const saveCareDone = async () => {
+    if (!selectedCare.value) return;
     try {
-        await eventsApi.update(care.id, { reminder_enabled: false });
+        const isRecurring = isCareRecurring(selectedCare.value);
+
+        if (isRecurring) {
+            await eventsApi.update(selectedCare.value.id, {
+                event_date: careDoneForm.value.date,
+                is_care: true,
+                reminder_enabled: true
+            });
+            snackbar.value.message = "Prochain rendez-vous planifié.";
+        } else {
+            await eventsApi.delete(selectedCare.value.id);
+            snackbar.value.message = "Soin validé et supprimé.";
+        }
+        
         await loadCares();
-        snackbar.value = {
-            show: true,
-            message: "Soin marqué comme fait.",
-            color: "success",
-        };
+        isCareDoneOpen.value = false;
+        snackbar.value.show = true;
+        snackbar.value.color = "success";
+
     } catch (error) {
-        console.error("Error marking care as done:", error);
-        snackbar.value = {
-            show: true,
-            message: "Action impossible.",
-            color: "error",
-        };
+        console.error("Erreur lors de la validation:", error);
+        snackbar.value = { show: true, message: "Action impossible.", color: "error" };
     }
 };
 

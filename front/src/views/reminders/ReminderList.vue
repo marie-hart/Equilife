@@ -1,10 +1,10 @@
 <template>
   <div v-if="items.length" class="reminder-groups">
-    <div v-for="group in groupedReminders" :key="group.status" class="mb-8">
+    <div v-for="group in groupedReminders" :key="group.status" class="mb-6">
       
       <div class="d-flex align-center mb-4 px-2">
         <div 
-          class="text-overline font-weight-bold" 
+          class="text-overline font-weight-bold flex-shrink-0 text-no-wrap" 
           :style="{ color: group.color, opacity: 0.9, letterSpacing: '1.5px' }"
         >
           {{ group.label }}
@@ -29,7 +29,7 @@
                   <div class="text-caption font-weight-bold mb-1" :style="{ color: '#7B5B3E' }">
                     {{ formatDateLong(getReminderDate(reminder)) }}
                   </div>
-                  <h3 class="text-h9 font-weight-bold leading-tight" style="color: #2E4B36">
+                  <h3 class="text-subtitle-1 font-weight-bold leading-tight" :style="{ color: '#2E4B36' }">
                     {{ getReminderTitle(reminder) }}
                   </h3>
                 </div>
@@ -38,6 +38,8 @@
                   v-if="reminder.reminder_type"
                   size="x-small"
                   variant="tonal"
+                  display: inline-flex
+                  line-height: 1
                   :color="getTypeColor(reminder.reminder_type)"
                   class="font-weight-black"
                 >
@@ -47,7 +49,7 @@
 
               <div class="d-flex align-center mt-2">
                 <v-icon size="16" color="#7a6e61" class="me-1">mdi-horse</v-icon>
-                <span class="text-body-2 font-weight-medium" style="color: #554338">
+                <span class="text-body-2 font-weight-medium" :style="{ color: '#554338' }">
                   {{ getHorseName(reminder.horse_id) }}
                 </span>
               </div>
@@ -92,8 +94,8 @@
   
   <div v-else class="text-center pa-10 bg-white rounded-xl mt-4">
     <v-icon size="64" color="#EFE5D9" class="mb-4">mdi-calendar-check</v-icon>
-    <p class="text-h6 font-weight-medium" style="color: #7a6e61">Tout est à jour !</p>
-    <p class="text-body-2" style="color: #a89f94">Aucun rappel pour le moment.</p>
+    <p class="text-h6 font-weight-medium" :style="{ color: '#7a6e61' }">Tout est à jour !</p>
+    <p class="text-body-2" :style="{ color: '#a89f94' }">Aucun rappel pour le moment.</p>
   </div>
 </template>
 
@@ -108,7 +110,6 @@ const props = defineProps<{
   getHorseName: (id: string) => string;
   reminderTypeLabel: (type: any) => string;
   getReminderActions: (item: any) => any[];
-  // Ajout des props manquantes pour ton design
   formatDateLong: (date: any) => string;
   getReminderDate: (item: any) => any;
   getTypeColor: (type: any) => string;
@@ -116,11 +117,10 @@ const props = defineProps<{
 
 defineEmits(['action']);
 
-// On regroupe les items par statut
 const groupedReminders = computed(() => {
   const groups = [
-    { status: 'overdue', label: 'En retard', color: '#D32F2F', items: [] as any[] },
-    { status: 'today', label: "Aujourd'hui", color: '#7B5B3E', items: [] as any[] },
+    { status: 'overdue', label: 'À faire', color: '#6B4F3A', items: [] as any[] },
+    { status: 'today', label: "À faire", color: '#6B4F3A', items: [] as any[] },
     { status: 'upcoming', label: 'À venir', color: '#2E4B36', items: [] as any[] }
   ];
 

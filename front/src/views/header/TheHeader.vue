@@ -56,7 +56,7 @@ const isMoreOpen = ref(false);
 const navItems: NavItem[] = [
   { tab: "dashboard", label: "Accueil", routeName: "HorseDashboardView", icon: "house" },
   { tab: "reminders", label: "Rappels", routeName: "Reminders", icon: "bell" },
-  { tab: "health", label: "Soins", routeName: "HorseHealth", icon: "house-chimney-medical" },
+  { tab: "health", label: "Soins", routeName: "HealthView", icon: "house-chimney-medical" },
   { tab: "activities", label: "Activités", routeName: "HorseActivities", icon: "heart-pulse" },
   { tab: "feeding", label: "Alimentation", routeName: "FeedingView", icon: "bowl-food" },
   { tab: "products", label: "Produits", routeName: "Products", icon: "box-open" },
