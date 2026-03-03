@@ -1,5 +1,5 @@
 <template>
-  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top pb-10">
+  <v-sheet color="#EDE4D8" min-height="100vh" class="pb-10">
     <v-container>
       <div class="d-flex align-center justify-space-between mb-6 mt-2">
         <div class="d-flex align-center">

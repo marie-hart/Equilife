@@ -31,17 +31,17 @@ export default defineConfig(({ mode }) => {
         start_url: "/",
         icons: [
           {
-            src: "icons/icon-192x192.png",
+            src: "icons/icon-192x192-v2.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "icons/icon-512x512.png",
+            src: "icons/icon-512x512-v2.png",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "icons/icon-512x512.png",
+            src: "icons/icon-512x512-v2.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
@@ -75,6 +75,10 @@ export default defineConfig(({ mode }) => {
         changeOrigin: true,
       },
     },
+    host: true,
+    hmr: {
+      host: '192.168.1.3'
+    }
   },
   };
 });

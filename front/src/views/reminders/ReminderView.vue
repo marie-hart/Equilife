@@ -1,5 +1,5 @@
 <template>
-  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top">
+  <v-sheet color="#EDE4D8" min-height="100vh">
     <v-container class="px-4">
       <div class="d-flex align-center justify-space-between mb-6 mt-2">
         <div>
@@ -205,6 +205,7 @@ const getTypeColor = (type?: ReminderType): string => {
 };
 
 const filteredReminders = computed(() => {
+    if (!reminders.value || reminders.value.length === 0) return [];
     const result = applyReminderFilters(reminders.value);
     
     return result.sort((a, b) => {
@@ -367,10 +368,15 @@ const saveCareDone = async () => {
 const loadReminders = async () => {
     isLoading.value = true;
     try {
+        // Force le chargement des chevaux si nécessaire avant les rappels
         if (horsesStore.horses.length === 0) await horsesStore.loadHorses();
-        reminders.value = await eventsApi.getReminders();
+        
+        // Récupération directe
+        const data = await eventsApi.getReminders();
+        reminders.value = Array.isArray(data) ? data : [];
     } catch (error) {
-        console.error(error);
+        console.error("Erreur chargement rappels:", error);
+        reminders.value = []; // Garantit un tableau vide au lieu de null
     } finally {
         isLoading.value = false;
     }

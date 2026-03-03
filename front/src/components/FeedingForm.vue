@@ -1,5 +1,5 @@
 <template>
-  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top pb-10">
+  <v-sheet color="#EDE4D8" min-height="100vh" class="pb-10">
     <v-container class="px-4 py-2">
       <div class="d-flex align-center justify-space-between mb-6">
         <div>
@@ -222,9 +222,6 @@
 </template>
 
 <style scoped>
-.safe-area-top {
-  padding-top: env(safe-area-inset-top, 20px) !important;
-}
 .shadow-subtle {
   box-shadow: 0 4px 15px rgba(123, 91, 62, 0.05) !important;
 }

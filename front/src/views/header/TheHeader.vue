@@ -4,7 +4,7 @@
         app 
         flat 
         color="#f3eadf" 
-        height="72"
+        height="56"
         style="border-bottom: none !important;"
       >
         <div class="d-flex align-center shadow-none" style="flex: 1;">
@@ -48,11 +48,9 @@ import NotificationBell from "@/components/NotificationBell.vue";
 const router = useRouter();
 const { lgAndUp } = useDisplay();
 
-/* STATE */
 const horseProfile = ref<Horse | null>(null);
 const isMoreOpen = ref(false);
 
-/* NAV ITEMS */
 const navItems: NavItem[] = [
   { tab: "dashboard", label: "Accueil", routeName: "HorseDashboardView", icon: "house" },
   { tab: "reminders", label: "Rappels", routeName: "Reminders", icon: "bell" },
@@ -63,7 +61,6 @@ const navItems: NavItem[] = [
   { tab: "horses", label: "Chevaux", routeName: "Horses", icon: "horse" },
 ];
 
-/* NAVIGATION */
 const navigate = (name: NavItem["routeName"]) => {
   if (name === "Reminders" || name === "Horses") {
       router.push({ name });

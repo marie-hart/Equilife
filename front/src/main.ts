@@ -80,10 +80,8 @@ createApp(App)
     .use(vuetify)
     .mount("#app");
 
-const { loadHorses } = useHorsesStore();
 const notificationStore = useNotificationStore();
 
-loadHorses()
 if (notificationStore.isSupported) {
     notificationStore.checkCurrentPermission();
 }

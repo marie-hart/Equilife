@@ -1,5 +1,5 @@
 <template>
-  <v-sheet color="#EDE4D8" min-height="100vh" class="safe-area-top">
+  <v-sheet color="#EDE4D8" min-height="100vh">
     <v-container class="px-4 py-2">
       <div class="mb-6">
         <h1 class="text-h4 font-weight-black mb-0" :style="{ color: '#2E4B36', fontFamily: 'Playfair Display, serif' }">

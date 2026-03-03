@@ -2,7 +2,7 @@
   <v-sheet 
     color="#EDE4D8" 
     min-height="100vh" 
-    class="safe-area-top pb-10"
+    class="pb-10"
   >
     <v-container class="px-4 py-2">
       
