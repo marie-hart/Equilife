@@ -15,6 +15,7 @@
                 :variant="variant"
                 :clearable="clearable"
                 :disabled="disabled"
+                :rules="rules"
                 :error-messages="errorMessages"
                 readonly
                 @click:clear="clearValue"
@@ -55,6 +56,7 @@ const props = withDefaults(
         errorMessages?: string | string[];
         min?: string;
         max?: string;
+        rules?: any[];
     }>(),
     {
         label: "",
@@ -62,6 +64,7 @@ const props = withDefaults(
         clearable: true,
         disabled: false,
         hideHeader: true,
+        rules: () => [],
     },
 );
 

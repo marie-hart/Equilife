@@ -231,7 +231,6 @@ export class EventRepository {
 
     async getReminders(horseId?: string): Promise<Event[]> {
         const safeHorseId = horseId && horseId.length > 0 ? horseId : undefined;
-        console.log("getReminders", safeHorseId);
         const cacheKey = CacheKeys.eventsRemindersKey(safeHorseId);
         const cached = await cacheService.get<Event[]>(cacheKey);
         if (cached) return cached;

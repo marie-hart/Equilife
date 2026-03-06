@@ -154,7 +154,6 @@ onMounted(async () => {
     await loadDashboard();
 });
 
-// UPDATED: Watch store horseId to reload data
 watch(() => horsesStore.horseId, () => {
     loadDashboard();
 });

@@ -210,7 +210,6 @@ const snackbar = ref({
 });
 
 const handleDateChange = (newVal: string) => {
-    console.log("Nouvelle date sélectionnée:", newVal);
     form.value.date = newVal;
 };
 

@@ -10,7 +10,6 @@ import Horses from "@/views/horses/HorseView.vue";
 import HorseCreate from "@/views/horses/HorseCreate.vue";
 import HorseEdit from "@/views/horses/HorseEdit.vue";
 import HorseDetails from "@/views/horses/HorseDetails.vue";
-import Health from "@/views/health/HealthView.vue";
 import HealthForm from "@/views/health/HealthForm.vue";
 import Products from "@/views/products/ProductView.vue";
 import ProductCreate from "@/views/products/ProductCreate.vue";
@@ -19,6 +18,7 @@ import ProductEdit from "@/views/products/ProductEdit.vue";
 import Reminders from "@/views/reminders/ReminderView.vue";
 import ReminderCreate from "@/views/reminders/ReminderCreate.vue";
 import { HealthView } from "@/views/health";
+import { FeedingDetails } from "@/views/feeding";
 
 
 const router = createRouter({
@@ -127,6 +127,11 @@ const router = createRouter({
             path: "/horses/:id/rations/:rationId/edit",
             name: "FeedingEdit",
             component: FeedingEdit,
+        },
+        {
+            path: "/horses/:id/rations/:rationId",
+            name: "FeedingDetails",
+            component: FeedingDetails
         },
         {
             path: "/horses/:id/products",

@@ -1,3 +1,5 @@
+import { RouteLocationRaw } from "vue-router";
+
 export interface RationItem {
     id: string;
     ration_id: string;
@@ -21,6 +23,16 @@ export interface Ration {
     created_at: string;
     updated_at: string;
 }
+
+export type RationAction = {
+    key: string;
+    title: string;
+    icon: string;
+    color?: string;
+    disabled: boolean;
+    to?: RouteLocationRaw
+    onClick?: () => void;
+};
 
 export interface CreateRationDto {
     horse_id: string;

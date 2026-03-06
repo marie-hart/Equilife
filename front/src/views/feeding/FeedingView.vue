@@ -52,6 +52,7 @@
         :get-horse-name="horsesStore.getHorseNameById"
         :get-product-name="getProductName"
         :item-type-label="itemTypeLabel"
+        @details="openDetails"
         @edit="openFeedingEdit"
         @share="shareRation"
         @delete="deleteRation"
@@ -67,16 +68,16 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 import { rationsApi } from "@/api/rations";
 import { productApi } from "@/api/product";
 import type { Product, Ration } from "@/types";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { FeedingList } from "@/views/feeding";
+import { generateRationPDF } from "@/utils/RationPdfService";
 
 const router = useRouter();
-const route = useRoute();
-const horsesStore = useHorsesStore(); // Initialisation du Store
+const horsesStore = useHorsesStore(); 
 
 const products = ref<Product[]>([]);
 const rations = ref<Ration[]>([]);
@@ -118,7 +119,6 @@ const loadRations = async () => {
         
         const data = await rationsApi.getAll(horseFilter);
         rations.value = data;
-        console.log("Rations chargées :", rations.value); 
     } catch (error) {
         console.error("Error loading rations:", error);
     } finally {
@@ -127,44 +127,26 @@ const loadRations = async () => {
 };
 
 const shareRation = async (ration: Ration) => {
-    const items = ration.items
-        .map((item) => {
-            const name = getProductName(item.product_id) || "Produit";
-            const parts = [
-                name,
-                item.quantity ? item.quantity : null,
-                item.frequency.length ? item.frequency.join(", ") : null,
-                item.type ? itemTypeLabel(item.type) : null,
-            ].filter(Boolean);
-            return `• ${parts.join(" • ")}`;
-        })
-        .join("\n");
+    const horseName = horsesStore.getHorseNameById(ration.horse_id) || "mon cheval";
     
-    const horseName = horsesStore.getHorseNameById(ration.horse_id) || "Cheval inconnu";
-    const text = `Ration: ${ration.name}\nCheval: ${horseName}\n${items}`;
     try {
-        if (navigator.share) {
-            await navigator.share({ title: `Ration ${ration.name}`, text });
-            snackbar.value = {
-                show: true,
-                message: "Ration partagée.",
-                color: "success",
-            };
-            return;
-        }
-        await navigator.clipboard.writeText(text);
+        isLoading.value = true;
+        await generateRationPDF(ration, horseName, getProductName);
+        
         snackbar.value = {
             show: true,
-            message: "Lien copié.",
+            message: "PDF généré et téléchargé.",
             color: "success",
         };
     } catch (error) {
-        console.error("Error sharing ration:", error);
+        console.error("Erreur PDF:", error);
         snackbar.value = {
             show: true,
-            message: "Partage impossible.",
+            message: "Erreur lors de la génération du PDF.",
             color: "error",
         };
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -186,6 +168,14 @@ const deleteRation = async (ration: Ration) => {
         };
     }
 };
+
+const openDetails = (ration: Ration) => {
+    router.push({
+        name: "FeedingDetails",
+        params: { rationId: ration.id },
+        query: { horseId: ration.horse_id }
+    });
+}
 
 const openFeedingEdit = (ration: Ration) => {
     router.push({

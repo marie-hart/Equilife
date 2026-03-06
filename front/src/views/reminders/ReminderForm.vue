@@ -1,6 +1,6 @@
 <template>
   <v-card variant="flat" class="bg-transparent">
-    <form @submit.prevent="emit('submit')">
+    <form @submit.prevent="handleSubmit">
       <v-row>
         <v-col cols="12">
           <div class="text-overline mb-2" style="color: #7B5B3E">Détails du rappel</div>
@@ -20,6 +20,7 @@
                   :error-messages="errors?.horseIds ? [errors.horseIds] : undefined"
                 />
               </v-col>
+
               <v-col cols="12" md="6">
                 <v-select
                   v-model="reminderType"
@@ -32,6 +33,7 @@
                   :error-messages="errors?.reminderType ? [errors.reminderType] : undefined"
                 />
               </v-col>
+
               <v-col cols="12" md="6">
                 <DatePickerField
                   v-model="date"
@@ -43,6 +45,7 @@
                   :error-messages="errors?.date ? [errors.date] : undefined"
                 />
               </v-col>
+
               <v-col cols="12">
                 <v-text-field
                   v-model="description"
@@ -96,55 +99,32 @@
           :loading="loading"
           elevation="4"
         >
-          {{ submitLabel }}
+          {{ isEdit ? 'Enregistrer les modifications' : 'Ajouter le rappel' }}
         </v-btn>
       </div>
     </form>
   </v-card>
 </template>
 
-<style scoped>
-.shadow-subtle {
-  box-shadow: 0 4px 15px rgba(123, 91, 62, 0.08) !important;
-}
-.border-light {
-  border: 1px solid rgba(168, 159, 148, 0.15) !important;
-}
-:deep(.v-field__outline) {
-  --v-field-border-color: #d1c7bc;
-}
-</style>
-
 <script setup lang="ts">
 import { computed } from "vue";
 import { DatePickerField, RecurrenceFields } from "@/components";
-import type { Horse, RecurrenceUnit } from "@/types"; // Importez correctement le type ici
-
-type ReminderFormValue = {
-    horseIds: string[];
-    description: string;
-    date: string;
-    reminderType: "soin" | "activité" | "alimentation" | "autres";
-    isRecurring: boolean;
-    recurrenceInterval: number;
-    recurrenceUnit: RecurrenceUnit;
-};
+import type { Horse, ReminderFormValue } from "@/types";
 
 const props = withDefaults(
     defineProps<{
         modelValue: ReminderFormValue;
         horses: Horse[];
         loading?: boolean;
-        submitLabel?: string;
         showHorseSelect?: boolean;
         multiple?: boolean;
         errors?: Record<string, string>;
     }>(),
     {
         loading: false,
-        submitLabel: "Ajouter",
         showHorseSelect: true,
         multiple: true,
+        errors: () => ({}),
     },
 );
 
@@ -154,34 +134,34 @@ const emit = defineEmits<{
     (event: "cancel"): void;
 }>();
 
-// Mapping des chevaux pour le select
+const isEdit = computed(() => !!props.modelValue.id);
+
 const horseSelectOptions = computed(() =>
     props.horses.map((horse) => ({ title: horse.name, value: horse.id })),
 );
 
-// Computed properties for v-model binding
+const updateField = (key: keyof ReminderFormValue, value: any) => {
+    emit("update:modelValue", { ...props.modelValue, [key]: value });
+};
+
 const horseIds = computed({
     get: () => props.modelValue.horseIds,
-    set: (value) =>
-        emit("update:modelValue", { ...props.modelValue, horseIds: value }),
+    set: (val) => updateField('horseIds', val),
 });
 
 const description = computed({
     get: () => props.modelValue.description,
-    set: (value) =>
-        emit("update:modelValue", { ...props.modelValue, description: value }),
+    set: (val) => updateField('description', val),
 });
 
 const date = computed({
     get: () => props.modelValue.date,
-    set: (value) =>
-        emit("update:modelValue", { ...props.modelValue, date: value }),
+    set: (val) => updateField('date', val),
 });
 
 const reminderType = computed({
     get: () => props.modelValue.reminderType,
-    set: (value) =>
-        emit("update:modelValue", { ...props.modelValue, reminderType: value }),
+    set: (val) => updateField('reminderType', val),
 });
 
 const recurrence = computed({
@@ -190,10 +170,14 @@ const recurrence = computed({
         recurrenceInterval: props.modelValue.recurrenceInterval,
         recurrenceUnit: props.modelValue.recurrenceUnit,
     }),
-    set: (value) =>
-        emit("update:modelValue", { ...props.modelValue, ...value }),
+    set: (val) => emit("update:modelValue", { ...props.modelValue, ...val }),
 });
 
+const handleSubmit = () => {
+    emit("submit");
+};
+
+// Options statiques
 const reminderTypeOptions = [
     { title: "Soin", value: "soin" },
     { title: "Activité", value: "activité" },
@@ -209,11 +193,13 @@ const recurrenceUnits = [
 </script>
 
 <style scoped>
-.reminder-form {
-    margin: 0;
+.shadow-subtle {
+  box-shadow: 0 4px 15px rgba(123, 91, 62, 0.08) !important;
 }
-/* Style pour s'assurer que RecurrenceFields hérite des styles */
+.border-light {
+  border: 1px solid rgba(168, 159, 148, 0.15) !important;
+}
 :deep(.v-field__outline) {
-    --v-field-border-color: #d1c7bc;
+  --v-field-border-color: #d1c7bc;
 }
 </style>

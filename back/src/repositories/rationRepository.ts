@@ -1,4 +1,6 @@
 import pool from "../config/database";
+import { CacheKeys } from "../services/cacheKeys";
+import cacheService from "../services/cacheService";
 import { CreateRationDto, UpdateRationDto, Ration, RationItem } from "../types";
 
 export class RationRepository {
@@ -243,38 +245,62 @@ export class RationRepository {
         }
     }
 
-    async delete(id: string): Promise<boolean> {
-        const client = await pool.connect();
-        try {
-            await client.query("BEGIN");
-            const hasRationsTable = await this.hasTable("rations", "rations");
-            if (!hasRationsTable) {
-                throw new Error("Missing table rations");
-            }
-            const hasRationItemsTable = await this.hasTable(
-                "ration_items",
-                "ration_items",
-            );
-            if (hasRationItemsTable) {
-                await client.query(
-                    `DELETE FROM ration_items WHERE ration_id = $1`,
-                    [id],
-                );
-            }
-            const result = await client.query(
-                `DELETE FROM rations WHERE id = $1`,
-                [id],
-            );
-            await client.query("COMMIT");
-            return result.rowCount !== null && result.rowCount > 0;
-        } catch (error) {
-            await client.query("ROLLBACK");
-            throw error;
-        } finally {
-            client.release();
-        }
-    }
+    /**
+ * Invalidation intelligente du cache des rations
+ */
+private async invalidateRationCache(ration: Ration): Promise<void> {
+    // 1. On supprime la clé spécifique de cette ration
+    await cacheService.delete(CacheKeys.rationKey(ration.id));
 
+    // 2. On invalide les listes globales (si elles existent dans tes CacheKeys)
+    await cacheService.delete(CacheKeys.rationsListKey());
+
+    // 3. TRÈS IMPORTANT : On invalide le cache du cheval concerné
+    // Car la ration est affichée sur son profil ou son dashboard
+    if (ration.horse_id) {
+        await cacheService.delete(CacheKeys.rationsListKey(ration.horse_id));
+        
+        // Si tu as une clé spécifique pour "La ration actuelle du cheval X"
+        await cacheService.delete(CacheKeys.horseRationKey(ration.horse_id));
+        
+        // Optionnel : Invalider la fiche du cheval si elle contient un résumé de la ration
+        await cacheService.delete(CacheKeys.horseKey(ration.horse_id));
+    }
+}
+
+    async delete(id: string): Promise<boolean> {
+    const client = await pool.connect();
+    try {
+        // 1. Récupérer la ration avant de la supprimer pour connaître le horse_id (utile pour le cache)
+        const existing = await this.findById(id);
+        if (!existing) return false;
+
+        await client.query("BEGIN");
+
+        // Supprimer les items (si pas de CASCADE SQL)
+        await client.query(`DELETE FROM ration_items WHERE ration_id = $1`, [id]);
+        
+        // Supprimer la ration
+        const result = await client.query(`DELETE FROM rations WHERE id = $1`, [id]);
+        
+        await client.query("COMMIT");
+
+        const deleted = (result.rowCount ?? 0) > 0;
+
+        // 2. Invalider le cache après le COMMIT réussi
+        if (deleted) {
+           await this.invalidateRationCache(existing);
+        }
+
+        return deleted;
+    } catch (error) {
+        await client.query("ROLLBACK");
+        console.error("Erreur lors de la suppression de la ration:", error);
+        throw error;
+    } finally {
+        client.release();
+    }
+}
     private mapRowToRation(row: any): Ration {
         return {
             id: row.id,

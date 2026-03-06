@@ -16,7 +16,7 @@
         
         <v-btn 
           variant="text" 
-          icon="mdi-arrow-left"
+          icon="mdi-close"
           color="#2E4B36"
           :to="{ name: 'Products' }"
         ></v-btn>
@@ -130,6 +130,17 @@
         </v-row>
       </div>
 
+      <ConfirmDeleteDialog
+          v-model="deleteDialogOpen"
+          title="Supprimer le produit"
+          :message="`Voulez-vous vraiment supprimer ${product?.name} ?`"
+          @confirm="handleDelete"
+      />
+
+      <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="2000">
+          {{ snackbar.message }}
+      </v-snackbar>
+
     </v-container>
   </v-sheet>
 </template>
@@ -149,18 +160,21 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { productApi } from "@/api/product";
 import type { Product } from "@/types";
+import { ConfirmDeleteDialog } from "@/components";
 
 const route = useRoute();
+const router = useRouter();
+
 const product = ref<Product | null>(null);
 const isLoading = ref(true);
 const deleteDialogOpen = ref(false);
+const snackbar = ref({ show: false, message: "", color: "success" });
 
 const productId = route.params.id as string;
 
-// LOGIQUE DE STOCK (Identique à ProductItem pour la cohérence)
 const isManaged = computed(() => {
     const cats = ["Granulés", "Complément", "Aliments"];
     return product.value && cats.includes(product.value.category || "");
@@ -195,6 +209,27 @@ const formattedPurchaseDate = computed(() => {
   }
 });
 
+const handleDelete = async () => {
+    try {
+        await productApi.delete(productId);
+        snackbar.value = {
+            show: true,
+            message: "Produit supprimé avec succès",
+            color: "success"
+        };
+        setTimeout(() => router.push({ name: 'Products' }), 1000);
+    } catch (error) {
+        console.error("Erreur suppression:", error);
+        snackbar.value = {
+            show: true,
+            message: "Erreur lors de la suppression",
+            color: "error"
+        };
+    } finally {
+        deleteDialogOpen.value = false;
+    }
+};
+
 const stockInfo = computed(() => {
     const days = remainingDays.value;
     if (!isManaged.value) return { label: 'Suivi manuel', color: 'grey' };
@@ -227,6 +262,4 @@ const loadProduct = async () => {
 };
 
 onMounted(loadProduct);
-
-// ... confirmDelete et autres méthodes
 </script>

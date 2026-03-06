@@ -8,9 +8,6 @@ import { useRouter } from 'vue-router';
 const horsesStore = useHorsesStore();
 const router = useRouter()
 
-const cardHeight = 240; 
-const cardMaxWidth = '100%';
-
 const snackbar = ref({
     show: false,
     message: "",

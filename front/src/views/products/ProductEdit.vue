@@ -1,11 +1,19 @@
 <template>
   <v-sheet color="#EDE4D8" min-height="100vh">
     <v-container class="px-4 py-2">
-      <div class="mb-6">
-        <h1 class="text-h4 font-weight-black mb-0" :style="{ color: '#2E4B36', fontFamily: 'Playfair Display, serif' }">
-          Modifier
-        </h1>
-        <div :style="{ width: '30px', height: '3px', backgroundColor: '#7B5B3E', borderRadius: '2px' }"></div>
+      <div class="d-flex align-center justify-space-between mb-6">
+        <div>
+          <h1 class="text-h4 font-weight-black mb-0" :style="{ color: '#2E4B36', fontFamily: 'Playfair Display, serif' }">
+            Modifier
+          </h1>
+          <div :style="{ width: '30px', height: '3px', backgroundColor: '#7B5B3E', borderRadius: '2px' }"></div>
+        </div>
+        <v-btn 
+            variant="text" 
+            icon="mdi-close"
+            color="#2E4B36"
+            @click="goBack"
+          ></v-btn>
       </div>
 
       <ProductForm

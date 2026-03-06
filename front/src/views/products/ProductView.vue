@@ -31,12 +31,14 @@
       <v-row class="mb-6" no-gutters align="center">
         <v-col>
           <v-text-field
+            v-model="searchQuery"
             placeholder="Rechercher un produit..."
             prepend-inner-icon="mdi-magnify"
             variant="solo"
             flat
             density="compact"
             rounded="xl"
+            clearable
             hide-details
             bg-color="#F5EFE6"
           ></v-text-field>
@@ -100,57 +102,69 @@
   border: 1px solid rgba(168, 159, 148, 0.12) !important;
 }
 
-/* On réduit la taille des titres pour le mobile */
 .text-h4 {
   font-size: 1.75rem !important;
   line-height: 1.2;
 }
 
-/* Pour éviter que le contenu ne soit caché par la barre de navigation du bas */
 .pb-16 {
   padding-bottom: 80px !important;
 }
 </style>
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue"; // Ajout de ref et onMounted
+import { computed, onMounted, ref } from "vue";
 import type { Product } from "@/types";
 import ProductItem from "./ProductItem.vue";
 import { getStockStatus } from "@/utils/productStock";
 import { productApi } from "@/api/product";
 
-// 1. On rend la prop optionnelle avec une valeur par défaut pour éviter le crash au rendu initial
 const props = withDefaults(defineProps<{ 
   products?: Product[] 
 }>(), {
   products: () => []
 });
 
-// 2. État local au cas où la vue est utilisée comme une page directe (via router)
 const localProducts = ref<Product[]>([]);
-const isLoading = ref(true);
+const isLoading = ref(!props.products || props.products.length === 0);
+const searchQuery = ref("");
 
-// On utilise soit les props (si fournies), soit les données chargées localement
-const currentProducts = computed(() => 
+const allProducts = computed(() => 
   props.products && props.products.length > 0 ? props.products : localProducts.value
 );
 
-// 3. Sécurité : On vérifie TOUJOURS si l'array existe avant le filter
+const searchedProducts = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim();
+  
+  // Si la barre de recherche est vide, on affiche tout le catalogue
+  if (!query) return allProducts.value;
+  
+  return allProducts.value.filter(p => {
+    // On récupère uniquement le nom, avec une sécurité si p.name est null/undefined
+    const productName = (p.name || '').toLowerCase();
+    
+    // On vérifie si la saisie est incluse dans le nom
+    return productName.includes(query);
+  });
+});
+
 const criticalProducts = computed(() => 
-  (currentProducts.value || []).filter(p => ['rupture', 'low'].includes(getStockStatus(p)))
+  searchedProducts.value.filter(p => ['rupture', 'low'].includes(getStockStatus(p)))
 );
 
 const normalProducts = computed(() => 
-  (currentProducts.value || []).filter(p => !['rupture', 'low'].includes(getStockStatus(p)))
+  searchedProducts.value.filter(p => !['rupture', 'low'].includes(getStockStatus(p)))
 );
 
-// 4. Chargement des données si on arrive sur la vue via le router
+const currentProducts = computed(() => 
+  props.products?.length ? props.products : localProducts.value
+);
+
 onMounted(async () => {
-  if (!props.products || props.products.length === 0) {
+  if (allProducts.value.length === 0) {
     try {
-      isLoading.value = true;
       localProducts.value = await productApi.getAll();
     } catch (error) {
-      console.error("Erreur chargement produits:", error);
+      console.error("Erreur:", error);
     } finally {
       isLoading.value = false;
     }

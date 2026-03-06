@@ -64,20 +64,16 @@ const createProduct = async () => {
   isSubmitting.value = true;
   try {
     const payload: any = {
-      name: form.value.name,
-      description: null, // Attendu par le repo
-      category: form.value.category,
+      ...form.value, // <--- FIX : On récupère TOUT (quantité, conso, unité, etc.)
+      description: null,
       brand: form.value.brand || null,
       note: form.value.note || null,
-      last_purchase_date: form.value.last_purchase_date ? new Date(form.value.last_purchase_date).toISOString() : null,
-      purchase_interval_months: (form.value as any).purchase_interval_months || null,
-      purchase_interval_years: null, // Attendu par le repo
-      estimated_cost: null, // Attendu par le repo
+      // La date est déjà au bon format grâce à notre fix précédent
+      last_purchase_date: form.value.last_purchase_date || null,
       horse_id: horseId.value !== 'all' ? horseId.value : null,
       needs_repurchase: false
     };
 
-    console.log("Payload envoyé :", payload);
     await productApi.create(payload);
     goBack();
   } catch (error: any) {

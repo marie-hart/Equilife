@@ -3,25 +3,19 @@
     <v-container>
       <div class="d-flex align-center justify-space-between mb-6 mt-2">
         <div class="d-flex align-center">
-          <v-btn icon="mdi-arrow-left" variant="text" color="#2E4B36" class="me-2" @click="$router.push({ name: 'Horses' })" />
           <div>
-            <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
+            <h1 class="text-h4 font-weight-black mb-0" :style="{ color: '#2E4B36', fontFamily: 'Playfair Display, serif' }">
               {{ horse?.name || 'Fiche Cheval' }}
             </h1>
-            <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
+            <div :style="{ width: '40px', height: '3px', backgroundColor: '#7B5B3E', borderRadius: '2px' }"></div>
           </div>
         </div>
-
-        <v-btn
-          color="#2E4B36"
-          variant="flat"
-          rounded="xl"
-          class="text-none font-weight-bold shadow-subtle"
-          :to="{ name: 'HorseEdit', params: { id: horse?.id } }"
-        >
-          <v-icon start icon="mdi-pencil" size="18" />
-          Modifier
-        </v-btn>
+        <v-btn 
+            variant="text" 
+            icon="mdi-close"
+            color="#2E4B36"
+            :to="{ name: 'Horses' }"
+          ></v-btn>
       </div>
 
       <v-card variant="flat" rounded="xl" class="pa-0 shadow-subtle border-light bg-white overflow-hidden">
@@ -46,17 +40,17 @@
             </v-col>
 
             <v-col cols="12" md="7" class="pa-6 pa-md-10">
-              <div class="text-overline mb-2" style="color: #7B5B3E">Informations générales</div>
+              <div class="text-overline mb-2" :style="{ color: '#7B5B3E' }">Informations générales</div>
               
               <v-row dense>
                 <v-col v-for="(item, i) in horseInfo" :key="i" cols="12" sm="6" class="mb-4">
                   <div class="d-flex align-start">
                     <v-icon :icon="item.icon" color="#BDB4A8" size="20" class="mt-1 me-3" />
                     <div>
-                      <div class="text-caption font-weight-bold text-uppercase" style="color: #BDB4A8; letter-spacing: 1px;">
+                      <div class="text-caption font-weight-bold text-uppercase" :style="{ color: '#BDB4A8', letterSpacing: '1px' }">
                         {{ item.title }}
                       </div>
-                      <div class="text-body-1 font-weight-bold" style="color: #2E4B36">
+                      <div class="text-body-1 font-weight-bold" :style="{ color: '#2E4B36' }">
                         {{ item.value }}
                       </div>
                     </div>
@@ -67,8 +61,8 @@
               <v-divider class="my-6" />
 
               <div class="bg-grey-lighten-5 pa-4 rounded-xl border-light">
-                <div class="text-caption font-weight-bold mb-1" style="color: #7B5B3E">NOTES & OBSERVATIONS</div>
-                <div class="text-body-2 italic" style="color: #554338; line-height: 1.6">
+                <div class="text-caption font-weight-bold mb-1" :style="{ color: '#7B5B3E' }">NOTES & OBSERVATIONS</div>
+                <div class="text-body-2 italic" :style="{ color: '#554338', lineHeight: 1.6 }">
                   "{{ horse.additional_info || 'Aucune note particulière pour le moment.' }}"
                 </div>
               </div>
@@ -81,6 +75,19 @@
           <p class="mt-4">Cheval introuvable.</p>
         </div>
       </v-card>
+      <div class="pt-3">
+            <v-btn
+              block
+              flat
+              rounded="xl"
+              size="large"
+              color="#2E4B36"
+              class="text-none font-weight-bold"
+              :to="{ name: 'HorseEdit', params: { id: horse?.id } }"
+            >
+              Modifier
+            </v-btn>
+      </div>
     </v-container>
   </v-sheet>
 </template>

@@ -2,14 +2,19 @@
   <v-sheet color="#EDE4D8" min-height="100vh" class="pb-10">
     <v-container class="px-4">
       
-      <div class="d-flex align-center mb-6 mt-2">
-        <v-btn icon="mdi-arrow-left" variant="text" color="#2E4B36" class="me-2" @click="goBack" />
+      <div class="d-flex align-center justify-space-between mb-6 mt-2">
         <div>
           <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
             {{ isEdit ? "Modifier" : "Nouveau soin" }}
           </h1>
           <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
         </div>
+         <v-btn 
+          variant="text" 
+          icon="mdi-close"
+          color="#2E4B36"
+          @click="goBack"
+        ></v-btn>
       </div>
 
       <v-card variant="flat" rounded="xl" class="pa-4 shadow-subtle border-light bg-white">

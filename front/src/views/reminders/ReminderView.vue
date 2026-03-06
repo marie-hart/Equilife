@@ -52,14 +52,13 @@
             @action="handleReminderAction" 
         />
 
-      <ReminderEdit
-          v-model="isEditOpen"
-          :form="editForm"
-          :errors="editErrors"
-          :recurrence-units="recurrenceUnits"
-          :key="selectedReminder?.id || 'new'"
-          @save="saveEdit"
-      />
+        <ReminderEdit
+            v-model="isEditOpen"
+            v-model:form="editForm"
+            :horses="horsesStore.horses"
+            :errors="editErrors"
+            @save="saveEdit"
+        />
 
       <ConfirmDeleteDialog
           v-model="isDeleteOpen"
@@ -111,11 +110,11 @@ import { useHorsesStore } from "@/stores/HorsesStore";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import { toDateInputValue, getReminderDate, fromDateInputValue, formatDateLong } from "@/libs/date";
 import { ConfirmDeleteDialog, DatePickerField, FiltersPanel } from "@/components";
-import type { Event, SelectOption, ReminderType } from "@/types";
+import type { Event, SelectOption, ReminderType, ReminderFormValue } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import { getStatusKey, getStatusColor } from "@/libs/index";
 import { useFilters } from "@/composables/useFilters";
-import { ReminderEdit, ReminderList, ReminderForm } from '@/views/reminders';
+import { ReminderEdit, ReminderList } from '@/views/reminders';
 
 type RecurrenceUnit = "days" | "months" | "years";
 
@@ -126,13 +125,17 @@ const isDeleteOpen = ref(false);
 const isCareDoneOpen = ref(false);
 const selectedReminder = ref<Event | null>(null);
 
-const editForm = ref({
+const editForm = ref<ReminderFormValue>({
+    id: "",
+    horseIds: [],
     description: "",
     date: "",
+    reminderType: "autres",
     isRecurring: false,
     recurrenceInterval: 1,
-    recurrenceUnit: "months" as RecurrenceUnit,
+    recurrenceUnit: "months",
 });
+
 const editErrors = ref<Record<string, string>>({});
 const careDoneForm = ref({ date: "" });
 const careDoneErrors = ref<Record<string, string>>({});
@@ -275,9 +278,12 @@ const markDone = async (reminder: Event) => {
 const editReminder = (reminder: Event) => {
     selectedReminder.value = reminder;
     
-   editForm.value = {
+    editForm.value = {
+        id: reminder.id,
+        horseIds: [reminder.horse_id || ""],
         description: reminder.description || reminder.name || "",
         date: toDateInputValue(reminder.event_date),
+        reminderType: reminder.reminder_type || "autres",
         isRecurring: isReminderRecurring(reminder),
         recurrenceInterval: reminder.reminder_interval_years || reminder.reminder_interval_months || reminder.reminder_interval_days || 1,
         recurrenceUnit: reminder.reminder_interval_years ? "years" : reminder.reminder_interval_months ? "months" : "days",

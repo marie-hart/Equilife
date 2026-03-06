@@ -170,6 +170,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from "vue";
 import type { Product } from "@/types";
+import { toDateInputValue } from "@/libs/date";
 
 const props = withDefaults(
   defineProps<{
@@ -229,7 +230,8 @@ const computedDate = computed({
   get: () => localForm.last_purchase_date ? new Date(localForm.last_purchase_date) : new Date(),
   set: (val) => {
     if (val) {
-      localForm.last_purchase_date = new Date(val).toISOString();
+      // On utilise ta méthode qui renvoie "YYYY-MM-DD" sans décalage
+      localForm.last_purchase_date = toDateInputValue(val);
     }
   }
 });

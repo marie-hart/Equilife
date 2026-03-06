@@ -1,12 +1,11 @@
 <template>
   <div class="activity-journal">
-    <div class="d-flex align-center mb-6 ps-1">
-      <h2 class="text-h5 font-weight-black" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
-        Journal de bord
-      </h2>
-      <v-spacer></v-spacer>
-      <div style="width: 40px; height: 2px; background-color: #7B5B3E; border-radius: 2px;"></div>
-    </div>
+    <div class="mb-6 ps-1">
+          <h2 class="text-h5 font-weight-black" style="color: #2E4B36; font-family: 'serif', 'Playfair Display', Georgia, serif;">
+            Journal de bord
+          </h2>
+          <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;" class="mt-1"></div>
+        </div>
 
     <div class="pt-2">
       <div v-if="groupedActivities.length">

@@ -140,19 +140,20 @@ export class ProductRepository {
     return updatedProduct;
   }
 
-  async delete(id: string): Promise<boolean> {
-    const product = await this.findById(id);
-    
-    const result = await pool.query(
-      `UPDATE products SET is_active = false WHERE id = $1`,
-      [id]
-    );
+ async delete(id: string): Promise<boolean> {
+  const product = await this.findById(id);
+  
+  // Utilise DELETE au lieu de UPDATE
+  const result = await pool.query(
+    `DELETE FROM products WHERE id = $1`,
+    [id]
+  );
 
-    if (product) {
-      await this.invalidateProductCache(product);
-    }
-    return (result.rowCount ?? 0) > 0;
+  if (product) {
+    await this.invalidateProductCache(product);
   }
+  return (result.rowCount ?? 0) > 0;
+}
 
   /**
    * Invalidation intelligente du cache

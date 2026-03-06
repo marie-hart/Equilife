@@ -3,7 +3,6 @@
         <v-container>
             <div class="d-flex align-center justify-space-between mb-6 mt-2">
                 <div class="d-flex align-center">
-                    <v-btn icon="mdi-arrow-left" variant="text" color="#2E4B36" class="me-2" @click="router.push({ name: 'Horses' })" />
                     <div>
                         <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
                             {{ isEdit ? "Modifier" : "Nouveau compagnon" }}
@@ -11,12 +10,18 @@
                         <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
                     </div>
                 </div>
+                <v-btn 
+                    variant="text" 
+                    icon="mdi-close"
+                    color="#2E4B36"
+                    @click="router.push({ name: 'Horses' })"
+                ></v-btn>
             </div>
 
             <v-card variant="flat" rounded="xl" class="pa-6 pa-md-10 shadow-subtle border-light bg-white">
                 <v-skeleton-loader v-if="isLoading" type="article, actions" />
                 
-                <v-form v-else @submit.prevent="handleSubmit">
+                <v-form v-else ref="formRef" @submit.prevent="handleSubmit">
                     <v-row>
                         <v-col cols="12">
                             <div class="text-overline mb-4" style="color: #7B5B3E">Identité & Photo</div>
@@ -32,6 +37,7 @@
                                 color="#2E4B36"
                                 rounded="lg"
                                 persistent-placeholder
+                                :rules="[rules.required]"
                                 :error-messages="fieldErrors.name ? [fieldErrors.name] : undefined"
                             />
                         </v-col>
@@ -66,6 +72,7 @@
                                 label="Date de naissance"
                                 color="#2E4B36"
                                 rounded="lg"
+                                :rules="[rules.isPast]"
                             />
                         </v-col>
 
@@ -188,6 +195,7 @@ import { useHorsesStore } from "@/stores/HorsesStore";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { CreateHorseDto } from "@/types";
+import type { VForm } from "vuetify/components";
 
 const props = defineProps<{
     horseId?: string; 
@@ -207,6 +215,19 @@ const snackbar = ref({
 });
 
 const isEdit = computed(() => Boolean(props.horseId));
+
+const rules = {
+    required: (v: any) => !!v || "Ce champ est obligatoire",
+    isPast: (v: string) => {
+        if (!v) return true;
+        const selected = new Date(v);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        return selected <= today || "La date ne peut pas être dans le futur";
+    }
+};
+
+const formRef = ref<VForm | null>(null);
 
 const form = ref<CreateHorseDto>({
    name: "",
@@ -328,6 +349,12 @@ const handleSubmit = async () => {
         return;
     }
 
+    if (!formRef.value) return;
+
+    const { valid } = await formRef.value.validate();
+    
+    if (!valid) return;
+
     try {
         isSubmitting.value = true;
         
@@ -339,7 +366,7 @@ const handleSubmit = async () => {
             stable_location: form.value.stable_location,
             feed: form.value.feed,
             additional_info: form.value.additional_info,
-            birth_date: form.value.birth_date ? new Date(form.value.birth_date).toISOString().split('T')[0] : ''
+            birth_date: form.value.birth_date
         };
 
         let savedHorseId: string;

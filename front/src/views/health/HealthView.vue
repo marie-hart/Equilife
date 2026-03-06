@@ -342,18 +342,42 @@ const markDone = async (care: Event) => {
 const saveCareDone = async () => {
     if (!selectedCare.value) return;
     try {
-        const isRecurring = isCareRecurring(selectedCare.value);
+        const care = selectedCare.value;
+        const doneDate = new Date(careDoneForm.value.date);
 
-        if (isRecurring) {
-            await eventsApi.update(selectedCare.value.id, {
-                event_date: careDoneForm.value.date,
-                is_care: true,
+        // 1. On crée une copie pour l'historique (soin accompli)
+        await eventsApi.create({
+            ...care,
+            event_date: careDoneForm.value.date,
+            reminder_enabled: false, // On désactive le rappel pour l'archive
+            is_care: true,
+        });
+
+        if (isCareRecurring(care)) {
+            // 2. On calcule la date du PROCHAIN rendez-vous
+            const nextDate = new Date(doneDate);
+            
+            if (care.reminder_interval_days) {
+                nextDate.setDate(nextDate.getDate() + care.reminder_interval_days);
+            } else if (care.reminder_interval_months) {
+                nextDate.setMonth(nextDate.getMonth() + care.reminder_interval_months);
+            } else if (care.reminder_interval_years) {
+                nextDate.setFullYear(nextDate.getFullYear() + care.reminder_interval_years);
+            }
+
+            // 3. On met à jour l'événement existant avec la nouvelle date futur
+            const formattedNextDate = nextDate.toISOString().split('T')[0];
+            
+            await eventsApi.update(care.id, {
+                event_date: formattedNextDate,
                 reminder_enabled: true
             });
-            snackbar.value.message = "Prochain rendez-vous planifié.";
+            
+            snackbar.value.message = "Soin historisé et prochain rendez-vous planifié.";
         } else {
-            await eventsApi.delete(selectedCare.value.id);
-            snackbar.value.message = "Soin validé et supprimé.";
+            // Si pas récurrent, on supprime l'original (la copie en historique suffit)
+            await eventsApi.delete(care.id);
+            snackbar.value.message = "Soin validé et enregistré dans l'historique.";
         }
         
         await loadCares();

@@ -2,11 +2,14 @@
     <div>
       <v-bottom-navigation
         v-if="!lgAndUp"
+        v-model="activeTab"
+        @update:model-value="activeTab = $event"
         class="mx-4 mb-4 pa-1" 
         rounded="pill"
         style="width: calc(100% - 32px)"
         app
         grow
+        mandatory
       >
         <v-btn
           v-for="item in bottomNavItems"
@@ -45,12 +48,16 @@
   </template>
   
 <script setup lang="ts">
-  import { computed } from "vue";
+  import { computed, watch, ref } from "vue";
   import { useDisplay } from "vuetify";
   import type { NavItem, NavTab } from "@/types";
-  import { useHorsesStore } from "@/stores/HorsesStore";
+  import { useHorsesStore } from "@/stores/HorsesStore"
+  import { useRoute } from 'vue-router';
+  import { storeToRefs } from 'pinia';
 
   const horsesStore = useHorsesStore();
+  const route = useRoute();
+  const { horseId } = storeToRefs(useHorsesStore());
   
   const props = defineProps<{
     navItems: NavItem[];
@@ -78,6 +85,34 @@
     }
 
     return items;
+  });
+
+ 
+  const activeTab = ref('dashboard');
+
+  const updateActiveTab = () => {
+    const name = route.name as string;
+    if (!name) return;
+
+    const mapping: Record<string, string> = {
+      'Dashboard': 'dashboard',
+      'Health': 'health',
+      'Product': 'products',
+      'Horse': 'horses'
+    };
+
+    for (const [routePart, tabValue] of Object.entries(mapping)) {
+      if (name.includes(routePart)) {
+        activeTab.value = tabValue;
+        break;
+      }
+    }
+  };
+
+  watch(() => route.fullPath, updateActiveTab, { immediate: true });
+
+  watch(horseId, () => {
+    updateActiveTab();
   });
 
   const isHorseIdReady = computed(() => {

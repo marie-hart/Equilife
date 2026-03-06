@@ -85,9 +85,7 @@
 </template>
 
 <script setup lang="ts">
-/* ... Ta logique existante reste la même ... */
 import { computed, onMounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
 import { useDisplay } from "vuetify";
 import { eventsApi } from "@/api/events";
 import { ConfirmDeleteDialog } from "@/components";
@@ -96,7 +94,6 @@ import { formatMonthLabel, sortByDateAsc, toMonthKey } from "@/libs/date";
 import type { ActivityAction, ActivityGroup, Event } from "@/types";
 import { ActivityList } from "@/views/activities";
 
-const route = useRoute();
 const { mdAndUp } = useDisplay();
 const horsesStore = useHorsesStore();
     
@@ -107,7 +104,7 @@ const selectedActivity = ref<Event | null>(null);
 const snackbar = ref({
     show: false,
     message: "",
-    color: "#2E4B36", // Vert Equilife pour le succès
+    color: "#2E4B36",
 });
 
 const cardMaxWidth = computed(() => (mdAndUp.value ? "520px" : "100%"));
