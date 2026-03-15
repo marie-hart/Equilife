@@ -2,6 +2,7 @@
     <div>
       <v-bottom-navigation
         v-if="!lgAndUp"
+        :key="`${route.path}-${horsesStore.horseId}`"
         v-model="activeTab"
         @update:model-value="activeTab = $event"
         class="mx-4 mb-4 pa-1" 

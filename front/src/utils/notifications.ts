@@ -138,16 +138,29 @@ const pollReminders = async () => {
 };
 
 export function startReminderNotifications() {
-  navigator.serviceWorker.addEventListener("message", (event) => {
-    const data = event.data;
+  // 1. Lancer le poller immédiatement pour les rappels d'événements
+  pollReminders(); // Premier check
+  setInterval(pollReminders, POLL_INTERVAL_MS); // Check toutes les minutes
 
-    if (data?.type === "stock") {
+  // 2. Écouter les messages venant du Service Worker (Push Notifications)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener("message", (event) => {
       const store = useNotificationStore();
-      store.addStockAlert({
-        product_id: data.product_id,
-        title: data.title,
-        body: data.body
-      });
-    }
-  });
+      const data = event.data;
+
+      if (data?.type === "stock") {
+        store.addStockAlert({
+          product_id: data.product_id,
+          title: data.title,
+          body: data.body
+        });
+      } 
+      else if (data?.type === "PUSH_RECEIVED" || data?.type === "reminder") {
+        // Gestion des rappels envoyés par Push
+        if (data.reminder) {
+          store.addUnreadReminder(data.reminder);
+        }
+      }
+    });
+  }
 }

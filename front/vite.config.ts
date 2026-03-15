@@ -3,6 +3,7 @@ import vue from "@vitejs/plugin-vue";
 import { fileURLToPath, URL } from "node:url";
 import vuetify from "vite-plugin-vuetify";
 import { VitePWA } from "vite-plugin-pwa";
+import fs from 'fs';
  
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -64,6 +65,10 @@ export default defineConfig(({ mode }) => {
   server: {
     port: 5173,
     allowedHosts: ["dave-bushier-tobias.ngrok-free.dev"],
+    https: {
+      key: fs.readFileSync('./localhost-key.pem'),
+      cert: fs.readFileSync('./localhost.pem'),
+    },
     proxy: {
       "/api": {
         target: 'http://localhost:3001',

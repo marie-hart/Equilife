@@ -12,30 +12,28 @@ precacheAndRoute(self.__WB_MANIFEST || []);
 
 self.addEventListener("push", (event: PushEvent) => {
   const data = event.data?.json() ?? {};
-
-  const title = data.title || "Notification EquiLife";
+  const title = data.title || "EquiLife";
 
   const options: NotificationOptions = {
     body: data.body || "",
-    tag: data.tag,
-    data: data.data,
+    tag: data.tag || `msg-${Date.now()}`,
+    data: data, 
     icon: "/logo.png",
     badge: "/logo.png",
   };
 
-  const notificationPromise =
-    self.registration.showNotification(title, options);
+  const notificationPromise = self.registration.showNotification(title, options);
 
-  const messagePromise = self.clients
-    .matchAll({ type: "window" })
-    .then((clients) => {
-      clients.forEach((client) => {
-        client.postMessage({
-          type: data.data?.product_id ? "STOCK_ALERT" : "REMINDER",
-          payload: data.data,
-        });
+  const messagePromise = self.clients.matchAll({ type: "window" }).then((clients) => {
+    clients.forEach((client) => {
+      // On envoie le format attendu par ton main.ts et tes utils
+      client.postMessage({
+        type: 'PUSH_RECEIVED',
+        reminder: data.reminder || (data.type === 'reminder' ? data : null),
+        product: data.product || (data.product_id ? data : null)
       });
     });
+  });
 
   event.waitUntil(Promise.all([notificationPromise, messagePromise]));
 });

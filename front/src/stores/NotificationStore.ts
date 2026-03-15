@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import { startReminderNotifications, requestPermission, supportsPush } from "@/utils/notifications";
+import { startReminderNotifications, requestPermission, supportsPush, ensurePushSubscription } from "@/utils/notifications";
 import type { Event, StockNotification } from "@/types"
 
 export const useNotificationStore = defineStore("notifications", () => {
@@ -56,20 +56,6 @@ export const useNotificationStore = defineStore("notifications", () => {
         PERMISSION
     ========================== */
 
-    async function enableNotifications() {
-        isSubscribing.value = true;
-        try {
-            const result = await requestPermission();
-            permission.value = result;
-            
-            if (result === "granted") {
-                await startReminderNotifications();
-            }
-        } finally {
-            isSubscribing.value = false;
-        }
-    }
-
     function checkCurrentPermission() {
         if (isSupported.value) {
             permission.value = Notification.permission;
@@ -80,6 +66,28 @@ export const useNotificationStore = defineStore("notifications", () => {
             }
         }
     }
+
+    async function enableNotifications() {
+    isSubscribing.value = true;
+    try {
+        const result = await requestPermission();
+        permission.value = result;
+        
+        if (result === "granted") {
+            // ÉTAPE CRUCIALE POUR LE MOBILE :
+            // On enregistre l'appareil auprès du service de Push (Google/Apple)
+            // et on envoie le token au backend
+            await ensurePushSubscription(); 
+            
+            // On lance le poller local en complément
+            startReminderNotifications();
+        }
+    } catch (err) {
+        console.error("Échec de l'abonnement push", err);
+    } finally {
+        isSubscribing.value = false;
+    }
+}
 
     /* =========================
         REMINDERS

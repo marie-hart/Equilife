@@ -33,6 +33,9 @@ import { registerSW } from "virtual:pwa-register";
 import Header from "@/views/header/TheHeader.vue";
 import { startReminderNotifications } from "@/utils/notifications";
 import { useHorsesStore } from "@/stores/HorsesStore";
+import { useNotificationStore } from "@/stores/NotificationStore";
+
+const notificationStore = useNotificationStore()
 
 const isAppReady = ref(false);
 const horsesStore = useHorsesStore();
@@ -55,6 +58,7 @@ onMounted(async () => {
     isAppReady.value = true; 
   }
     startReminderNotifications();
+    notificationStore.checkCurrentPermission();
 });
 </script>
 

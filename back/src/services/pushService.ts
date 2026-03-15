@@ -114,14 +114,15 @@ const fetchDueReminders = async () => {
               e.name,
               e.description,
               e.horse_id,
+              e.type as event_type, -- Important pour le routage front
               COALESCE(e.next_reminder_date, e.event_date) AS reminder_date
             FROM events e
             LEFT JOIN push_notifications pn
               ON pn.event_id::text = e.id::text
               AND pn.reminder_date = COALESCE(e.next_reminder_date, e.event_date)
             WHERE e.reminder_enabled = true
-              AND COALESCE(e.next_reminder_date, e.event_date) IS NOT NULL
-              AND COALESCE(e.next_reminder_date, e.event_date) <= NOW()
+              -- On s'assure que le rappel est pour AUJOURD'HUI ou passé
+              AND COALESCE(e.next_reminder_date, e.event_date)::date <= CURRENT_DATE
               AND pn.event_id IS NULL
             `,
         );
@@ -201,53 +202,45 @@ const markProductNotified = async (
 export const startProductStockPushScheduler = () => {
   if (!isPushConfigured()) return;
 
-  const run = async () => {
-    const products = await fetchLowStockProducts();
+    const runStockCheck = async () => {
+        const products = await fetchLowStockProducts();
 
-    for (const product of products) {
-      const remaining = computeRemainingDays(product);
-      if (remaining === null) continue;
+        for (const product of products) {
+        const remaining = computeRemainingDays(product);
+        if (remaining === null) continue;
 
-      // 🔔 J-14
-      if (remaining === 14) {
-        const notified = await alreadyNotified(product.id, "J14");
-        if (!notified) {
-          await sendToAll({
-            title: "Stock bientôt épuisé",
-            body: `${product.name} : plus que 14 jours`,
-            tag: `stock-${product.id}-J14`,
-            data: {
-              product_id: product.id,
-              type: "J14",
-            },
-          });
-
-          await markProductNotified(product.id, "J14");
+        // 🔔 Alerte Stock Bas (Entre 10 et 14 jours)
+        if (remaining <= 14 && remaining > 0) {
+            const notified = await alreadyNotified(product.id, "J14");
+            if (!notified) {
+            await sendToAll({
+                title: "Stock bas 📦",
+                body: `Il reste environ 14 jours de ${product.name}.`,
+                tag: `stock-low-${product.id}`,
+                data: { product_id: product.id, type: "STOCK_LOW" },
+            });
+            await markProductNotified(product.id, "J14");
+            }
         }
-      }
 
-      // 🔴 J-0
-      if (remaining === 0) {
-        const notified = await alreadyNotified(product.id, "J0");
-        if (!notified) {
-          await sendToAll({
-            title: "Rupture de stock",
-            body: `${product.name} est épuisé`,
-            tag: `stock-${product.id}-J0`,
-            data: {
-              product_id: product.id,
-              type: "J0",
-            },
-          });
-
-          await markProductNotified(product.id, "J0");
+        // 🔴 Alerte Rupture (J-0 ou moins)
+        if (remaining <= 0) {
+            const notified = await alreadyNotified(product.id, "J0");
+            if (!notified) {
+            await sendToAll({
+                title: "Rupture de stock ! ⚠️",
+                body: `${product.name} est épuisé.`,
+                tag: `stock-empty-${product.id}`,
+                data: { product_id: product.id, type: "STOCK_EMPTY" },
+            });
+            await markProductNotified(product.id, "J0");
+            }
         }
-      }
-    }
-  };
+        }
+    };
 
-  void run();
-  setInterval(() => void run(), 6 * 60 * 60 * 1000);
+  void runStockCheck();
+  setInterval(() => void runStockCheck(), 6 * 60 * 60 * 1000);
 };
 
 const sendToAll = async (payload: Record<string, unknown>) => {

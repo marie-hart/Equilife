@@ -2,6 +2,8 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
+import https from 'https';
+import fs from 'fs';
 import swaggerUi from "swagger-ui-express";
 import eventRoutes from "./routes/eventRoutes";
 import productRoutes from "./routes/productRoutes";
@@ -49,7 +51,7 @@ app.use("/api/push", pushRoutes);
 // Route d'information (mise à jour pour correspondre à ton schéma réel)
 app.get("/", (req: Request, res: Response) => {
     res.json({
-        message: "Horse Care App API",
+        message: "Equilife App API",
         version: "1.1.0", // Nouvelle version pour ton nouveau schéma
         status: "Running"
     });
@@ -88,6 +90,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
+const httpsOptions = {
+    key: fs.readFileSync(path.join(__dirname, '../localhost-key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, '../localhost.pem')),
+};
+
 // 6. Démarrage sécurisé
 const start = async () => {
     try {
@@ -95,9 +102,19 @@ const start = async () => {
         await pool.query("SELECT 1");
         console.log("🐘 Database connected");
 
-        app.listen(PORT, () => {
-            console.log(`🚀 Server ready on http://localhost:${PORT}`);
-        });
+        if (process.env.NODE_ENV === 'development') {
+            const httpsOptions = {
+                key: fs.readFileSync('./localhost-key.pem'),
+                cert: fs.readFileSync('./localhost.pem'),
+            };
+            https.createServer(httpsOptions, app).listen(PORT, () => {
+                console.log(`🛡️  Local HTTPS: https://localhost:${PORT}`);
+            });
+        } else {
+            app.listen(PORT, () => {
+                console.log(`🚀 Production HTTP (behind Proxy): http://localhost:${PORT}`);
+            });
+        }
 
         // Initialisation des services de notifications
         const pushEnabled = await initPushService();
