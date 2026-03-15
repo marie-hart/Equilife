@@ -114,7 +114,7 @@ const fetchDueReminders = async () => {
               e.name,
               e.description,
               e.horse_id,
-              e.type as event_type, -- Important pour le routage front
+              e.reminder_type AS event_type,
               COALESCE(e.next_reminder_date, e.event_date) AS reminder_date
             FROM events e
             LEFT JOIN push_notifications pn
@@ -127,29 +127,41 @@ const fetchDueReminders = async () => {
             `,
         );
         return result.rows;
-    } catch (error) {
-        console.error("❌ Error fetching due reminders:", error);
+    } catch (error: any) {
+        if (error?.code === "42P01") {
+            console.warn("⚠️ Table 'events' missing; run DB migrations. Skipping reminder fetch.");
+        } else {
+            console.error("❌ Error fetching due reminders:", error);
+        }
         return [];
     }
 };
 
 const fetchLowStockProducts = async () => {
-  const result = await pool.query(`
-    SELECT
-      p.id,
-      p.name,
-      p.last_purchase_date,
-      p.quantity_purchased,
-      p.daily_usage,
-      p.unit
-    FROM products p
-    WHERE p.category IN ('Granulés', 'Complément')
-      AND p.last_purchase_date IS NOT NULL
-      AND p.quantity_purchased IS NOT NULL
-      AND p.daily_usage IS NOT NULL
-  `);
-
-  return result.rows;
+  try {
+    const result = await pool.query(`
+      SELECT
+        p.id,
+        p.name,
+        p.last_purchase_date,
+        p.quantity_purchased,
+        p.daily_usage,
+        p.unit
+      FROM products p
+      WHERE p.category IN ('Granulés', 'Complément')
+        AND p.last_purchase_date IS NOT NULL
+        AND p.quantity_purchased IS NOT NULL
+        AND p.daily_usage IS NOT NULL
+    `);
+    return result.rows;
+  } catch (error: any) {
+    if (error?.code === "42P01") {
+      console.warn("⚠️ Table 'products' missing; run DB migrations. Skipping stock check.");
+    } else {
+      console.error("❌ Error fetching low stock products:", error);
+    }
+    return [];
+  }
 };
 
 const computeRemainingDays = (product: any): number | null => {
