@@ -162,6 +162,7 @@
 import { onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { productApi } from "@/api/product";
+import { logger } from "@/services/LoggerService";
 import type { Product } from "@/types";
 import { ConfirmDeleteDialog } from "@/components";
 
@@ -219,7 +220,7 @@ const handleDelete = async () => {
         };
         setTimeout(() => router.push({ name: 'Products' }), 1000);
     } catch (error) {
-        console.error("Erreur suppression:", error);
+        logger.error("Erreur suppression:", error);
         snackbar.value = {
             show: true,
             message: "Erreur lors de la suppression",
@@ -255,7 +256,7 @@ const loadProduct = async () => {
     try {
         product.value = await productApi.getById(productId);
     } catch (error) {
-        console.error("Error loading product:", error);
+        logger.error("Error loading product:", error);
     } finally {
         isLoading.value = false;
     }

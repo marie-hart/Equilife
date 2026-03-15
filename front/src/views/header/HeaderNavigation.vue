@@ -122,12 +122,11 @@
 
   const getRoute = (item: NavItem) => {
     if (item.tab === "horses") {
-      return {name: item.routeName }
-    } else {
-      if (!isHorseIdReady.value) {
-        return;
-      }
-      return {name: item.routeName, params: { id: horsesStore.horseId }}
+      return { name: item.routeName };
     }
+    if (!isHorseIdReady.value) {
+      return { name: "Horses" };
+    }
+    return { name: item.routeName };
   };
 </script>

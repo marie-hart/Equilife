@@ -10,7 +10,7 @@
             size="small" 
             color="#2E4B36"
             elevation="1"
-            :to="{ name: 'ReminderCreate', params: { id: horsesStore.horseId ?? undefined } }"
+            :to="{ name: 'ReminderCreate' }"
         />
       </div>
 
@@ -54,6 +54,7 @@
   import { computed, onMounted, watch } from "vue";
   import { useHorsesStore } from "@/stores/HorsesStore";
   import { eventsApi } from "@/api/events";
+  import { logger } from "@/services/LoggerService";
   import {
     sortByDateAsc,
     startOfDay,
@@ -75,7 +76,7 @@
         ? await eventsApi.getReminders(horseId)
         : await eventsApi.getReminders();
     } catch (error) {
-      console.error("Error loading reminders:", error);
+      logger.error("Error loading reminders:", error);
       reminders.value = [];
     }
   };

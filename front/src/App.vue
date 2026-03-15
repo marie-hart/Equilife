@@ -34,6 +34,7 @@ import Header from "@/views/header/TheHeader.vue";
 import { startReminderNotifications } from "@/utils/notifications";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { useNotificationStore } from "@/stores/NotificationStore";
+import { logger } from "@/services/LoggerService";
 
 const notificationStore = useNotificationStore()
 
@@ -54,7 +55,7 @@ onMounted(async () => {
     }, 1500);
     
   } catch (error) {
-    console.error("Erreur au chargement:", error);
+    logger.error("Erreur au chargement:", error);
     isAppReady.value = true; 
   }
     startReminderNotifications();

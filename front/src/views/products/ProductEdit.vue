@@ -32,6 +32,7 @@
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { productApi } from "@/api/product";
+import { logger } from "@/services/LoggerService";
 import type { Product } from "@/types";
 import ProductForm from "@/views/products/ProductForm.vue";
 
@@ -58,7 +59,7 @@ const updateProduct = async () => {
     
     goBack();
   } catch (error) {
-    console.error("Erreur API:", error);
+    logger.error("Erreur API:", error);
   } finally {
     isSubmitting.value = false;
   }

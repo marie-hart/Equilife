@@ -1,3 +1,5 @@
+import { logger } from "@/services/LoggerService";
+
 const SELECTED_HORSE_ID_KEY = "selectedHorseId";
 const SELECTED_HORSE_PHOTO_KEY = "selectedHorsePhoto";
 
@@ -5,7 +7,7 @@ export const getStoredHorseId = () => {
     try {
         return localStorage.getItem(SELECTED_HORSE_ID_KEY)
     } catch (error) {
-        console.warn("Unable to read selected horse from storage:", error);
+        logger.warn("Unable to read selected horse from storage:", error);
         return null;
     }
 };
@@ -17,8 +19,7 @@ export const setStoredHorseId = (id: string) => {
     try {
         localStorage.setItem(SELECTED_HORSE_ID_KEY, id);
     } catch (error) {
-        console.warn("Unable to set horse from storage:", error);
-     
+        logger.warn("Unable to set horse from storage:", error);
     }
 }
 
@@ -34,7 +35,7 @@ export const setStoredHorsePhoto = (horseId: string, photoBase64: string | null)
             localStorage.removeItem(key);
         }
     } catch (error) {
-        console.warn(`Unable to set horse photo for ID ${horseId} in storage:`, error);
+        logger.warn(`Unable to set horse photo for ID ${horseId} in storage:`, error);
     }
 };
 

@@ -83,7 +83,7 @@
               size="large"
               color="#2E4B36"
               class="text-none font-weight-bold"
-              :to="{ name: 'HorseEdit', params: { id: horse?.id } }"
+              :to="{ name: 'HorseEdit' }"
             >
               Modifier
             </v-btn>
@@ -94,11 +94,10 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
-import { useRoute } from "vue-router";
+import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import type { Horse } from "@/types";
 
-const route = useRoute();
 const horsesStore = useHorsesStore();
 const horse = ref<Horse | null>(null);
 const isLoading = ref(true);
@@ -129,17 +128,18 @@ const horseInfo = computed(() => {
 });
 
 const loadHorse = async () => {
+    const id = horsesStore.horseId;
+    if (!id || id === "all") {
+        isLoading.value = false;
+        return;
+    }
     isLoading.value = true;
     try {
-        const id = route.params.id as string;
-        
-        const foundHorse = horsesStore.horses.find(h => h.id === id) 
-                           || await horsesStore.loadHorseById(id);
-        
+        const foundHorse = horsesStore.horses.find(h => h.id === id)
+            || await horsesStore.loadHorseById(id);
         horse.value = (foundHorse as Horse) || null;
-        
     } catch (error) {
-        console.error("Error loading horse details:", error);
+        logger.error("Error loading horse details:", error);
     } finally {
         isLoading.value = false;
     }

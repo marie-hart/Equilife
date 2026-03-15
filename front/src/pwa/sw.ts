@@ -46,9 +46,9 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
   let url = "/";
 
   if (data?.product_id) {
-    url = `/products/${data.product_id}`;
+    url = `/product/${data.product_id}`;
   } else if (data?.horse_id) {
-    url = `/horses/${data.horse_id}/dashboard`;
+    url = `/dashboard?horseId=${encodeURIComponent(data.horse_id)}`;
   }
 
   event.waitUntil(

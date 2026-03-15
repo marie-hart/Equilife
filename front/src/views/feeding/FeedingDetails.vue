@@ -126,6 +126,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { rationsApi } from "@/api/rations";
 import { productApi } from "@/api/product";
+import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import type { Ration, Product } from "@/types";
 
@@ -192,18 +193,15 @@ const loadData = async () => {
     products.value = productsData;
     ration.value = rationData;
   } catch (error) {
-    console.error("Erreur lors du chargement des détails de la ration:", error);
+    logger.error("Erreur lors du chargement des détails de la ration:", error);
   } finally {
     loading.value = false;
   }
 };
 
 const handleEdit = () => {
-  router.push({ 
-    name: 'FeedingEdit', 
-    params: { rationId: rationId.value },
-    query: { horseId: ration.value?.horse_id }
-  });
+  if (ration.value?.horse_id) horsesStore.sethorseId(ration.value.horse_id);
+  router.push({ name: "FeedingEdit", params: { rationId: rationId.value } });
 };
 
 onMounted(loadData);

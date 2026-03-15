@@ -19,7 +19,7 @@
         class="mb-6 text-none font-weight-bold" 
         prepend-icon="mdi-plus"
         elevation="1"
-        :to="{ name: 'FeedingCreate', params: { id: horsesStore.horseId } }"
+        :to="{ name: 'FeedingCreate' }"
       >
         Ajouter une ration
       </v-btn>
@@ -71,6 +71,7 @@ import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { rationsApi } from "@/api/rations";
 import { productApi } from "@/api/product";
+import { logger } from "@/services/LoggerService";
 import type { Product, Ration } from "@/types";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { FeedingList } from "@/views/feeding";
@@ -106,7 +107,7 @@ const loadProducts = async () => {
     try {
         products.value = await productApi.getAll(false);
     } catch (error) {
-        console.error("Error loading products:", error);
+        logger.error("Error loading products:", error);
     }
 };
 
@@ -120,7 +121,7 @@ const loadRations = async () => {
         const data = await rationsApi.getAll(horseFilter);
         rations.value = data;
     } catch (error) {
-        console.error("Error loading rations:", error);
+        logger.error("Error loading rations:", error);
     } finally {
         isLoading.value = false;
     }
@@ -139,7 +140,7 @@ const shareRation = async (ration: Ration) => {
             color: "success",
         };
     } catch (error) {
-        console.error("Erreur PDF:", error);
+        logger.error("Erreur PDF:", error);
         snackbar.value = {
             show: true,
             message: "Erreur lors de la génération du PDF.",
@@ -160,7 +161,7 @@ const deleteRation = async (ration: Ration) => {
             color: "success",
         };
     } catch (error) {
-        console.error("Error deleting ration:", error);
+        logger.error("Error deleting ration:", error);
         snackbar.value = {
             show: true,
             message: "Suppression impossible.",
@@ -170,20 +171,14 @@ const deleteRation = async (ration: Ration) => {
 };
 
 const openDetails = (ration: Ration) => {
-    router.push({
-        name: "FeedingDetails",
-        params: { rationId: ration.id },
-        query: { horseId: ration.horse_id }
-    });
-}
+    if (ration.horse_id) horsesStore.sethorseId(ration.horse_id);
+    router.push({ name: "FeedingDetails", params: { rationId: ration.id } });
+};
 
 const openFeedingEdit = (ration: Ration) => {
-    router.push({
-        name: "FeedingEdit",
-        params: { rationId: ration.id }, 
-        query: { horseId: ration.horse_id },
-    });
-}
+    if (ration.horse_id) horsesStore.sethorseId(ration.horse_id);
+    router.push({ name: "FeedingEdit", params: { rationId: ration.id } });
+};
 
 watch(() => horsesStore.horseId, () => {
     loadProducts();

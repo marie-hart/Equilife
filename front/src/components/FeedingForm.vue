@@ -239,10 +239,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue"
-import { useRouter, useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 import { rationsApi } from "@/api/rations";
 import { productApi } from "@/api/product";
 import { toDateInputValue } from "@/libs/date";
+import { logger } from "@/services/LoggerService";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import type { Product, Ration, RationFormItem } from "@/types";
@@ -253,7 +254,6 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
-const route = useRoute()
 const horsesStore = useHorsesStore();
 
 const isEditMode = computed(() => Boolean(props.rationId));
@@ -337,7 +337,7 @@ const loadProducts = async () => {
     try {
         products.value = await productApi.getAll(false);
     } catch (error) {
-        console.error("Error loading products:", error);
+        logger.error("Error loading products:", error);
     }
 };
 
@@ -366,7 +366,7 @@ const loadRation = async () => {
         };
         if (!form.value.items.length) addItem();
     } catch (error) {
-        console.error("Error loading ration:", error);
+        logger.error("Error loading ration:", error);
         snackbar.value = { show: true, message: "Chargement impossible.", color: "error" };
     }
 };
@@ -416,7 +416,7 @@ const saveRation = async () => {
         }
         goBack();
     } catch (error) {
-        console.error("Error saving ration:", error);
+        logger.error("Error saving ration:", error);
         snackbar.value = { show: true, message: "Action impossible.", color: "error" };
     } finally {
         isSubmitting.value = false;
@@ -424,11 +424,7 @@ const saveRation = async () => {
 };
 
 const goBack = () => {
-    if (horsesStore.horseId) {
-        router.push({ name: "FeedingView", params: { id: horsesStore.horseId } });
-        return;
-    }
-    router.push("/horses");
+    router.push(horsesStore.horseId ? { name: "FeedingView" } : { name: "Horses" });
 };
 
 onMounted(async () => {
@@ -436,14 +432,11 @@ onMounted(async () => {
     try {
         await horsesStore.loadHorses();
         
-        const horseIdFromUrl = route.query.horseId as string;
-  
-        const horseExists = horsesStore.horses.some(h => h.id === horseIdFromUrl);
-
-        if (horseIdFromUrl && horseExists) {
-            horsesStore.sethorseId(horseIdFromUrl);
-        } else if (horsesStore.horses.length > 0 && !isEditMode.value) {
-            horsesStore.sethorseId(horsesStore.horses[0].id);
+        if (!isEditMode.value && horsesStore.horses.length > 0) {
+            const toSelect = horsesStore.horseId && horsesStore.horseId !== "all" && horsesStore.horses.some(h => h.id === horsesStore.horseId)
+                ? horsesStore.horseId
+                : horsesStore.horses[0].id;
+            horsesStore.sethorseId(toSelect);
         }
 
         if (isEditMode.value) {

@@ -23,7 +23,7 @@
           class="mb-6 text-none font-weight-bold" 
           prepend-icon="mdi-plus"
           elevation="1"
-          :to="{ name: 'ActivityCreate', params: { id: horsesStore.horseId} }"
+          :to="{ name: 'ActivityCreate' }"
         >
           Ajouter une activité
         </v-btn>
@@ -89,6 +89,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
 import { eventsApi } from "@/api/events";
 import { ConfirmDeleteDialog } from "@/components";
+import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { formatMonthLabel, sortByDateAsc, toMonthKey } from "@/libs/date";
 import type { ActivityAction, ActivityGroup, Event } from "@/types";
@@ -207,7 +208,7 @@ const loadActivities = async () => {
         const horseFilter = horsesStore.horseId !== "all" ? horsesStore.horseId : undefined;
         activities.value = await eventsApi.getAll(horseFilter as string);
     } catch (error) {
-        console.error("Error loading activities:", error);
+        logger.error("Error loading activities:", error);
     } finally {
         isLoading.value = false;
     }

@@ -106,6 +106,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
+import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import { toDateInputValue, getReminderDate, fromDateInputValue, formatDateLong } from "@/libs/date";
@@ -381,7 +382,7 @@ const loadReminders = async () => {
         const data = await eventsApi.getReminders();
         reminders.value = Array.isArray(data) ? data : [];
     } catch (error) {
-        console.error("Erreur chargement rappels:", error);
+        logger.error("Erreur chargement rappels:", error);
         reminders.value = []; // Garantit un tableau vide au lieu de null
     } finally {
         isLoading.value = false;

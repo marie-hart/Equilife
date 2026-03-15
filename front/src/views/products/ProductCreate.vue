@@ -41,6 +41,7 @@
 
 <script setup lang="ts">
 import { productApi } from '@/api/product.js';
+import { logger } from '@/services/LoggerService';
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useHorsesStore } from '@/stores/HorsesStore';
@@ -77,17 +78,13 @@ const createProduct = async () => {
     await productApi.create(payload);
     goBack();
   } catch (error: any) {
-    console.error("Erreur serveur :", error.response?.data);
+    logger.error("Erreur serveur :", error.response?.data);
   } finally {
     isSubmitting.value = false;
   }
 };
 
 const goBack = () => {
-  if (horseId.value && horseId.value !== 'all') {
-    router.push({ name: "Products", query: { horseId: String(horseId.value) } });
-    return;
-  }
-  router.push("/horses");
+  router.push(horseId.value && horseId.value !== "all" ? { name: "Products" } : { name: "Horses" });
 };
 </script>

@@ -89,11 +89,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter } from "vue-router";
+import { useHorsesStore } from "@/stores/HorsesStore";
 import { useNotificationStore } from "@/stores/NotificationStore";
 import type { Event as HorseEvent } from "@/types";
 
 const notificationStore = useNotificationStore();
+const horsesStore = useHorsesStore();
 const router = useRouter();
 const menuOpen = ref(false);
 
@@ -106,8 +108,8 @@ const handleBellClick = () => {
 const handleReminderAction = (reminder: HorseEvent) => {
   notificationStore.markAsRead(reminder.id);
   menuOpen.value = false;
-  // Navigation vers le dashboard du cheval concerné
-  router.push({ name: 'HorseDashboardView', params: { id: reminder.horse_id } });
+  if (reminder.horse_id) horsesStore.sethorseId(reminder.horse_id);
+  router.push({ name: "HorseDashboardView" });
 };
 
 const goToAllReminders = () => {

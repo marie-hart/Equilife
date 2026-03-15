@@ -3,11 +3,9 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from "vue-router"
-import HorseForm from '@/components/HorseForm.vue';
+import { storeToRefs } from "pinia";
+import HorseForm from "@/components/HorseForm.vue";
+import { useHorsesStore } from "@/stores/HorsesStore";
 
-const route = useRoute()
-
-const horseId = route.params.id as string
-
+const { horseId } = storeToRefs(useHorsesStore());
 </script>

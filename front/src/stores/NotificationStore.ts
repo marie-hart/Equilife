@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { startReminderNotifications, requestPermission, supportsPush, ensurePushSubscription } from "@/utils/notifications";
+import { logger } from "@/services/LoggerService";
 import type { Event, StockNotification } from "@/types"
 
 export const useNotificationStore = defineStore("notifications", () => {
@@ -83,7 +84,7 @@ export const useNotificationStore = defineStore("notifications", () => {
             startReminderNotifications();
         }
     } catch (err) {
-        console.error("Échec de l'abonnement push", err);
+        logger.error("Échec de l'abonnement push", err);
     } finally {
         isSubscribing.value = false;
     }

@@ -181,6 +181,7 @@ import { onMounted, ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { toDateInputValue, fromDateInputValue } from "@/libs/date";
+import { logger } from "@/services/LoggerService";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import { useHorsesStore } from "@/stores/HorsesStore";
@@ -246,7 +247,7 @@ const loadActivity = async () => {
             comment: event.activity_comment || event.description || "",
         };
     } catch (error) {
-        console.error("Error loading activity:", error);
+        logger.error("Error loading activity:", error);
         snackbar.value = { show: true, message: "Impossible de charger l'activité.", color: "error" };
     } finally {
         isLoading.value = false;
@@ -300,7 +301,7 @@ const submitForm = async () => {
         }
         goBack();
     } catch (error) {
-        console.error("Error saving activity:", error);
+        logger.error("Error saving activity:", error);
         snackbar.value = { show: true, message: "Action impossible.", color: "error" };
     } finally {
         isSubmitting.value = false;
@@ -308,11 +309,7 @@ const submitForm = async () => {
 };
 
 const goBack = () => {
-    if (horsesStore.horseId) {
-        router.push({ name: "HorseActivities", params: { id: horsesStore.horseId } });
-        return;
-    }
-    router.push("/horses");
+    router.push(horsesStore.horseId ? { name: "HorseActivities" } : { name: "Horses" });
 };
 
 watch(() => route.params.id, async (newId) => {

@@ -34,15 +34,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
+import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import { ReminderForm } from "@/views/reminders";
 import type { ReminderFormValue } from "@/types";
 
 const router = useRouter();
-const route = useRoute();
 const horsesStore = useHorsesStore();
 
 const isLoading = ref(false);
@@ -70,8 +70,7 @@ onMounted(async () => {
     if (horsesStore.horses.length === 0) {
         await horsesStore.loadHorses();
     }
-    
-    const preselectedHorseId = route.params.id as string;
+    const preselectedHorseId = horsesStore.horseId && horsesStore.horseId !== "all" ? horsesStore.horseId : null;
     if (preselectedHorseId) {
         form.value.horseIds = [preselectedHorseId];
     }
@@ -122,7 +121,7 @@ const handleCreate = async () => {
         setTimeout(() => router.push({ name: "Reminders" }), 1500);
 
     } catch (error) {
-        console.error("Erreur création rappel:", error);
+        logger.error("Erreur création rappel:", error);
         snackbar.value = {
             show: true,
             message: "Impossible de créer le rappel.",

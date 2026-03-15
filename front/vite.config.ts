@@ -1,10 +1,10 @@
 import { defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { fileURLToPath, URL } from "node:url";
+import fs from "node:fs";
 import vuetify from "vite-plugin-vuetify";
 import { VitePWA } from "vite-plugin-pwa";
-import fs from 'fs';
- 
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const baseUrl = env.VITE_API_BASE_URL || "/api";
@@ -14,76 +14,53 @@ export default defineConfig(({ mode }) => {
   const proxyTarget = env.VITE_API_PROXY_TARGET || inferredTarget;
 
   return {
-  plugins: [
-    vue(),
-    vuetify({ autoImport: true }),
-    VitePWA({
-      registerType: "autoUpdate",
-      strategies: "injectManifest",
-      srcDir: "src/pwa",
-      filename: "sw.ts",
-      injectRegister: "auto",
-      manifest: {
-        name: "Equilife",
-        short_name: "Equilife",
-        theme_color: "#2c4b29",
-        background_color: "#ffffff",
-        display: "standalone",
-        start_url: "/",
-        icons: [
-          {
-            src: "icons/icon-192x192-v2.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: "icons/icon-512x512-v2.png",
-            sizes: "512x512",
-            type: "image/png",
-          },
-          {
-            src: "icons/icon-512x512-v2.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
-          },
-        ],
-      },
-      includeAssets: ['apple-touch-icon.png'],
-      devOptions: {
-        enabled: true,
-        type: 'module'
-      },
-    }),
-  ],
-  resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
-      "@@": fileURLToPath(new URL("../", import.meta.url)),
-    },
-  },
-  server: {
-    port: 5173,
-    allowedHosts: ["dave-bushier-tobias.ngrok-free.dev"],
-    https: {
-      key: fs.readFileSync('./localhost-key.pem'),
-      cert: fs.readFileSync('./localhost.pem'),
-    },
-    proxy: {
-      "/api": {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        secure: false,
-      },
-      "/uploads": {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
+    plugins: [
+      vue(),
+      vuetify({ autoImport: true }),
+      VitePWA({
+        registerType: "autoUpdate",
+        strategies: "injectManifest",
+        srcDir: "src/pwa",
+        filename: "sw.ts",
+        injectRegister: "auto",
+        manifest: {
+          name: "Equilife",
+          short_name: "Equilife",
+          theme_color: "#2c4b29",
+          background_color: "#ffffff",
+          display: "standalone",
+          start_url: "/",
+          icons: [
+            { src: "icons/icon-192x192-v2.png", sizes: "192x192", type: "image/png" },
+            { src: "icons/icon-512x512-v2.png", sizes: "512x512", type: "image/png" },
+            { src: "icons/icon-512x512-v2.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          ],
+        },
+        includeAssets: ["apple-touch-icon.png"],
+        devOptions: { enabled: true, type: "module" },
+      }),
+    ],
+    resolve: {
+      alias: {
+        "@": fileURLToPath(new URL("./src", import.meta.url)),
+        "@@": fileURLToPath(new URL("./", import.meta.url)),
       },
     },
-    host: true,
-    hmr: {
-      host: '192.168.1.3'
-    }
-  },
+    server: {
+      port: 5173,
+      allowedHosts: ["dave-bushier-tobias.ngrok-free.dev"],
+      https: {
+        key: fs.readFileSync("./localhost+1-key.pem"),
+        cert: fs.readFileSync("./localhost+1.pem"),
+      },
+      proxy: {
+        "/api": { target: "http://localhost:3001", changeOrigin: true, secure: false },
+        "/uploads": { target: "http://localhost:3001", changeOrigin: true },
+      },
+      host: true,
+      hmr: mode === "development"
+        ? { protocol: "wss", port: 5173 }
+        : undefined,
+    },
   };
 });

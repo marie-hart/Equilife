@@ -191,6 +191,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue"; 
 import { useRouter } from "vue-router";
+import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
@@ -296,7 +297,7 @@ const handleFileChange = async (fileInput: File | File[] | null) => {
         try {
             const base64 = await fileToBase64(file);
         } catch (error) {
-            console.error("Erreur conversion photo", error);
+            logger.error("Erreur conversion photo", error);
         }
     } else {
         selectedPhoto.value = null;
@@ -330,7 +331,7 @@ const loadHorse = async () => {
             fillForm(horse);
         }
     } catch (error) {
-        console.error("Erreur chargement cheval dans le form:", error);
+        logger.error("Erreur chargement cheval dans le form:", error);
     } finally {
         isLoading.value = false;
     }
@@ -390,11 +391,12 @@ const handleSubmit = async () => {
         };
 
         setTimeout(() => {
-            router.push({ name: "HorseDetails", params: { id: savedHorseId } });
+            horsesStore.sethorseId(savedHorseId);
+            router.push({ name: "HorseDetails" });
         }, 800);
 
     } catch (error: any) {
-        console.error("Save error:", error);
+        logger.error("Save error:", error);
         const serverMsg = error.response?.data?.message || "";
         formError.value = `Erreur serveur (500): ${serverMsg || "Vérifiez les champs"}`;
         

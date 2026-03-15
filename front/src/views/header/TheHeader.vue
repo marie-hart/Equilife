@@ -41,14 +41,12 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
-import type { Horse, NavItem } from "@/types";
+import type { NavItem } from "@/types";
 import { HeaderNavigation } from "./index";
-import NotificationBell from "@/components/NotificationBell.vue"; 
+import NotificationBell from "@/components/NotificationBell.vue";
 
 const router = useRouter();
 const { lgAndUp } = useDisplay();
-
-const horseProfile = ref<Horse | null>(null);
 const isMoreOpen = ref(false);
 
 const navItems: NavItem[] = [
@@ -62,16 +60,6 @@ const navItems: NavItem[] = [
 ];
 
 const navigate = (name: NavItem["routeName"]) => {
-  if (name === "Reminders" || name === "Horses") {
-      router.push({ name });
-      return;
-  }
-  
-  const horseId = horseProfile.value?.id;
-  if (horseId) {
-      router.push({ name, params: { id: horseId } });
-      return;
-  }
-  router.push({ name: "Dashboard" });
+  router.push({ name });
 };
 </script>

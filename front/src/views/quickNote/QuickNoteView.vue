@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { saveNotes, loadNotes } from "@/libs/note";
+import { logger } from "@/services/LoggerService";
 import type { DashboardNote } from "@/types/note";
 import { QuickNoteCard, QuickNoteDialog } from "./";
 
@@ -48,7 +49,7 @@ const saveQuickNote = () => {
     try {
         localStorage.removeItem("dashboardQuickNote");
     } catch (error) {
-        console.warn("Unable to clear quick note:", error);
+        logger.warn("Unable to clear quick note:", error);
     }
 };
 
@@ -86,7 +87,7 @@ onMounted(() => {
     try {
         quickNote.value = localStorage.getItem("dashboardQuickNote") || "";
     } catch (error) {
-        console.warn("Unable to load quick note:", error);
+        logger.warn("Unable to load quick note:", error);
     }
     notes.value = loadNotes();
 });

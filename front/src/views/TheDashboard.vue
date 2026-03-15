@@ -59,6 +59,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from "vue";
 import { eventsApi } from "../api/events";
+import { logger } from "@/services/LoggerService";
 import type { Event, SelectedKind } from "../types";
 import { ReminderCard } from "./reminders";
 import { QuickNoteView } from "./quickNote";
@@ -101,7 +102,7 @@ const loadDashboard = async () => {
         events.value = eventsResponse;
         reminders.value = remindersResponse;
     } catch (error) {
-        console.error("Error loading dashboard data:", error);
+        logger.error("Error loading dashboard data:", error);
     } finally {
         isLoading.value = false;
     }
@@ -120,7 +121,7 @@ const confirmDelete = async () => {
             color: "success",
         };
     } catch (error) {
-        console.error("Error deleting item:", error);
+        logger.error("Error deleting item:", error);
         snackbar.value = {
             show: true,
             message: "Suppression impossible.",
@@ -131,16 +132,16 @@ const confirmDelete = async () => {
 
 const getActivitiesRoute = () => {
     if (horsesStore.horseId && horsesStore.horseId !== "all") {
-        return { name: "HorseActivities", params: { id: horsesStore.horseId } };
+        return { name: "HorseActivities" };
     }
-    return "/horses/:id/activities";
+    return { name: "Horses" };
 };
 
 const goToFeeding = () => {
     if (horsesStore.horseId && horsesStore.horseId !== "all") {
-        return { name: "FeedingView", params: { id: horsesStore.horseId } };
+        return { name: "FeedingView" };
     }
-    return "/horses/:id/feeding";
+    return { name: "Horses" };
 };
 
 const deleteLabel = computed(() => {

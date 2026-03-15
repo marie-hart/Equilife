@@ -1,5 +1,6 @@
 import { horsesApi } from "@/api/horses";
 import { getStoredHorseId, getStoredHorsePhoto, setStoredHorseId, setStoredHorsePhoto } from "@/libs/horseProfile";
+import { logger } from "@/services/LoggerService";
 import { CreateHorseDto, Horse } from "@/types";
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
@@ -140,7 +141,7 @@ export const useHorsesStore = defineStore('horses', () => {
 
             await loadHorseById(id);
         } catch (error) {
-            console.error("Erreur upload photo:", error);
+            logger.error("Erreur upload photo:", error);
         }   
 }
     

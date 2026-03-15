@@ -131,6 +131,7 @@ import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { formatDateLong } from "@/libs/date";
+import { logger } from "@/services/LoggerService";
 import type { Event } from "@/types";
 
 const route = useRoute();
@@ -165,7 +166,7 @@ const loadEvent = async () => {
     try {
         event.value = await eventsApi.getById(id);
     } catch (error) {
-        console.error(error);
+        logger.error("Error loading activity details", error);
     } finally {
         isLoading.value = false;
     }

@@ -147,6 +147,7 @@ import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { DatePickerField, RecurrenceFields } from "@/components";
 import { productApi } from "@/api/product";
+import { logger } from "@/services/LoggerService";
 import type { Product, Event, RecurrenceUnit, CreateEventDto } from "@/types";
 import { fromDateInputValue, toDateInputValue } from "@/libs/date";
 import { useHorsesStore } from "@/stores/HorsesStore";
@@ -278,7 +279,7 @@ const handleSubmit = async () => {
         setTimeout(() => goBack(), 1000);
 
     } catch (error) {
-        console.error("Error saving event:", error);
+        logger.error("Error saving event:", error);
         snackbar.value = { 
             show: true, 
             message: "Erreur lors de l'enregistrement.", 
@@ -289,19 +290,13 @@ const handleSubmit = async () => {
     }
 };
 
-const goBack = () => {
-    if (horsesStore.horseId && horsesStore.horseId !== 'all') {
-        router.push({ name: 'HealthView' });
-    } else {
-        router.push('/health');
-    }
-};
+const goBack = () => router.push({ name: "HealthView" });
 
 const loadProducts = async () => {
     try {
         products.value = await productApi.getAll(false);
     } catch (error) {
-        console.error("Error loading products:", error);
+        logger.error("Error loading products:", error);
     }
 };
 
@@ -320,13 +315,11 @@ onMounted(async () => {
             
             fillForm(fetchedEvent); 
         } else {
-            const horseIdFromQuery = route.query.horseId as string;
-            if (horseIdFromQuery) {
-                form.value.horseIds = [horseIdFromQuery];
-            }
+            const preselected = horsesStore.horseId && horsesStore.horseId !== "all" ? horsesStore.horseId : null;
+            if (preselected) form.value.horseIds = [preselected];
         }
     } catch (error) {
-        console.error("Erreur au montage:", error);
+        logger.error("Erreur au montage:", error);
     } finally {
         isLoading.value = false;
     }

@@ -48,26 +48,29 @@ const confirmDelete = async () => {
 };
 
 
+const goToDetails = (horse: Horse) => {
+    horsesStore.sethorseId(horse.id);
+    router.push({ name: "HorseDetails" });
+};
+const goToEdit = (horse: Horse) => {
+    horsesStore.sethorseId(horse.id);
+    router.push({ name: "HorseEdit" });
+};
+
 const getHorseActions = (horse: Horse): HorseAction[] => [
     {
         key: "view",
         title: "Détails",
         icon: "mdi-eye",
         disabled: false,
-        to: {
-            name: "HorseDetails",
-            params: { id: horse.id },
-        },
+        onClick: () => goToDetails(horse),
     },
     {
         key: "edit",
         title: "Modifier",
         icon: "mdi-pencil",
         disabled: false,
-        to: {
-            name: "HorseEdit",
-            params: { id: horse.id },
-        },
+        onClick: () => goToEdit(horse),
     },
     {
         key: "delete",
@@ -86,7 +89,7 @@ const openDeleteDialog = (horse: Horse) => {
 
 const goToDashboard = (horseId: string) => {
     horsesStore.sethorseId(horseId);
-    router.push({ name: "HorseDashboardView", params: { id: horseId } });
+    router.push({ name: "HorseDashboardView" });
 };
 </script>
 

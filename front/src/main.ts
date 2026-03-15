@@ -28,10 +28,16 @@ import "@mdi/font/css/materialdesignicons.css";
 import "vuetify/styles";
 import App from "@/App.vue";
 import router from "@/router";
+import { logger } from "@/services/LoggerService";
 import { UI_BREAKPOINTS, VUETIFY_THRESHOLDS } from "@/ui/breakpoints";
 import { createPinia } from "pinia";
 import { useHorsesStore } from "./stores/HorsesStore";
 import { useNotificationStore } from "./stores/NotificationStore";
+
+// En production avec Datadog : installer @datadog/browser-logs puis décommenter :
+// import { datadogLogs } from "@datadog/browser-logs";
+// datadogLogs.init({ clientToken: "…", site: "datadoghq.eu", sessionSampleRate: 100 });
+// logger.setDatadogLogger(datadogLogs.logger);
 
 library.add(
     faClock,

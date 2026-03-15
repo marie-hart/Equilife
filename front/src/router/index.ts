@@ -19,7 +19,20 @@ import Reminders from "@/views/reminders/ReminderView.vue";
 import ReminderCreate from "@/views/reminders/ReminderCreate.vue";
 import { HealthView } from "@/views/health";
 import { FeedingDetails } from "@/views/feeding";
+import { useHorsesStore } from "@/stores/HorsesStore";
+import { getStoredHorseId } from "@/libs/horseProfile";
 
+/** Routes that require a horse to be selected (store). Redirect to /horses if none. */
+const ROUTES_REQUIRING_HORSE = new Set([
+    "HorseDetails", "HorseEdit", "Reminders", "ReminderCreate", "HorseDashboardView",
+    "HealthView", "HealthCreate", "HorseActivities", "ActivityCreate",
+    "FeedingView", "FeedingCreate", "FeedingEdit", "FeedingDetails",
+    "Products", "ProductCreate",
+]);
+
+function requiresHorse(name: string) {
+    return ROUTES_REQUIRING_HORSE.has(name);
+}
 
 const router = createRouter({
     history: createWebHistory(),
@@ -28,23 +41,18 @@ const router = createRouter({
             path: "/",
             name: "Dashboard",
             redirect: () => {
-                // récupère l'UUID stocké ou sélectionné
-                const storedHorseId = localStorage.getItem("selectedHorseId"); // ou getStoredHorseId()
-                if (storedHorseId) {
-                  return `/horses/${storedHorseId}/dashboard`;
-                }
-                // si aucun cheval sélectionné, redirige vers liste chevaux
+                const storedHorseId = getStoredHorseId();
+                if (storedHorseId) return "/dashboard";
                 return "/horses";
-              },
-           
+            },
         },
         {
-            path: "/horses/:id/reminders",
+            path: "/reminders",
             name: "Reminders",
             component: Reminders,
         },
         {
-            path: "/horses/:id/reminders/new",
+            path: "/reminders/new",
             name: "ReminderCreate",
             component: ReminderCreate,
         },
@@ -59,32 +67,27 @@ const router = createRouter({
             component: HorseCreate,
         },
         {
-            path: "/horses/:id/edit",
+            path: "/horse/edit",
             name: "HorseEdit",
             component: HorseEdit,
         },
         {
-            path: "/horses/:id/details",
+            path: "/horse/details",
             name: "HorseDetails",
             component: HorseDetails,
         },
         {
-            path: "/horses/:id",
-            name: "HorseDashboard",
-            redirect: (to) => `/horses/${to.params.id}/dashboard`,
-        },
-        {
-            path: "/horses/:id/dashboard",
+            path: "/dashboard",
             name: "HorseDashboardView",
             component: Dashboard,
         },
         {
-            path: "/horses/:id/health",
+            path: "/health",
             name: "HealthView",
             component: HealthView,
         },
         {
-            path: "/horses/:id/health/new",
+            path: "/health/new",
             name: "HealthCreate",
             component: HealthForm,
         },
@@ -94,12 +97,12 @@ const router = createRouter({
             component: HealthForm,
         },
         {
-            path: "/horses/:id/activities",
+            path: "/activities",
             name: "HorseActivities",
             component: Activities,
         },
         {
-            path: "/horses/:id/activities/new",
+            path: "/activities/new",
             name: "ActivityCreate",
             component: ActivityForm,
         },
@@ -108,38 +111,38 @@ const router = createRouter({
             name: "ActivityEdit",
             component: ActivityForm,
         },
-         {
+        {
             path: "/events/:id",
             name: "ActivityDetails",
             component: ActivityDetails,
         },
         {
-            path: "/horses/:id/feeding",
+            path: "/feeding",
             name: "FeedingView",
             component: Feeding,
         },
         {
-            path: "/horses/:id/feeding/new",
+            path: "/feeding/new",
             name: "FeedingCreate",
             component: FeedingCreate,
         },
         {
-            path: "/horses/:id/rations/:rationId/edit",
+            path: "/rations/:rationId/edit",
             name: "FeedingEdit",
             component: FeedingEdit,
         },
         {
-            path: "/horses/:id/rations/:rationId",
+            path: "/rations/:rationId",
             name: "FeedingDetails",
             component: FeedingDetails
         },
         {
-            path: "/horses/:id/products",
+            path: "/products",
             name: "Products",
             component: Products,
         },
         {
-            path: "/horses/:id/product/new",
+            path: "/products/new",
             name: "ProductCreate",
             component: ProductCreate,
         },
@@ -153,7 +156,44 @@ const router = createRouter({
             name: "ProductEdit",
             component: ProductEdit,
         },
+        // Redirections pour les anciennes URLs (id cheval dans le path) → store + nouvelle URL
+        { path: "/horses/:id", redirect: (to) => ({ path: "/dashboard", query: to.params.id ? { horseId: to.params.id as string } : undefined }) },
+        { path: "/horses/:id/dashboard", redirect: (to) => ({ path: "/dashboard", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/details", redirect: (to) => ({ path: "/horse/details", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/edit", redirect: (to) => ({ path: "/horse/edit", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/reminders", redirect: (to) => ({ path: "/reminders", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/reminders/new", redirect: (to) => ({ path: "/reminders/new", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/health", redirect: (to) => ({ path: "/health", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/health/new", redirect: (to) => ({ path: "/health/new", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/activities", redirect: (to) => ({ path: "/activities", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/activities/new", redirect: (to) => ({ path: "/activities/new", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/feeding", redirect: (to) => ({ path: "/feeding", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/feeding/new", redirect: (to) => ({ path: "/feeding/new", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/products", redirect: (to) => ({ path: "/products", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/product/new", redirect: (to) => ({ path: "/products/new", query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/rations/:rationId", redirect: (to) => ({ path: `/rations/${to.params.rationId}`, query: { horseId: to.params.id as string } }) },
+        { path: "/horses/:id/rations/:rationId/edit", redirect: (to) => ({ path: `/rations/${to.params.rationId}/edit`, query: { horseId: to.params.id as string } }) },
     ],
+});
+
+router.beforeEach((to, _from, next) => {
+    const store = useHorsesStore();
+    const horseIdFromQuery = to.query.horseId as string | undefined;
+    if (horseIdFromQuery) {
+        store.sethorseId(horseIdFromQuery);
+        const { horseId: _, ...restQuery } = to.query;
+        router.replace({ path: to.path, query: restQuery });
+        next(false);
+        return;
+    }
+    if (to.name && requiresHorse(to.name as string)) {
+        const id = store.horseId;
+        if (!id || id === "all") {
+            next({ name: "Horses" });
+            return;
+        }
+    }
+    next();
 });
 
 export default router;

@@ -113,6 +113,7 @@
 </style>
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { logger } from "@/services/LoggerService";
 import type { Product } from "@/types";
 import ProductItem from "./ProductItem.vue";
 import { getStockStatus } from "@/utils/productStock";
@@ -164,7 +165,7 @@ onMounted(async () => {
     try {
       localProducts.value = await productApi.getAll();
     } catch (error) {
-      console.error("Erreur:", error);
+      logger.error("Erreur:", error);
     } finally {
       isLoading.value = false;
     }

@@ -16,7 +16,7 @@
                     rounded="xl"
                     class="text-none font-weight-bold"
                     elevation="4"
-                    :to="{ name: 'HealthCreate', params: { id: horsesStore.horseId !== 'all' ? horsesStore.horseId : undefined } }"
+                    :to="{ name: 'HealthCreate' }"
                 >
                     <v-icon icon="mdi-plus" class="me-1" />
                     Ajouter
@@ -94,6 +94,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { eventsApi } from "@/api/events";
 import { useFilters } from "@/composables/useFilters";
+import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore"; 
 import type { CareAction, CareStatus, Event } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
@@ -297,7 +298,7 @@ const loadCares = async () => {
         const events = await eventsApi.getAll();
         cares.value = events.filter((event) => event.is_care);
     } catch (error) {
-        console.error("Error loading cares:", error);
+        logger.error("Error loading cares:", error);
     } finally {
         isLoading.value = false;
     }
@@ -329,7 +330,7 @@ const markDone = async (care: Event) => {
                 color: "success",
             };
         } catch (error) {
-            console.error("Erreur lors de la suppression du soin:", error);
+            logger.error("Erreur lors de la suppression du soin:", error);
             snackbar.value = {
                 show: true,
                 message: "Action impossible.",
@@ -386,7 +387,7 @@ const saveCareDone = async () => {
         snackbar.value.color = "success";
 
     } catch (error) {
-        console.error("Erreur lors de la validation:", error);
+        logger.error("Erreur lors de la validation:", error);
         snackbar.value = { show: true, message: "Action impossible.", color: "error" };
     }
 };
@@ -433,7 +434,7 @@ const confirmDelete = async () => {
             color: "success",
         };
     } catch (error) {
-        console.error("Error deleting care:", error);
+        logger.error("Error deleting care:", error);
         snackbar.value = {
             show: true,
             message: "Suppression impossible.",
