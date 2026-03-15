@@ -1,5 +1,12 @@
 import html2pdf from 'html2pdf.js';
 
+/** Échappe les caractères HTML pour éviter l'injection (XSS) dans le PDF généré. */
+function escapeHtml(raw: string): string {
+  const div = document.createElement("div");
+  div.textContent = raw;
+  return div.innerHTML;
+}
+
 export const generateRationPDF = async (ration: any, horseName: string, getProductName: Function) => {
   const meals = ['matin', 'midi', 'soir']
     .map(key => ({
@@ -20,23 +27,23 @@ export const generateRationPDF = async (ration: any, horseName: string, getProdu
       </div>
 
       <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #EDE4D8; border-radius: 15px; background-color: white;">
-        <div style="font-size: 20px; font-weight: bold;">${horseName}</div>
-        <div style="font-size: 14px; color: #7B5B3E; margin-top: 5px;">Ration : ${ration.name}</div>
+        <div style="font-size: 20px; font-weight: bold;">${escapeHtml(horseName)}</div>
+        <div style="font-size: 14px; color: #7B5B3E; margin-top: 5px;">Ration : ${escapeHtml(ration.name ?? "")}</div>
       </div>
 
       ${meals.map(meal => `
         <div style="margin-top: 25px; page-break-inside: avoid;">
           <div style="display: flex; align-items: center; margin-bottom: 10px;">
             <div style="background: #2E4B36; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">
-              ${meal.label}
+              ${escapeHtml(meal.label)}
             </div>
           </div>
           <table style="width: 100%; border-collapse: collapse;">
             ${meal.items.map((item: any) => `
               <tr style="border-bottom: 1px solid #EDE4D8;">
-                <td style="padding: 12px 5px; font-weight: 600;">${getProductName(item.product_id) || 'Produit'}</td>
+                <td style="padding: 12px 5px; font-weight: 600;">${escapeHtml(String(getProductName(item.product_id) || "Produit"))}</td>
                 <td style="padding: 12px 5px; text-align: right; color: #7B5B3E; font-weight: bold;">
-                  ${item.quantity}
+                  ${escapeHtml(String(item.quantity ?? ""))}
                 </td>
               </tr>
             `).join('')}

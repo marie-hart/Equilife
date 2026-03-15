@@ -8,15 +8,21 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configuration du stockage
+const ALLOWED_IMAGE_EXT = [".jpeg", ".jpg", ".png", ".gif", ".webp"];
+
+/** Extension sûre uniquement (évite path traversal / double extension). */
+function getSafeImageExtension(originalname: string): string {
+    const ext = path.extname(originalname).toLowerCase().replace(/[^a-z.]/g, "");
+    return ALLOWED_IMAGE_EXT.includes(ext) ? ext : ".jpg";
+}
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
-        // Générer un nom unique avec timestamp + extension originale
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        const ext = path.extname(file.originalname);
+        const ext = getSafeImageExtension(file.originalname);
         cb(null, `horse-${uniqueSuffix}${ext}`);
     },
 });

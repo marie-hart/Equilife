@@ -8,13 +8,21 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+const ALLOWED_DOC_EXT = [".pdf", ".jpeg", ".jpg", ".png", ".doc", ".docx"];
+
+/** Extension sûre uniquement (évite path traversal / double extension). */
+function getSafeDocumentExtension(originalname: string): string {
+    const ext = path.extname(originalname).toLowerCase().replace(/[^a-z.]/g, "");
+    return ALLOWED_DOC_EXT.includes(ext) ? ext : ".bin";
+}
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        const ext = path.extname(file.originalname);
+        const ext = getSafeDocumentExtension(file.originalname);
         cb(null, `document-${uniqueSuffix}${ext}`);
     },
 });

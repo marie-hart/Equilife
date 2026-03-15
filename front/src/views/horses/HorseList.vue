@@ -94,6 +94,7 @@ const goToDashboard = (horseId: string) => {
 </script>
 
 <template>
+    <div>
     <v-row v-if="horsesStore.horses.length" dense>
         <v-col
             v-for="horse in horsesStore.horses"
@@ -180,6 +181,7 @@ const goToDashboard = (horseId: string) => {
     <v-snackbar v-model="snackbar.show" :color="snackbar.color" rounded="lg">
         {{ snackbar.message }}
     </v-snackbar>
+    </div>
 </template>
 
 <style scoped>

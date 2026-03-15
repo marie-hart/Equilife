@@ -1,5 +1,5 @@
 <template>
-    <HorseForm :horse-id="horseId" />
+    <HorseForm :horse-id="horseId ?? undefined" />
 </template>
 
 <script setup lang="ts">
