@@ -99,35 +99,30 @@
           </v-card-text>
         </v-card>
 
-        <v-row dense>
-          <v-col cols="8">
-            <v-btn
-              block
-              flat
-              rounded="xl"
-              size="large"
-              color="#2E4B36"
-              class="text-none font-weight-bold"
-              :to="{ name: 'ProductEdit', params: { id: productId }}"
-            >
-              Modifier le produit
-            </v-btn>
-          </v-col>
-          <v-col cols="4">
-            <v-btn
-              block
-              flat
-              rounded="xl"
-              size="large"
-              color="#F5EFE6"
-              style="color: #7B5B3E; border: 1px solid rgba(123, 91, 62, 0.2)"
-              class="text-none"
-              @click="deleteDialogOpen = true"
-            >
-              <v-icon>mdi-delete-outline</v-icon>
-            </v-btn>
-          </v-col>
-        </v-row>
+        <div class="d-flex ga-3">
+          <v-btn
+            variant="flat"
+            color="#2E4B36"
+            rounded="xl"
+            class="flex-grow-1 text-none font-weight-bold"
+            size="large"
+            prepend-icon="mdi-pencil"
+            :to="{ name: 'ProductEdit', params: { id: productId }}"
+          >
+            Modifier
+          </v-btn>
+          <v-btn
+            variant="tonal"
+            color="#B00020"
+            rounded="xl"
+            class="text-none font-weight-bold"
+            size="large"
+            prepend-icon="mdi-trash-can-outline"
+            @click="deleteDialogOpen = true"
+          >
+            Supprimer
+          </v-btn>
+        </div>
       </div>
 
       <ConfirmDeleteDialog

@@ -1,5 +1,5 @@
 <template>
-    <v-sheet color="#EDE4D8" min-height="100vh">
+    <v-sheet color="#EDE4D8" >
         <v-container class="px-4 pb-10">
         
             <div class="d-flex align-center justify-space-between mb-6 mt-2">
@@ -48,7 +48,25 @@
                 :get-horse-name="horsesStore.getHorseNameById"
                 :recurrence-label="recurrenceLabel"
                 :get-care-actions="getCareActions"
+                @click:care="goToCareDetails"
             />
+
+            <div v-if="!isLoading && filteredHistory.length" class="mt-8">
+                <div class="mb-4 d-flex align-center">
+                    <v-icon icon="mdi-history" size="18" color="#7B5B3E" class="me-2" />
+                    <span class="text-overline font-weight-bold" style="color: #7B5B3E">Historique des soins</span>
+                </div>
+                <HealthList
+                    :items="filteredHistoryForList"
+                    :format-date="formatDateLong"
+                    :format-date-mobile="formatDateMobile"
+                    :get-horse-name="horsesStore.getHorseNameById"
+                    :recurrence-label="() => '-'"
+                    :get-care-actions="() => []"
+                    :show-done-tag="true"
+                    @click:care="() => {}"
+                />
+            </div>
 
             <v-dialog v-model="isCareDoneOpen" max-width="420px">
                 <v-card rounded="xl" class="pa-4">
@@ -92,11 +110,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { eventsApi } from "@/api/events";
+import { useRouter } from "vue-router";
+import { eventsApi, careHistoryApi } from "@/api/events";
 import { useFilters } from "@/composables/useFilters";
 import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore"; 
-import type { CareAction, CareStatus, Event } from "@/types";
+import type { CareAction, CareStatus, Event, CareHistoryEntry } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import {
     formatDateLong,
@@ -109,6 +128,7 @@ import { ConfirmDeleteDialog, FiltersPanel, DatePickerField } from "@/components
 import { HealthList } from "@/views/health";
 
 const cares = ref<Event[]>([]);
+const careHistory = ref<CareHistoryEntry[]>([]);
 const isLoading = ref(true);
 const isDeleteOpen = ref(false);
 const selectedCare = ref<Event | null>(null);
@@ -120,7 +140,13 @@ const snackbar = ref({
     color: "success",
 });
 
+const router = useRouter();
 const horsesStore = useHorsesStore();
+
+const goToCareDetails = (care: Event | CareHistoryEntry) => {
+    if ("care_status" in care) return;
+    router.push({ name: "HealthDetails", params: { id: care.id } });
+};
 
 const statusOptions = [
     { title: "Tous", value: "all" },
@@ -265,11 +291,13 @@ const filterDefinitions = computed(() => [
     { ...filters[2], options: availableTypeOptions.value },
 ]);
 
-const recurrenceLabel = (care: Event): string => {
-    const days = care.reminder_interval_days;
-    const months = care.reminder_interval_months;
-    const years = care.reminder_interval_years;
-    if (!care.reminder_enabled || (!days && !months && !years)) return "-";
+const recurrenceLabel = (care: Event | CareHistoryEntry): string => {
+    if ("care_status" in care) return "-";
+    const ev = care as Event;
+    const days = ev.reminder_interval_days;
+    const months = ev.reminder_interval_months;
+    const years = ev.reminder_interval_years;
+    if (!ev.reminder_enabled || (!days && !months && !years)) return "-";
     if (days) return `Tous les ${days} jour${days > 1 ? "s" : ""}`;
     if (months) return `Tous les ${months} mois`;
     if (years) return `Tous les ${years} an${years > 1 ? "s" : ""}`;
@@ -292,15 +320,42 @@ const filteredCares = computed(() => {
     );
 });
 
+const filteredHistory = computed(() => {
+    let result = careHistory.value;
+    if (filterValues.horseId !== "all") {
+        result = result.filter((h) => h.horse_id === filterValues.horseId);
+    }
+    return result;
+});
+
+const filteredHistoryForList = computed(() =>
+    [...filteredHistory.value].sort(
+        (a, b) =>
+            new Date(b.event_date).getTime() - new Date(a.event_date).getTime(),
+    ),
+);
+
 const loadCares = async () => {
     isLoading.value = true;
     try {
-        const events = await eventsApi.getAll();
+        const [events, history] = await Promise.all([
+            eventsApi.getAll(),
+            careHistoryApi.getAll(),
+        ]);
         cares.value = events.filter((event) => event.is_care);
+        careHistory.value = history;
     } catch (error) {
         logger.error("Error loading cares:", error);
     } finally {
         isLoading.value = false;
+    }
+};
+
+const loadHistory = async () => {
+    try {
+        careHistory.value = await careHistoryApi.getAll();
+    } catch (error) {
+        logger.error("Error loading care history:", error);
     }
 };
 
@@ -312,80 +367,28 @@ const isCareRecurring = (care: Event): boolean =>
             care.reminder_interval_years,
     );
 
-const markDone = async (care: Event) => {
+const markDone = (care: Event) => {
     selectedCare.value = care;
-
-    if (isCareRecurring(care)) {
-        careDoneForm.value = {
-            date: toDateInputValue(new Date()),
-        };
-        isCareDoneOpen.value = true;
-    } else {
-        try {
-            await eventsApi.delete(care.id);
-            await loadCares();
-            snackbar.value = {
-                show: true,
-                message: "Soin effectué et supprimé.",
-                color: "success",
-            };
-        } catch (error) {
-            logger.error("Erreur lors de la suppression du soin:", error);
-            snackbar.value = {
-                show: true,
-                message: "Action impossible.",
-                color: "error",
-            };
-        }
-    }
+    careDoneForm.value = {
+        date: toDateInputValue(care.event_date ? new Date(care.event_date) : new Date()),
+    };
+    isCareDoneOpen.value = true;
 };
 
 const saveCareDone = async () => {
     if (!selectedCare.value) return;
     try {
         const care = selectedCare.value;
-        const doneDate = new Date(careDoneForm.value.date);
+        await eventsApi.markCareDone(care.id, careDoneForm.value.date);
 
-        // 1. On crée une copie pour l'historique (soin accompli)
-        await eventsApi.create({
-            ...care,
-            event_date: careDoneForm.value.date,
-            reminder_enabled: false, // On désactive le rappel pour l'archive
-            is_care: true,
-        });
-
-        if (isCareRecurring(care)) {
-            // 2. On calcule la date du PROCHAIN rendez-vous
-            const nextDate = new Date(doneDate);
-            
-            if (care.reminder_interval_days) {
-                nextDate.setDate(nextDate.getDate() + care.reminder_interval_days);
-            } else if (care.reminder_interval_months) {
-                nextDate.setMonth(nextDate.getMonth() + care.reminder_interval_months);
-            } else if (care.reminder_interval_years) {
-                nextDate.setFullYear(nextDate.getFullYear() + care.reminder_interval_years);
-            }
-
-            // 3. On met à jour l'événement existant avec la nouvelle date futur
-            const formattedNextDate = nextDate.toISOString().split('T')[0];
-            
-            await eventsApi.update(care.id, {
-                event_date: formattedNextDate,
-                reminder_enabled: true
-            });
-            
-            snackbar.value.message = "Soin historisé et prochain rendez-vous planifié.";
-        } else {
-            // Si pas récurrent, on supprime l'original (la copie en historique suffit)
-            await eventsApi.delete(care.id);
-            snackbar.value.message = "Soin validé et enregistré dans l'historique.";
-        }
-        
-        await loadCares();
-        isCareDoneOpen.value = false;
+        snackbar.value.message = isCareRecurring(care)
+            ? "Soin historisé avec tag 'done' et prochain rendez-vous planifié."
+            : "Soin validé avec tag 'done' et enregistré dans l'historique.";
         snackbar.value.show = true;
         snackbar.value.color = "success";
-
+        isCareDoneOpen.value = false;
+        await loadCares();
+        await loadHistory();
     } catch (error) {
         logger.error("Erreur lors de la validation:", error);
         snackbar.value = { show: true, message: "Action impossible.", color: "error" };
@@ -397,7 +400,9 @@ const openDelete = (care: Event) => {
     isDeleteOpen.value = true;
 };
 
-const getCareActions = (care: Event): CareAction[] => [
+const getCareActions = (care: Event | CareHistoryEntry): CareAction[] => {
+    if ("care_status" in care) return [];
+    return [
     {
         key: "done",
         title: "Valider",
@@ -421,6 +426,7 @@ const getCareActions = (care: Event): CareAction[] => [
         onClick: () => openDelete(care),
     },
 ];
+};
 
 const confirmDelete = async () => {
     if (!selectedCare.value) return;

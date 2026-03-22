@@ -53,6 +53,10 @@
                                 prepend-icon="mdi-camera"
                                 @update:model-value="handleFileChange"
                             />
+                            <p v-if="photoDisplayName" class="text-caption mt-2 mb-0" style="color: #7B5B3E;">
+                                <v-icon size="14" class="me-1">mdi-check-circle</v-icon>
+                                {{ photoDisplayName }}
+                            </p>
                         </v-col>
 
                         <v-col cols="12" md="4">
@@ -63,6 +67,7 @@
                                 variant="outlined"
                                 color="#2E4B36"
                                 rounded="lg"
+                                :clearable="!!form.sex"
                             />
                         </v-col>
 
@@ -72,6 +77,7 @@
                                 label="Date de naissance"
                                 color="#2E4B36"
                                 rounded="lg"
+                                :clearable="!!form.birth_date"
                                 :rules="[rules.isPast]"
                             />
                         </v-col>
@@ -84,7 +90,7 @@
                                 variant="outlined"
                                 color="#2E4B36"
                                 rounded="lg"
-                                clearable
+                                :clearable="!!form.breed"
                             />
                         </v-col>
 
@@ -96,7 +102,7 @@
                                 variant="outlined"
                                 color="#2E4B36"
                                 rounded="lg"
-                                clearable
+                                :clearable="!!form.coat"
                             />
                         </v-col>
 
@@ -121,6 +127,7 @@
                                 rounded="lg"
                                 rows="2"
                                 auto-grow
+                                @keydown.enter.prevent
                             />
                         </v-col>
 
@@ -133,6 +140,7 @@
                                 color="#2E4B36"
                                 rounded="lg"
                                 rows="3"
+                                @keydown.enter.prevent
                             />
                         </v-col>
                     </v-row>
@@ -208,6 +216,7 @@ const isSubmitting = ref(false);
 const isLoading = ref(true);
 const formError = ref("");
 const selectedPhoto = ref<File | null>(null);
+const existingPhotoPath = ref<string | undefined>(undefined);
 const fieldErrors = ref<Record<string, string>>({});
 const snackbar = ref({
     show: false,
@@ -216,6 +225,17 @@ const snackbar = ref({
 });
 
 const isEdit = computed(() => Boolean(props.horseId));
+
+const photoDisplayName = computed(() => {
+    if (selectedPhoto.value) {
+        return `Nouvelle photo : ${selectedPhoto.value.name}`;
+    }
+    if (existingPhotoPath.value) {
+        const filename = existingPhotoPath.value.split(/[/\\]/).pop() || existingPhotoPath.value;
+        return `Photo actuelle : ${filename}`;
+    }
+    return "";
+});
 
 const rules = {
     required: (v: any) => !!v || "Ce champ est obligatoire",
@@ -294,11 +314,6 @@ const handleFileChange = async (fileInput: File | File[] | null) => {
     
     if (file) {
         selectedPhoto.value = file;
-        try {
-            const base64 = await fileToBase64(file);
-        } catch (error) {
-            logger.error("Erreur conversion photo", error);
-        }
     } else {
         selectedPhoto.value = null;
     }
@@ -315,6 +330,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 const loadHorse = async () => {
     if (!props.horseId) {
+        existingPhotoPath.value = undefined;
         isLoading.value = false;
         return;
     }
@@ -329,6 +345,9 @@ const loadHorse = async () => {
 
         if (horse) {
             fillForm(horse);
+            existingPhotoPath.value = horse.photo_path;
+        } else {
+            existingPhotoPath.value = undefined;
         }
     } catch (error) {
         logger.error("Erreur chargement cheval dans le form:", error);

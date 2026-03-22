@@ -26,11 +26,32 @@ export const isSameDayFilter = (
     return date === target;
 };
 
+/** Parse une chaîne date (YYYY-MM-DD ou ISO) en Date locale sans décalage horaire */
+const parseDateOnly = (dateString: string): Date => {
+    const match = String(dateString).match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+        return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    }
+    return new Date(dateString);
+};
+
 export const formatDateLong = (dateString: string): string => {
-    const date = new Date(dateString);
+    if (!dateString) return "";
+    const date = parseDateOnly(dateString);
     return date.toLocaleDateString("fr-FR", {
         day: "numeric",
         month: "long",
+        year: "numeric",
+    });
+};
+
+/** Format court pour les champs date (jj/mm/aaaa), sans heures */
+export const formatDateShort = (dateString: string): string => {
+    if (!dateString) return "";
+    const date = parseDateOnly(dateString);
+    return date.toLocaleDateString("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
         year: "numeric",
     });
 };

@@ -53,7 +53,7 @@ Node.js 20 (pour le dev local)
 # 1. Lancer l'infrastructure (DB + Redis + API)
 docker-compose up -d
 
-# 2. Exécuter les migrations et le seed (données de test)
+# 2. Exécuter les migrations
 cd migrations
 ./run-migrations.sh
 ```

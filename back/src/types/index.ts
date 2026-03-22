@@ -40,6 +40,28 @@ export interface CreateEventDto {
     reminder_interval_years?: number;
 }
 
+// Types pour l'historique des soins validés
+export interface CareHistoryEntry {
+    id: string;
+    original_event_id?: string;
+    horse_id: string;
+    product_id?: string;
+    name: string;
+    description?: string;
+    event_date: Date;
+    care_status: "done";
+    created_at: Date;
+}
+
+export interface CreateCareHistoryDto {
+    original_event_id: string;
+    horse_id: string;
+    product_id?: string;
+    name: string;
+    description?: string;
+    event_date: string; // date de réalisation (YYYY-MM-DD)
+}
+
 export interface UpdateEventDto {
     name: string;
     description?: string;

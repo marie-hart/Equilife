@@ -20,3 +20,15 @@ export interface Event {
     created_at: string;
     updated_at: string;
 }
+
+export interface CareHistoryEntry {
+    id: string;
+    original_event_id?: string;
+    horse_id: string;
+    product_id?: string;
+    name: string;
+    description?: string;
+    event_date: string;
+    care_status: "done";
+    created_at: string;
+}

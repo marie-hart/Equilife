@@ -32,7 +32,7 @@
                 class="horse-detail-image"
               >
                 <div class="image-overlay d-flex align-end pa-6">
-                  <v-chip color="white" variant="flat" class="font-weight-black" size="large">
+                  <v-chip v-if="horse.age != null" color="white" variant="flat" class="font-weight-black" size="large">
                     {{ horse.age }} ans
                   </v-chip>
                 </div>

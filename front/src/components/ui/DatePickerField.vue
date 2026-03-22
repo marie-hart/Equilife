@@ -34,6 +34,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { formatDateShort } from "@/libs/date";
 
 type Density = "default" | "comfortable" | "compact";
 type Variant =
@@ -80,8 +81,8 @@ const internalValue = computed<string | null>({
 });
 
 const displayValue = computed<string>({
-    get: () => props.modelValue || "",
-    set: (value) => emit("update:modelValue", value),
+    get: () => (props.modelValue ? formatDateShort(props.modelValue) : ""),
+    set: (value) => emit("update:modelValue", value || ""),
 });
 
 const onSelect = (value: string | null) => {

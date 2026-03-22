@@ -29,7 +29,7 @@
                 bg-color="white"
                 rounded="lg"
                 density="comfortable"
-                :error-messages="errors.type"
+                :error-messages="errors.category"
               />
             </v-col>
 
@@ -136,6 +136,7 @@
           rounded="xl"
           density="comfortable"
           rows="3"
+          @keydown.enter.prevent
         />
       </v-col>
     </v-row>
@@ -170,7 +171,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from "vue";
 import type { Product } from "@/types";
-import { toDateInputValue } from "@/libs/date";
+import { toDateInputValue, formatDateShort } from "@/libs/date";
 
 const props = withDefaults(
   defineProps<{
@@ -222,8 +223,7 @@ const typeOptions = [
 
 const formatDisplayDate = (date: string) => {
   if (!date) return "";
-  const d = new Date(date);
-  return d.toLocaleDateString('fr-FR');
+  return formatDateShort(date);
 };
 
 const computedDate = computed({

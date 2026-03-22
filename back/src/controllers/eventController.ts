@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import eventRepository from "../repositories/eventRepository";
+import careHistoryRepository from "../repositories/careHistoryRepository";
 import { CreateEventDto, UpdateEventDto } from "../types";
 import { normalizeHorseId } from "../utils/normalizeHorseId";
+import { calculateNextReminderDate } from "../utils/dateUtils";
 
 export class EventController {
     async getAll(req: Request, res: Response): Promise<void> {
@@ -98,7 +100,70 @@ export class EventController {
           res.status(500).json({ error: "Failed to fetch reminders" });
         }
     }
-      
+
+    async markCareDone(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const { event_date: doneDateStr } = req.body as { event_date: string };
+
+            if (!doneDateStr) {
+                res.status(400).json({ error: "event_date is required" });
+                return;
+            }
+
+            const event = await eventRepository.findById(id);
+            if (!event) {
+                res.status(404).json({ error: "Event not found" });
+                return;
+            }
+
+            if (!event.is_care) {
+                res.status(400).json({ error: "Event is not a care" });
+                return;
+            }
+
+            const isRecurring =
+                event.reminder_enabled &&
+                Boolean(
+                    event.reminder_interval_days ||
+                        event.reminder_interval_months ||
+                        event.reminder_interval_years,
+                );
+
+            const entry = await careHistoryRepository.insert({
+                original_event_id: id,
+                horse_id: event.horse_id!,
+                product_id: event.product_id,
+                name: event.name,
+                description: event.description,
+                event_date: doneDateStr,
+            });
+
+            if (isRecurring) {
+                const doneDate = new Date(doneDateStr);
+                const nextDate = calculateNextReminderDate(
+                    doneDate,
+                    event.reminder_interval_days,
+                    event.reminder_interval_months,
+                    event.reminder_interval_years,
+                );
+                const formattedNext =
+                    nextDate?.toISOString().split("T")[0] ?? doneDateStr;
+                await eventRepository.update(id, {
+                    name: event.name,
+                    event_date: formattedNext,
+                    reminder_enabled: true,
+                });
+            } else {
+                await eventRepository.delete(id);
+            }
+
+            res.status(201).json(entry);
+        } catch (error) {
+            console.error("Error marking care done:", error);
+            res.status(500).json({ error: "Failed to mark care done" });
+        }
+    }
 }
 
 export default new EventController();

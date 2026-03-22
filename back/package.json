@@ -1,5 +1,5 @@
 {
-  "name": "horse-care-app-backend",
+  "name": "equilife-app-backend",
   "version": "1.0.0",
   "description": "Backend de l'application de gestion quotidienne pour propriétaires de chevaux",
   "main": "dist/server.js",

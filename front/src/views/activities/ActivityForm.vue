@@ -111,7 +111,7 @@
           </v-col>
 
           <v-col cols="12">
-            <div class="text-overline mb-2 ps-1" style="color: #7B5B3E">Commentaire & Ressenti</div>
+            <div class="text-overline mb-2 ps-1" style="color: #7B5B3E">Notes de séance</div>
             <v-textarea
               v-model="form.comment"
               placeholder="Comment s'est passé la séance ?"
@@ -122,6 +122,7 @@
               density="comfortable"
               rows="3"
               class="shadow-subtle"
+              @keydown.enter.prevent
             />
           </v-col>
         </v-row>

@@ -35,7 +35,7 @@ fi
 echo "✓ Connexion réussie"
 echo ""
 
-for sql in deploy/init.sql deploy/horses_links.sql deploy/rations_table.sql deploy/demo_eclipse_seed.sql; do
+for sql in deploy/init.sql deploy/horses_links.sql deploy/rations_table.sql deploy/care_history.sql; do
     if [ ! -f "$sql" ]; then
         echo "⚠️ Fichier manquant: $sql"
         continue

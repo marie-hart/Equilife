@@ -1,5 +1,5 @@
 <template>
-    <v-sheet color="#EDE4D8" min-height="100vh" class="pb-10">
+    <v-sheet color="#EDE4D8" class="pb-nav">
         <v-container fluid class="pa-3">
             <v-skeleton-loader v-if="isLoading" type="card, article" bg-color="transparent" />
 
@@ -53,6 +53,15 @@
 }
 .border-light {
     border: 1px solid rgba(168, 159, 148, 0.15) !important;
+}
+/* Marge minimale pour laisser le contenu visible au-dessus de la bottom nav */
+.pb-nav {
+    padding-bottom: 56px;
+}
+@media (min-width: 1024px) {
+    .pb-nav {
+        padding-bottom: 1.5rem;
+    }
 }
 </style>
 

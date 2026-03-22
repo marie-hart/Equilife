@@ -1,7 +1,6 @@
 <template>
   <v-sheet
     color="#EDE4D8"
-    min-height="100vh"
     class="pa-0 pb-10"
   >
     <v-container class="px-4 py-2">
@@ -60,6 +59,7 @@
         :card-max-width="cardMaxWidth"
         :get-activity-actions="getActivityActions"
         :intensity-label="intensityLabel"
+        :get-horse-name="horsesStore.getHorseNameById"
       />
 
       <ConfirmDeleteDialog

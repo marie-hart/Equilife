@@ -6,7 +6,8 @@
         :key="care.id"
         variant="flat"
         rounded="xl"
-        class="pa-3 shadow-subtle border-light bg-white"
+        class="pa-3 shadow-subtle border-light bg-white care-card clickable"
+        @click="$emit('click:care', care)"
       >
         <div class="d-flex align-center">
           <div class="status-indicator" :style="{ backgroundColor: '#2E4B36' }"></div>
@@ -24,7 +25,17 @@
               </div>
 
               <v-chip
-                v-if="recurrenceLabel(care) !== '-'"
+                v-if="showDoneTag"
+                size="x-small"
+                variant="flat"
+                color="#2E4B36"
+                class="font-weight-bold"
+              >
+                <v-icon start size="12">mdi-check</v-icon>
+                Done
+              </v-chip>
+              <v-chip
+                v-else-if="recurrenceLabel(care) !== '-'"
                 size="x-small"
                 variant="tonal"
                 color="#7B5B3E"
@@ -41,9 +52,17 @@
                 {{ getHorseName(String(care.horse_id)) }}
               </span>
             </div>
+
+            <p
+              v-if="care.description"
+              class="text-body-2 mt-2 mb-0 text-medium-emphasis"
+              style="color: #7B5B3E; line-height: 1.4;"
+            >
+              {{ care.description }}
+            </p>
           </div>
 
-          <div class="ms-2">
+          <div v-if="!showDoneTag" class="ms-2" @click.stop>
             <ActionButtons
               mode="auto"
               button-size="small"
@@ -80,6 +99,9 @@
 .leading-tight {
   line-height: 1.2;
 }
+.clickable {
+  cursor: pointer;
+}
 </style>
 
 <script setup lang="ts">
@@ -87,12 +109,20 @@ import { ActionButtons } from "@/components";
 import type { CareAction, Event } from "@/types";
 import { useHorsesStore } from "@/stores/HorsesStore";
 
-defineProps<{
-    items: Event[];
-    formatDate: (dateString: string) => string;
-    formatDateMobile: (dateString: string) => string;
-    recurrenceLabel: (care: Event) => string;
-    getCareActions: (care: Event) => CareAction[];
+const props = withDefaults(
+    defineProps<{
+        items: (Event | import("@/types").CareHistoryEntry)[];
+        formatDate: (dateString: string) => string;
+        formatDateMobile: (dateString: string) => string;
+        recurrenceLabel: (care: Event | import("@/types").CareHistoryEntry) => string;
+        getCareActions: (care: Event | import("@/types").CareHistoryEntry) => CareAction[];
+        showDoneTag?: boolean;
+    }>(),
+    { showDoneTag: false },
+);
+
+defineEmits<{
+    (e: "click:care", care: Event | import("@/types").CareHistoryEntry): void;
 }>();
 
 const horsesStore = useHorsesStore(); 

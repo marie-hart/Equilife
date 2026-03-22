@@ -1,5 +1,12 @@
+<script lang="ts">
+export default { name: "ProductItem" };
+</script>
+
 <template>
-  <v-list-item class="py-2">
+  <v-list-item
+    class="py-2"
+    :to="{ name: 'ProductDetails', params: { id: product.id } }"
+  >
     <template v-slot:prepend>
       <v-avatar color="#EDE4D8" size="40" rounded="lg">
         <v-icon :icon="categoryIcon" color="#2E4B36"></v-icon>
@@ -19,13 +26,7 @@
         <v-chip :color="chipColor" size="small" variant="flat" class="me-2">
           {{ chipLabel }}
         </v-chip>
-        <v-btn
-          icon="mdi-chevron-right"
-          variant="text"
-          color="#A89F94"
-          size="small"
-          :to="{ name: 'ProductDetails', params: { id: product.id }}"
-        />
+        <v-icon icon="mdi-chevron-right" color="#A89F94" size="small" />
       </div>
     </template>
   </v-list-item>

@@ -33,10 +33,13 @@
                     </v-avatar>
                     <div>
                       <div class="text-subtitle-1 font-weight-bold" style="color: #2E4B36; line-height: 1.2;">
-                        {{ activity.activity_type || activity.name }}
+                        {{ formatActivityType(activity.activity_type || activity.name) }}
                       </div>
                       <div class="text-caption" style="color: #7B5B3E">
                         {{ formatDateMobile(activity.event_date) }}
+                        <template v-if="activity.horse_id && getHorseName">
+                          · {{ getHorseName(activity.horse_id) }}
+                        </template>
                       </div>
                     </div>
                   </div>
@@ -79,10 +82,12 @@
 
                   <div
                     v-if="activity.activity_comment || activity.description"
-                    class="mt-3 pa-3 rounded-lg text-body-2 italic-note"
-                    style="background-color: rgba(255, 255, 255, 0.5); color: #554338; line-height: 1.4;"
+                    class="mt-3"
                   >
-                    "{{ activity.activity_comment || activity.description }}"
+                    <div class="text-overline mb-1 ps-1" style="color: #7B5B3E; font-size: 0.65rem;">Notes de séance</div>
+                    <div class="pa-3 rounded-lg text-body-2 italic-note" style="background-color: rgba(255, 255, 255, 0.5); color: #554338; line-height: 1.4;">
+                      "{{ activity.activity_comment || activity.description }}"
+                    </div>
                   </div>
                 </v-card-text>
               </v-card>
@@ -111,7 +116,13 @@ defineProps<{
   cardMaxWidth: string;
   getActivityActions: (activity: Event) => ActivityAction[];
   intensityLabel: (value?: string) => string;
+  getHorseName?: (horseId: string) => string;
 }>();
+
+const formatActivityType = (s: string | undefined): string => {
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+};
 
 // Helper pour les icônes d'activité
 const getActivityIcon = (type: string | undefined) => {

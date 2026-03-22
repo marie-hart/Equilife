@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { nextTick } from "vue";
 import Activities from "@/views/activities/ActivityView.vue";
 import ActivityForm from "@/views/activities/ActivityForm.vue";
 import ActivityDetails from "@/views/activities/ActivityDetails.vue";
@@ -36,6 +37,9 @@ function requiresHorse(name: string) {
 
 const router = createRouter({
     history: createWebHistory(),
+    scrollBehavior() {
+        return { top: 0 };
+    },
     routes: [
         {
             path: "/",
@@ -95,6 +99,11 @@ const router = createRouter({
             path: "/health/:id/edit",
             name: "HealthEdit",
             component: HealthForm,
+        },
+        {
+            path: "/health/:id",
+            name: "HealthDetails",
+            component: () => import("@/views/health/HealthDetails.vue"),
         },
         {
             path: "/activities",
@@ -174,6 +183,14 @@ const router = createRouter({
         { path: "/horses/:id/rations/:rationId", redirect: (to) => ({ path: `/rations/${to.params.rationId}`, query: { horseId: to.params.id as string } }) },
         { path: "/horses/:id/rations/:rationId/edit", redirect: (to) => ({ path: `/rations/${to.params.rationId}/edit`, query: { horseId: to.params.id as string } }) },
     ],
+});
+
+// Remonte en haut à chaque changement de page (v-main scrollable)
+router.afterEach(async () => {
+    await nextTick();
+    const scroller = document.querySelector(".v-main__scroller");
+    if (scroller) scroller.scrollTo({ top: 0, behavior: "auto" });
+    window.scrollTo(0, 0);
 });
 
 router.beforeEach((to, _from, next) => {

@@ -15,10 +15,12 @@
 
     <template v-if="isAppReady">
       <Header class="mobile-header-fix" />
-      <v-main class="main-content-fix">
+      <v-main scrollable class="main-content-fix" id="main-scroll">
         <router-view v-slot="{ Component }">
           <transition name="page-fade" mode="out-in">
-            <component :is="Component" />
+            <div class="route-page">
+              <component :is="Component" />
+            </div>
           </transition>
         </router-view>
       </v-main>
@@ -27,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+/// <reference path="./pwa-register.d.ts" />
 import { onMounted, ref } from "vue";
 import { registerSW } from "virtual:pwa-register";
 // @ts-ignore Vue SFC default export is provided by vue-tsc
@@ -102,31 +105,65 @@ onMounted(async () => {
 }
 
 html,
+body {
+    overflow: hidden;
+    height: 100%;
+    margin: 0;
+    /* Évite le délai 300ms et le double-tap requis sur mobile */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Zones tactiles réactives (boutons, liens, cartes cliquables) */
+button,
+a,
+[role="button"],
+.v-btn,
+.v-list-item,
+.v-list-item--link {
+    touch-action: manipulation;
+}
+
+html,
 body,
 #app,
 .v-application,
 .v-application__wrap,
 .v-main,
-.v-main__wrap {
+.v-main__wrap,
+.v-main__scroller {
     background-color: #f3eadf !important;
 }
 
+/* Permet au contenu flex de gérer correctement le scroll (évite espace vide) */
+.v-main {
+    min-height: 0;
+}
+
+/* Remplit l'espace visible sans forcer un scroll inutile (100vh créait du défilement vide) */
+.route-page {
+    min-height: 100%;
+}
+.route-page > * {
+    min-height: 100%;
+}
+
 #app {
-    min-height: 100vh;
+    min-height: 100%;
+    height: 100%;
     width: 100%;
     overflow-x: hidden;
-    padding-bottom: 15px;
+}
+
+/* Barre de navigation collée en bas, sans espace */
+.bottom-nav-fix.v-bottom-navigation {
+    margin-bottom: 0 !important;
+    bottom: 0 !important;
 }
 
 @supports (-webkit-touch-callout: none) {
     #app {
         min-height: -webkit-fill-available;
-    }
-}
-
-@media (min-width: 1024px) {
-    #app {
-        padding-bottom: 0;
     }
 }
 </style>

@@ -184,6 +184,7 @@
               bg-color="#F5EFE6"
               rounded="xl"
               rows="3"
+              @keydown.enter.prevent
             />
           </v-col>
         </v-row>

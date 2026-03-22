@@ -6,6 +6,7 @@ import https from 'https';
 import fs from 'fs';
 import swaggerUi from "swagger-ui-express";
 import eventRoutes from "./routes/eventRoutes";
+import careHistoryRoutes from "./routes/careHistoryRoutes";
 import productRoutes from "./routes/productRoutes";
 import horseRoutes from "./routes/horseRoutes";
 import documentRoutes from "./routes/documentRoutes";
@@ -49,6 +50,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // 4. Routes de l'API
 app.use("/api/events", eventRoutes);
+app.use("/api/care-history", careHistoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/horses", horseRoutes);
 app.use("/api/documents", documentRoutes);

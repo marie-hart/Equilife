@@ -5,7 +5,7 @@
         :key="`${route.path}-${horsesStore.horseId}`"
         v-model="activeTab"
         @update:model-value="activeTab = $event"
-        class="mx-4 mb-4 pa-1" 
+        class="mx-4 pa-1 bottom-nav-fix" 
         rounded="pill"
         style="width: calc(100% - 32px)"
         app

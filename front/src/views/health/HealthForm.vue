@@ -35,7 +35,7 @@
                 :multiple="!isEdit"
                 chips
                 closable-chips
-                :error-messages="fieldErrors.horseIds"
+                :error-messages="fieldErrors.horseIds ? [fieldErrors.horseIds] : undefined"
               />
             </v-col>
             
@@ -52,7 +52,7 @@
                 variant="outlined"
                 color="#2E4B36"
                 rounded="lg"
-                :error-messages="fieldErrors.careDescription"
+                :error-messages="fieldErrors.careDescription ? [fieldErrors.careDescription] : undefined"
               />
             </v-col>
             
@@ -77,7 +77,7 @@
                 variant="outlined"
                 color="#2E4B36"
                 rounded="lg"
-                :error-messages="fieldErrors.date"
+                :error-messages="fieldErrors.date ? [fieldErrors.date] : undefined"
               />
             </v-col>
             
@@ -103,6 +103,7 @@
                 rounded="lg"
                 rows="3"
                 hide-details
+                @keydown.enter.prevent
               />
             </v-col>
           </v-row>
@@ -151,6 +152,7 @@ import { logger } from "@/services/LoggerService";
 import type { Product, Event, RecurrenceUnit, CreateEventDto } from "@/types";
 import { fromDateInputValue, toDateInputValue } from "@/libs/date";
 import { useHorsesStore } from "@/stores/HorsesStore";
+import { validateRequiredFieldsMap } from "@/utils/validation";
 
 const route = useRoute();
 const router = useRouter();
@@ -231,6 +233,17 @@ const fillForm = (event: Event) => {
 };
 
 const handleSubmit = async () => {
+    const { errors, firstError } = await validateRequiredFieldsMap([
+        { key: "horseIds", label: "au moins un cheval", value: form.value.horseIds?.length ? form.value.horseIds[0] : "" },
+        { key: "careDescription", label: "le type de soin", value: form.value.careDescription?.trim() },
+        { key: "date", label: "la date du soin", value: form.value.date },
+    ]);
+    fieldErrors.value = errors;
+    if (firstError) {
+        snackbar.value = { show: true, message: firstError, color: "error" };
+        return;
+    }
+
     try {
         isSubmitting.value = true;
 
@@ -242,7 +255,7 @@ const handleSubmit = async () => {
             name: form.value.careDescription.trim(),
             event_date: localDate.toISOString(),
             product_id: form.value.productId || undefined, 
-            note: form.value.note.trim() || undefined,
+            description: form.value.note.trim() || undefined,
             is_care: true,
             
             reminder_enabled: form.value.isRecurring,

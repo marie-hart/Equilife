@@ -1,5 +1,6 @@
 import { createApp } from "vue";
 import { createVuetify } from "vuetify";
+import { fr } from "vuetify/locale";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
     faClock,
@@ -61,6 +62,11 @@ library.add(
 );
 
 const vuetify = createVuetify({
+    locale: {
+        locale: "fr",
+        fallback: "fr",
+        messages: { fr },
+    },
     display: {
         thresholds: VUETIFY_THRESHOLDS,
         mobileBreakpoint: UI_BREAKPOINTS.tabletMin,

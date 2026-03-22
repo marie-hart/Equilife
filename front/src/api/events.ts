@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { Event, CreateEventDto } from "../types";
+import type { Event, CreateEventDto, CareHistoryEntry } from "../types";
 
 export const eventsApi = {
     getAll: async (horseId?: string) => {
@@ -28,5 +28,21 @@ export const eventsApi = {
     },
     delete: async (id: string) => {
         await apiClient.delete(`/events/${id}`);
+    },
+    markCareDone: async (id: string, eventDate: string): Promise<CareHistoryEntry> => {
+        const response = await apiClient.post<CareHistoryEntry>(
+            `/events/${id}/mark-done`,
+            { event_date: eventDate },
+        );
+        return response.data;
+    },
+};
+
+export const careHistoryApi = {
+    getAll: async (horseId?: string): Promise<CareHistoryEntry[]> => {
+        const response = await apiClient.get<CareHistoryEntry[]>("/care-history", {
+            params: horseId ? { horseId } : undefined,
+        });
+        return response.data;
     },
 };

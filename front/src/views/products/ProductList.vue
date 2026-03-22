@@ -1,7 +1,6 @@
 <template>
   <v-sheet
     color="#EDE4D8"
-    min-height="100vh"
     class="pa-0"
   >
     <v-container class="pa-4 pt-4">

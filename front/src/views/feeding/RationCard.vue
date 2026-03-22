@@ -74,25 +74,18 @@
       </v-expansion-panel>
     </v-expansion-panels>
 
-    <v-dialog v-model="confirmDelete" max-width="340">
-      <v-card color="#F5EFE6" rounded="xl" class="pa-4 text-center">
-        <v-card-text>
-          <v-avatar color="#F8D7DA" size="64" class="mb-4">
-            <v-icon color="#B00020" size="32">mdi-food-off-outline</v-icon>
-          </v-avatar>
-          <h3 class="text-h6 font-weight-bold mb-2" style="color: #2E4B36">Supprimer la ration ?</h3>
-          <p class="text-body-2 mb-6" style="color: #7B5B3E">Cette action est définitive.</p>
-          <v-btn block flat rounded="pill" color="#2E4B36" class="mb-2" @click="confirmDelete = false">Annuler</v-btn>
-          <v-btn block variant="text" rounded="pill" color="#B00020" class="font-weight-bold" @click="confirmAndDelete">Supprimer</v-btn>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+    <ConfirmDeleteDialog
+      v-model="confirmDelete"
+      title="Supprimer la ration ?"
+      message="Cette action est définitive."
+      @confirm="confirmAndDelete"
+    />
   </v-card>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { ActionButtons } from "@/components";
+import { ActionButtons, ConfirmDeleteDialog } from "@/components";
 import type { MealGroup, MealItem, MealKey, Ration, RationItem } from "@/types";
 
 const props = defineProps<{
