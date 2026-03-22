@@ -18,6 +18,8 @@
           :key="item.tab"
           :value="item.tab"
           :to="getRoute(item)"
+          active-class=""
+          exact-active-class=""
         >
           <font-awesome-icon :icon="item.icon" />
           <span class="text-caption">{{ item.label }}</span>

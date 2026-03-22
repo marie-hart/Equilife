@@ -104,7 +104,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { eventsApi } from "@/api/events";
 import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
@@ -143,6 +143,7 @@ const careDoneErrors = ref<Record<string, string>>({});
 const snackbar = ref({ show: false, message: "", color: "success" });
 
 const router = useRouter();
+const route = useRoute();
 const horsesStore = useHorsesStore(); 
 
 const statusOptions = [
@@ -395,5 +396,21 @@ const goToReminderCreate = () => {
 };
 
 watch(() => horsesStore.horseId, (newId) => { if (newId) filterValues.horseId = newId; }, { immediate: true });
+
+watch(
+  () => [route.query.reminderId, reminders.value] as const,
+  async ([reminderId, list]) => {
+    if (!reminderId || !Array.isArray(list) || list.length === 0) return;
+    const id = String(reminderId);
+    const reminder = list.find((r) => r.id === id);
+    if (reminder) {
+      if (reminder.horse_id) horsesStore.sethorseId(reminder.horse_id);
+      editReminder(reminder);
+      await router.replace({ name: "Reminders", query: {} });
+    }
+  },
+  { flush: "post" }
+);
+
 onMounted(loadReminders);
 </script>

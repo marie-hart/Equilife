@@ -108,7 +108,7 @@
             </v-col>
           </v-row>
           
-          <div class="d-flex flex-column ga-2 mt-8">
+          <div class="d-flex flex-column ga-2 mt-8 mb-6">
             <v-btn
               block
               size="large"

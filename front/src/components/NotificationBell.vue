@@ -9,7 +9,6 @@
       <v-btn 
         icon 
         variant="text" 
-        class="pr-4"
         color="#1F3D2B" 
         v-bind="menuProps" 
         @click="handleBellClick"
@@ -109,7 +108,7 @@ const handleReminderAction = (reminder: HorseEvent) => {
   notificationStore.markAsRead(reminder.id);
   menuOpen.value = false;
   if (reminder.horse_id) horsesStore.sethorseId(reminder.horse_id);
-  router.push({ name: "HorseDashboardView" });
+  router.push({ name: "Reminders", query: { reminderId: reminder.id } });
 };
 
 const goToAllReminders = () => {

@@ -1,6 +1,7 @@
 import pool from "../config/database";
 import { CacheKeys } from "../services/cacheKeys";
 import cacheService from "../services/cacheService";
+import { syncProductDailyUsageFromRations } from "../services/rationProductSyncService";
 import { CreateRationDto, UpdateRationDto, Ration, RationItem } from "../types";
 
 export class RationRepository {
@@ -131,7 +132,16 @@ export class RationRepository {
             }
 
             await client.query("COMMIT");
-            return { ...this.mapRowToRation(rationRow), items };
+            const created = { ...this.mapRowToRation(rationRow), items };
+            const productIds = [...new Set(
+                (data.items || []).map((i) => i.product_id).filter((id): id is string => !!id)
+            )];
+            if (productIds.length > 0) {
+                syncProductDailyUsageFromRations(productIds).catch((err) =>
+                    console.error("syncProductDailyUsageFromRations:", err)
+                );
+            }
+            return created;
         } catch (error) {
             await client.query("ROLLBACK");
             throw error;
@@ -201,11 +211,19 @@ export class RationRepository {
 
             const rationRow = result.rows[0];
             const items: RationItem[] = [];
+            let oldProductIds: string[] = [];
             const hasRationItemsTable = await this.hasTable(
                 "ration_items",
                 "ration_items",
             );
             if (hasRationItemsTable && data.items) {
+                const oldItemsResult = await client.query(
+                    `SELECT product_id FROM ration_items WHERE ration_id = $1 AND product_id IS NOT NULL`,
+                    [id],
+                );
+                oldProductIds = oldItemsResult.rows
+                    .map((r) => r.product_id)
+                    .filter(Boolean);
                 await client.query(
                     `DELETE FROM ration_items WHERE ration_id = $1`,
                     [id],
@@ -236,7 +254,17 @@ export class RationRepository {
             }
 
             await client.query("COMMIT");
-            return { ...this.mapRowToRation(rationRow), items };
+            const updated = { ...this.mapRowToRation(rationRow), items };
+            const newProductIds = (data.items || [])
+                .map((i) => i.product_id)
+                .filter((id): id is string => Boolean(id));
+            const productIds = [...new Set([...oldProductIds, ...newProductIds])];
+            if (productIds.length > 0) {
+                syncProductDailyUsageFromRations(productIds).catch((err) =>
+                    console.error("syncProductDailyUsageFromRations:", err)
+                );
+            }
+            return updated;
         } catch (error) {
             await client.query("ROLLBACK");
             throw error;
@@ -290,6 +318,18 @@ private async invalidateRationCache(ration: Ration): Promise<void> {
         // 2. Invalider le cache après le COMMIT réussi
         if (deleted) {
            await this.invalidateRationCache(existing);
+           const productIds = [
+               ...new Set(
+                   (existing.items || [])
+                       .map((i) => i.product_id)
+                       .filter((id): id is string => Boolean(id))
+               ),
+           ];
+           if (productIds.length > 0) {
+               syncProductDailyUsageFromRations(productIds).catch((err) =>
+                   console.error("syncProductDailyUsageFromRations:", err)
+               );
+           }
         }
 
         return deleted;

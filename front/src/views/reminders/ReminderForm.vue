@@ -79,7 +79,7 @@
         </v-col>
       </v-row>
       
-      <div class="d-flex align-center justify-end ga-3 mt-8">
+      <div class="d-flex align-center justify-end ga-3 mt-8 mb-6">
         <v-btn 
           variant="text" 
           @click="emit('cancel')"

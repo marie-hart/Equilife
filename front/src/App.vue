@@ -155,10 +155,10 @@ body,
     overflow-x: hidden;
 }
 
-/* Barre de navigation collée en bas, sans espace */
+/* Barre de navigation en bas avec léger espace (mobile) */
 .bottom-nav-fix.v-bottom-navigation {
     margin-bottom: 0 !important;
-    bottom: 0 !important;
+    bottom: 14px !important;
 }
 
 @supports (-webkit-touch-callout: none) {

@@ -47,6 +47,11 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
 
   if (data?.product_id) {
     url = `/product/${data.product_id}`;
+  } else if (data?.id && (data?.event_date ?? data?.name)) {
+    url = `/reminders?reminderId=${encodeURIComponent(data.id)}`;
+    if (data?.horse_id) {
+      url += `&horseId=${encodeURIComponent(data.horse_id)}`;
+    }
   } else if (data?.horse_id) {
     url = `/dashboard?horseId=${encodeURIComponent(data.horse_id)}`;
   }

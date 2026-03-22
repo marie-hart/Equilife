@@ -23,7 +23,7 @@
           />
         </div>
   
-        <div class="d-flex justify-end align-center" style="flex: 1;">
+        <div class="d-flex justify-end align-center me-3" style="flex: 1;">
           <NotificationBell />
         </div>
       </v-app-bar>
