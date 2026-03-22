@@ -59,7 +59,7 @@ export DB_USER=horse_user
 export DB_PASSWORD=horse_password
 export DB_HOST=localhost
 export DB_PORT=5432
-export DB_NAME=horse_care_db
+export DB_NAME=equilife_db
 sqitch deploy db:pg://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 ```
 

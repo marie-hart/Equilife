@@ -3,13 +3,13 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: horse_care_postgres
+    container_name: equilife_postgres
     environment:
-      POSTGRES_DB: horse_care_db
+      POSTGRES_DB: equilife_db
       POSTGRES_USER: horse_user
       POSTGRES_PASSWORD: horse_password
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -20,7 +20,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: horse_care_redis
+    container_name: equilife_redis
     ports:
       - "6380:6379"
     volumes:
@@ -34,7 +34,7 @@ services:
 
   sqitch:
     image: sqitch/sqitch:latest
-    container_name: horse_care_sqitch
+    container_name: equilife_sqitch
     depends_on:
       postgres:
         condition: service_healthy
@@ -43,30 +43,57 @@ services:
       PGPASSWORD: horse_password
       PGHOST: postgres
       PGPORT: 5432
-      PGDATABASE: horse_care_db
+      PGDATABASE: equilife_db
     volumes:
       - ./migrations:/migrations
     working_dir: /migrations
     entrypoint: [ "sqitch" ]
-    command: [ "deploy", "db:pg://horse_user:horse_password@postgres:5432/horse_care_db" ]
+    command: [ "deploy", "db:pg://horse_user:horse_password@postgres:5432/equilife_db" ]
+
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: equilife_front
+    ports:
+      - "8080:80"
+
+  api-proxy:
+    image: nginx:alpine
+    container_name: equilife_api_proxy
+    ports:
+      - "3443:443"
+    volumes:
+      - ./nginx/api-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
 
   backend:
     build:
       context: ./back
       dockerfile: Dockerfile
-    container_name: horse_care_backend
+    container_name: equilife_backend
     ports:
       - "3000:3000"
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: horse_care_db
+      DB_NAME: equilife_db
       DB_USER: horse_user
-      DB_PASSWORD: horse_password
+      # En production : définir DB_PASSWORD dans .env (obligatoire, le backend refuse "horse_password")
+      DB_PASSWORD: ${DB_PASSWORD:-horse_password}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       PORT: 3000
       NODE_ENV: production
+      # CORS_ORIGIN obligatoire en prod (origine du frontend, ex: https://app.equilife.com)
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+      # Auth désactivée par défaut. AUTH_ENABLED=true + JWT_SECRET + APP_PIN pour activer.
+      AUTH_ENABLED: ${AUTH_ENABLED:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+      APP_PIN: ${APP_PIN:-}
     depends_on:
       postgres:
         condition: service_healthy

@@ -12,7 +12,7 @@ export PGUSER="${DB_USER:-horse_user}"
 export PGPASSWORD="${DB_PASSWORD:-horse_password}"
 export PGHOST="${DB_HOST:-localhost}"
 export PGPORT="${DB_PORT:-5432}"
-export PGDATABASE="${DB_NAME:-horse_care_db}"
+export PGDATABASE="${DB_NAME:-equilife_db}"
 
 echo "═══════════════════════════════════════════════════════════"
 echo "  Exécution des migrations Sqitch"
@@ -44,7 +44,7 @@ if command -v psql > /dev/null 2>&1; then
         echo "  3. Créer un fichier .env dans migrations/ avec:"
         echo "     DB_HOST=localhost"
         echo "     DB_PORT=5432"
-        echo "     DB_NAME=horse_care_db"
+        echo "     DB_NAME=equilife_db"
         echo "     DB_USER=horse_user"
         echo "     DB_PASSWORD=horse_password"
         exit 1

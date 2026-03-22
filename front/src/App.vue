@@ -14,7 +14,9 @@
     </transition>
 
     <template v-if="isAppReady">
-      <Header class="mobile-header-fix" />
+      <template v-if="!isLoginRoute">
+        <Header class="mobile-header-fix" />
+      </template>
       <v-main scrollable class="main-content-fix" id="main-scroll">
         <router-view v-slot="{ Component }">
           <transition name="page-fade" mode="out-in">
@@ -30,27 +32,45 @@
 
 <script setup lang="ts">
 /// <reference path="./pwa-register.d.ts" />
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, computed } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { registerSW } from "virtual:pwa-register";
 // @ts-ignore Vue SFC default export is provided by vue-tsc
 import Header from "@/views/header/TheHeader.vue";
 import { startReminderNotifications } from "@/utils/notifications";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { useNotificationStore } from "@/stores/NotificationStore";
+import { useAuthStore } from "@/stores/AuthStore";
 import { logger } from "@/services/LoggerService";
 
-const notificationStore = useNotificationStore()
+const router = useRouter();
+const route = useRoute();
+const notificationStore = useNotificationStore();
+const isLoginRoute = computed(() => route.name === "Login");
+const authStore = useAuthStore();
 
 const isAppReady = ref(false);
 const horsesStore = useHorsesStore();
 
+const handleUnauthorized = () => {
+    router.replace({ name: "Login" });
+};
+
 onMounted(async () => {
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
     registerSW({
         immediate: true,
         onNeedRefresh() {
             window.location.reload();
         },
     });
+
+    const authNeeded = await authStore.checkAuthStatus();
+    if (authNeeded && !authStore.isAuthenticated) {
+        router.replace({ name: "Login" });
+        isAppReady.value = true;
+        return;
+    }
     try {
     await horsesStore.loadHorses();
     setTimeout(() => {
@@ -63,6 +83,10 @@ onMounted(async () => {
   }
     startReminderNotifications();
     notificationStore.checkCurrentPermission();
+});
+
+onUnmounted(() => {
+    window.removeEventListener("auth:unauthorized", handleUnauthorized);
 });
 </script>
 

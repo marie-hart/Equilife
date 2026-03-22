@@ -17,7 +17,7 @@ export PGUSER="${DB_USER:-horse_user}"
 export PGPASSWORD="${DB_PASSWORD:-horse_password}"
 export PGHOST="${DB_HOST:-localhost}"
 export PGPORT="${DB_PORT:-5432}"
-export PGDATABASE="${DB_NAME:-horse_care_db}"
+export PGDATABASE="${DB_NAME:-equilife_db}"
 
 echo "═══════════════════════════════════════════════════════════"
 echo "  Migrations SQL (psql)"

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { nextTick } from "vue";
+import LoginView from "@/views/auth/LoginView.vue";
 import Activities from "@/views/activities/ActivityView.vue";
 import ActivityForm from "@/views/activities/ActivityForm.vue";
 import ActivityDetails from "@/views/activities/ActivityDetails.vue";
@@ -21,6 +22,7 @@ import ReminderCreate from "@/views/reminders/ReminderCreate.vue";
 import { HealthView } from "@/views/health";
 import { FeedingDetails } from "@/views/feeding";
 import { useHorsesStore } from "@/stores/HorsesStore";
+import { useAuthStore } from "@/stores/AuthStore";
 import { getStoredHorseId } from "@/libs/horseProfile";
 
 /** Routes that require a horse to be selected (store). Redirect to /horses if none. */
@@ -41,6 +43,12 @@ const router = createRouter({
         return { top: 0 };
     },
     routes: [
+        {
+            path: "/login",
+            name: "Login",
+            component: LoginView,
+            meta: { public: true },
+        },
         {
             path: "/",
             name: "Dashboard",
@@ -193,7 +201,24 @@ router.afterEach(async () => {
     window.scrollTo(0, 0);
 });
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
+    const authStore = useAuthStore();
+    if (authStore.authRequired === null) {
+        await authStore.checkAuthStatus();
+    }
+    if (to.meta.public) {
+        if (authStore.authRequired === true && authStore.isAuthenticated) {
+            next({ name: "Dashboard" });
+        } else {
+            next();
+        }
+        return;
+    }
+    if (authStore.authRequired === true && !authStore.isAuthenticated) {
+        next({ name: "Login" });
+        return;
+    }
+
     const store = useHorsesStore();
     const horseIdFromQuery = to.query.horseId as string | undefined;
     if (horseIdFromQuery) {

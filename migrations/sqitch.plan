@@ -1,6 +1,6 @@
 %syntax-version=1.0.0
-%project=horse_care_db
-%uri=https://github.com/yourusername/horse-care-app
+%project=equilife_db
+%uri=https://github.com/yourusername/equilife-app
 
 init 2024-05-20T10:00:00Z mariehdek <mariehdek@yahoo.fr> # Création de horses, products et fonctions de base
 horses_links [init] 2024-05-20T11:00:00Z mariehdek <mariehdek@yahoo.fr> # Ajout de la table events

@@ -1,0 +1,3 @@
+# Certificats SSL (ne jamais committer)
+certs/*.pem
+certs/*.key

@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import dotenv from "dotenv";
 import path from "path";
 import https from 'https';
@@ -12,6 +13,8 @@ import horseRoutes from "./routes/horseRoutes";
 import documentRoutes from "./routes/documentRoutes";
 import rationRoutes from "./routes/rationRoutes";
 import pushRoutes from "./routes/pushRoutes";
+import authRoutes from "./routes/authRoutes";
+import { requireAuth } from "./middleware/auth";
 import pool from "./config/database";
 import redis from "./config/redis";
 import { swaggerSpec } from "./docs/swagger";
@@ -27,7 +30,19 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // 1. Middlewares
+app.use(
+    helmet({
+        contentSecurityPolicy: false, // L'API sert du JSON, pas de HTML
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    })
+);
 const corsOrigin = process.env.CORS_ORIGIN;
+if (process.env.NODE_ENV === "production") {
+    if (!corsOrigin || corsOrigin.trim() === "") {
+        throw new Error("CORS_ORIGIN is required in production. Set the frontend origin(s) in .env (comma-separated for multiple).");
+    }
+}
 app.use(
     cors(
         corsOrigin
@@ -49,12 +64,13 @@ app.get("/api/docs", swaggerUi.setup(swaggerSpec) as express.RequestHandler);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // 4. Routes de l'API
-app.use("/api/events", eventRoutes);
-app.use("/api/care-history", careHistoryRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/horses", horseRoutes);
-app.use("/api/documents", documentRoutes);
-app.use("/api/rations", rationRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/events", requireAuth, eventRoutes);
+app.use("/api/care-history", requireAuth, careHistoryRoutes);
+app.use("/api/products", requireAuth, productRoutes);
+app.use("/api/horses", requireAuth, horseRoutes);
+app.use("/api/documents", requireAuth, documentRoutes);
+app.use("/api/rations", requireAuth, rationRoutes);
 app.use("/api/push", pushRoutes);
 
 // Route d'information (mise à jour pour correspondre à ton schéma réel)

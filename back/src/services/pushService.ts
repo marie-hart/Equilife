@@ -12,7 +12,7 @@ type PushSubscriptionPayload = {
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "";
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
 const VAPID_SUBJECT =
-    process.env.VAPID_SUBJECT || "mailto:admin@horse-care.local";
+    process.env.VAPID_SUBJECT || "mailto:admin@equilife.local";
 const REMINDER_POLL_INTERVAL_MS = 5 * 60 * 1000;
 
 const ensureTables = async () => {

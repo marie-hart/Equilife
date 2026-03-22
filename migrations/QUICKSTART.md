@@ -7,7 +7,7 @@ Si vous voyez l'erreur `password authentication failed`, suivez ces étapes :
 ### 1. Démarrer PostgreSQL
 
 ```bash
-cd /home/oem/horse-care-app
+cd /chemin/vers/equilife-app
 docker-compose up -d postgres
 ```
 
@@ -19,7 +19,7 @@ Attendez quelques secondes que PostgreSQL soit prêt (vérifier avec `docker-com
 docker-compose ps
 ```
 
-Vous devriez voir `horse_care_postgres` avec le statut "Up".
+Vous devriez voir `equilife_postgres` avec le statut "Up".
 
 ### 3. Créer le fichier .env (optionnel mais recommandé)
 
@@ -45,15 +45,15 @@ Si vous avez des problèmes avec la connexion locale, utilisez le conteneur Dock
 ```bash
 cd migrations
 docker run --rm \
-  --network horse-care-app_default \
+  --network equilife-app_default \
   -v $(pwd):/migrations \
   -e PGUSER=horse_user \
   -e PGPASSWORD=horse_password \
   -e PGHOST=postgres \
   -e PGPORT=5432 \
-  -e PGDATABASE=horse_care_db \
+  -e PGDATABASE=equilife_db \
   sqitch/sqitch:latest \
-  sqitch deploy db:pg://horse_user:horse_password@postgres:5432/horse_care_db
+  sqitch deploy db:pg://horse_user:horse_password@postgres:5432/equilife_db
 ```
 
 Ou utilisez directement docker-compose pour tout :
