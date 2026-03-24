@@ -17,10 +17,10 @@ function getSafeDocumentExtension(originalname: string): string {
 }
 
 const storage = multer.diskStorage({
-    destination: (_req, _file, cb) => {
+    destination: (_req: unknown, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
         cb(null, uploadsDir);
     },
-    filename: (_req, file, cb) => {
+    filename: (_req: unknown, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         const ext = getSafeDocumentExtension(file.originalname);
         cb(null, `document-${uniqueSuffix}${ext}`);
