@@ -26,7 +26,6 @@ const storage = multer.diskStorage({
         cb(null, `horse-${uniqueSuffix}${ext}`);
     },
 });
-
 // Filtrer les types de fichiers (seulement images)
 const fileFilter = (
     _req: unknown,
