@@ -7,7 +7,8 @@ services:
     environment:
       POSTGRES_DB: equilife_db
       POSTGRES_USER: horse_user
-      POSTGRES_PASSWORD: horse_password
+      # En production : définir DB_PASSWORD dans .env (doit correspondre au backend)
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-horse_password}
     ports:
       - "5433:5432"
     volumes:
@@ -40,7 +41,7 @@ services:
         condition: service_healthy
     environment:
       PGUSER: horse_user
-      PGPASSWORD: horse_password
+      PGPASSWORD: ${DB_PASSWORD:-horse_password}
       PGHOST: postgres
       PGPORT: 5432
       PGDATABASE: equilife_db
@@ -48,7 +49,8 @@ services:
       - ./migrations:/migrations
     working_dir: /migrations
     entrypoint: [ "sqitch" ]
-    command: [ "deploy", "db:pg://horse_user:horse_password@postgres:5432/equilife_db" ]
+    # Utilise DB_PASSWORD du .env (doit correspondre à postgres et backend)
+    command: ["deploy", "db:pg://horse_user:${DB_PASSWORD:-horse_password}@postgres:5432/equilife_db"]
 
   front:
     build:

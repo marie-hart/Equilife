@@ -115,11 +115,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
-const httpsOptions = {
-    key: fs.readFileSync(path.join(__dirname, '../localhost+1-key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, '../localhost+1.pem')),
-};
-
 // 6. Démarrage sécurisé
 const start = async () => {
     try {

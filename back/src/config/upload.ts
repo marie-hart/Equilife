@@ -17,10 +17,10 @@ function getSafeImageExtension(originalname: string): string {
 }
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (_req, _file, cb) => {
         cb(null, uploadsDir);
     },
-    filename: (req, file, cb) => {
+    filename: (_req, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         const ext = getSafeImageExtension(file.originalname);
         cb(null, `horse-${uniqueSuffix}${ext}`);
@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
 
 // Filtrer les types de fichiers (seulement images)
 const fileFilter = (
-    req: any,
+    _req: unknown,
     file: Express.Multer.File,
     cb: multer.FileFilterCallback,
 ) => {

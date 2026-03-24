@@ -61,7 +61,7 @@ cd migrations
 
 L'API est maintenant accessible sur http://localhost:3000.
 
-**Production :** `DB_PASSWORD` et `CORS_ORIGIN` sont obligatoires dans `back/.env`. `CORS_ORIGIN` doit contenir l’origine du frontend (ex: `https://app.equilife.com`).
+**Production :** Créer un `.env` à la racine avec `DB_PASSWORD` et `CORS_ORIGIN` obligatoires. Voir `docs/DEPLOYMENT.md` pour la checklist complète.
 
 ### Authentification (optionnelle)
 
