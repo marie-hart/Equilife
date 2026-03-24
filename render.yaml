@@ -1,0 +1,16 @@
+# Blueprint Render : backend Node dans le sous-dossier `back/`
+# https://render.com/docs/blueprint-spec
+#
+# Sans rootDir: back, Render installe à la racine du repo et `tsc` ne trouve pas multer, helmet, etc.
+
+services:
+  - type: web
+    name: equilife-api
+    runtime: node
+    rootDir: back
+    # YARN_PRODUCTION=false : inclut les deps nécessaires au build si Render exclut les devDependencies
+    buildCommand: YARN_PRODUCTION=false yarn install && yarn build
+    startCommand: yarn start
+    envVars:
+      - key: NODE_ENV
+        value: production

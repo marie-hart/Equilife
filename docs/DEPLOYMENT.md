@@ -1,5 +1,23 @@
 # Checklist de mise en production
 
+## Render.com (backend)
+
+Le dépôt est un **monorepo** : le `package.json` du backend est dans **`back/`**. Si Render utilise la racine du repo sans changer de dossier, `yarn install` n’installe pas les dépendances du backend et `tsc` échoue avec *Cannot find module 'multer'* (et packages similaires).
+
+**À configurer dans le service Web Render :**
+
+| Paramètre | Valeur |
+|-----------|--------|
+| **Root Directory** | `back` |
+| **Build Command** | `YARN_PRODUCTION=false yarn install && yarn build` (ou équivalent ; voir ci-dessous) |
+| **Start Command** | `yarn start` |
+
+Ou déployer via le fichier **`render.yaml`** à la racine du repo (définit déjà `rootDir: back`).
+
+**Variables d’environnement** : ajouter sur Render les mêmes que pour toute prod (`DB_*`, `CORS_ORIGIN`, `REDIS_*`, etc.) — voir la section suivante et `docs/SECURITY.md`.
+
+`typescript` et les `@types/*` sont dans **`dependencies`** du `back/package.json` pour que le build Render (souvent sans devDependencies) trouve toujours `tsc` et les déclarations. Le `render.yaml` utilise `YARN_PRODUCTION=false` en complément.
+
 ## 1. Variables d'environnement (obligatoires)
 
 Créer un `.env` à la racine du projet (utilisé par docker-compose).
