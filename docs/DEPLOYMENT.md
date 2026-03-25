@@ -14,7 +14,9 @@ Le dépôt est un **monorepo** : le `package.json` du backend est dans **`back/`
 
 Ou déployer via le fichier **`render.yaml`** à la racine du repo (définit déjà `rootDir: back`).
 
-**Variables d’environnement** : ajouter sur Render les mêmes que pour toute prod (`DB_*`, `CORS_ORIGIN`, `REDIS_*`, etc.) — voir la section suivante et `docs/SECURITY.md`.
+**Variables d’environnement** : ajouter sur Render les mêmes que pour toute prod (`DATABASE_URL` ou `DB_*`, `CORS_ORIGIN`, etc.) — voir la section suivante et `docs/SECURITY.md`.
+
+**Redis** : ne pas reprendre `REDIS_HOST=redis` (nom du service Docker) : ce hostname n’existe pas sur Render. Soit ajouter un **Redis managé** (Render Redis, Upstash) et **`REDIS_URL`**, soit désactiver Redis avec **`REDIS_ENABLED=false`** (cache en mémoire dans le processus, suffisant pour beaucoup de cas).
 
 `typescript` et les `@types/*` sont dans **`dependencies`** du `back/package.json` pour que le build Render (souvent sans devDependencies) trouve toujours `tsc` et les déclarations. Le `render.yaml` utilise `YARN_PRODUCTION=false` en complément.
 
