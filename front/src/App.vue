@@ -46,13 +46,16 @@ import { logger } from "@/services/LoggerService";
 const router = useRouter();
 const route = useRoute();
 const notificationStore = useNotificationStore();
-const isLoginRoute = computed(() => route.name === "Login");
+const isLoginRoute = computed(
+    () => route.name === "Login" || route.name === "Register",
+);
 const authStore = useAuthStore();
 
 const isAppReady = ref(false);
 const horsesStore = useHorsesStore();
 
 const handleUnauthorized = () => {
+    authStore.logout();
     router.replace({ name: "Login" });
 };
 
@@ -65,8 +68,8 @@ onMounted(async () => {
         },
     });
 
-    const authNeeded = await authStore.checkAuthStatus();
-    if (authNeeded && !authStore.isAuthenticated) {
+    const needLogin = await authStore.checkAuthStatus();
+    if (needLogin && !authStore.isAuthenticated) {
         router.replace({ name: "Login" });
         isAppReady.value = true;
         return;

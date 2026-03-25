@@ -36,8 +36,8 @@ export class CacheKeys {
         return `horse:${id}`;
     }
 
-    static horsesListKey(): string {
-        return "horse:list:all";
+    static horsesListKey(userId?: string): string {
+        return userId ? `horse:list:user:${userId}` : "horse:list:all";
     }
 
     // --- Rations (Nouveau) ---

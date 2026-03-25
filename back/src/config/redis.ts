@@ -1,8 +1,6 @@
+import "./loadEnv";
 import Redis from "ioredis";
 import MockRedis from "ioredis-mock";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const redisDisabled =
     process.env.REDIS_ENABLED === "false" ||

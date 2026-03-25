@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { nextTick } from "vue";
 import LoginView from "@/views/auth/LoginView.vue";
+import RegisterView from "@/views/auth/RegisterView.vue";
 import Activities from "@/views/activities/ActivityView.vue";
 import ActivityForm from "@/views/activities/ActivityForm.vue";
 import ActivityDetails from "@/views/activities/ActivityDetails.vue";
@@ -47,6 +48,12 @@ const router = createRouter({
             path: "/login",
             name: "Login",
             component: LoginView,
+            meta: { public: true },
+        },
+        {
+            path: "/register",
+            name: "Register",
+            component: RegisterView,
             meta: { public: true },
         },
         {
@@ -207,14 +214,14 @@ router.beforeEach(async (to, _from, next) => {
         await authStore.checkAuthStatus();
     }
     if (to.meta.public) {
-        if (authStore.authRequired === true && authStore.isAuthenticated) {
+        if (authStore.mustLogin && authStore.isAuthenticated) {
             next({ name: "Dashboard" });
         } else {
             next();
         }
         return;
     }
-    if (authStore.authRequired === true && !authStore.isAuthenticated) {
+    if (authStore.mustLogin && !authStore.isAuthenticated) {
         next({ name: "Login" });
         return;
     }

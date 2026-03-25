@@ -1,4 +1,4 @@
-# Horse Care App - Frontend
+# Equilife — Frontend
 
 Frontend de l'application de gestion quotidienne pour propriétaires de chevaux.
 

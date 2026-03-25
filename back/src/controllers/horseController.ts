@@ -8,7 +8,7 @@ import { uploadsDirPath } from "../config/upload";
 export class HorseController {
     async getAll(req: Request, res: Response): Promise<void> {
         try {
-            const horses = await horseRepository.findAll();
+            const horses = await horseRepository.findAll(req.userId);
             res.json(horses);
         } catch (error) {
             console.error("Error fetching horses:", error);
@@ -19,7 +19,7 @@ export class HorseController {
     async getById(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const horse = await horseRepository.findById(id);
+            const horse = await horseRepository.findById(id, req.userId);
 
             if (!horse) {
                 res.status(404).json({ error: "Horse not found" });
@@ -35,7 +35,7 @@ export class HorseController {
 
     async getFirst(req: Request, res: Response): Promise<void> {
         try {
-            const horse = await horseRepository.findFirst();
+            const horse = await horseRepository.findFirst(req.userId);
 
             if (!horse) {
                 res.status(404).json({ error: "No horse found" });
@@ -58,7 +58,7 @@ export class HorseController {
                 return;
             }
 
-            const horse = await horseRepository.create(data);
+            const horse = await horseRepository.create(data, req.userId);
             res.status(201).json(horse);
         } catch (error) {
             console.error("Error creating horse:", error);
@@ -71,7 +71,7 @@ export class HorseController {
             const { id } = req.params;
             const data: UpdateHorseDto = req.body;
 
-            const horse = await horseRepository.update(id, data);
+            const horse = await horseRepository.update(id, data, req.userId);
 
             if (!horse) {
                 res.status(404).json({ error: "Horse not found" });
@@ -95,7 +95,7 @@ export class HorseController {
             }
 
             // Supprimer l'ancienne photo si elle existe
-            const horse = await horseRepository.findById(id);
+            const horse = await horseRepository.findById(id, req.userId);
             if (horse?.photo_path) {
                 const oldPhotoPath = path.join(
                     uploadsDirPath,
@@ -111,6 +111,7 @@ export class HorseController {
             const updatedHorse = await horseRepository.updatePhotoPath(
                 id,
                 photoPath,
+                req.userId,
             );
 
             if (!updatedHorse) {
@@ -130,7 +131,7 @@ export class HorseController {
             const { id } = req.params;
 
             // Supprimer la photo si elle existe
-            const horse = await horseRepository.findById(id);
+            const horse = await horseRepository.findById(id, req.userId);
             if (horse?.photo_path) {
                 const photoPath = path.join(
                     uploadsDirPath,
@@ -141,7 +142,7 @@ export class HorseController {
                 }
             }
 
-            const deleted = await horseRepository.delete(id);
+            const deleted = await horseRepository.delete(id, req.userId);
 
             if (!deleted) {
                 res.status(404).json({ error: "Horse not found" });

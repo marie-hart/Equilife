@@ -92,10 +92,9 @@ services:
       NODE_ENV: production
       # CORS_ORIGIN obligatoire en prod (origine du frontend, ex: https://app.equilife.com)
       CORS_ORIGIN: ${CORS_ORIGIN:-}
-      # Auth désactivée par défaut. AUTH_ENABLED=true + JWT_SECRET + APP_PIN pour activer.
-      AUTH_ENABLED: ${AUTH_ENABLED:-}
+      # Comptes e-mail / mot de passe : USER_AUTH_ENABLED=true + JWT_SECRET
+      USER_AUTH_ENABLED: ${USER_AUTH_ENABLED:-}
       JWT_SECRET: ${JWT_SECRET:-}
-      APP_PIN: ${APP_PIN:-}
     depends_on:
       postgres:
         condition: service_healthy

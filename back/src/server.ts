@@ -1,7 +1,7 @@
+import "./config/loadEnv";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import dotenv from "dotenv";
 import path from "path";
 import https from 'https';
 import fs from 'fs';
@@ -14,6 +14,7 @@ import documentRoutes from "./routes/documentRoutes";
 import rationRoutes from "./routes/rationRoutes";
 import pushRoutes from "./routes/pushRoutes";
 import authRoutes from "./routes/authRoutes";
+import quickNoteRoutes from "./routes/quickNoteRoutes";
 import { requireAuth } from "./middleware/auth";
 import pool from "./config/database";
 import redis from "./config/redis";
@@ -23,8 +24,6 @@ import {
     startProductStockPushScheduler,
     startReminderPushScheduler,
 } from "./services/pushService";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -65,6 +64,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // 4. Routes de l'API
 app.use("/api/auth", authRoutes);
+app.use("/api/quick-notes", requireAuth, quickNoteRoutes);
 app.use("/api/events", requireAuth, eventRoutes);
 app.use("/api/care-history", requireAuth, careHistoryRoutes);
 app.use("/api/products", requireAuth, productRoutes);
@@ -76,7 +76,7 @@ app.use("/api/push", pushRoutes);
 // Route d'information (mise à jour pour correspondre à ton schéma réel)
 app.get("/", (req: Request, res: Response) => {
     res.json({
-        message: "Equilife App API",
+        message: "Equilife API",
         version: "1.1.0", // Nouvelle version pour ton nouveau schéma
         status: "Running"
     });
@@ -122,17 +122,39 @@ const start = async () => {
         await pool.query("SELECT 1");
         console.log("🐘 Database connected");
 
-        if (process.env.NODE_ENV === 'development') {
-            const httpsOptions = {
-                key: fs.readFileSync('./localhost-key.pem'),
-                cert: fs.readFileSync('./localhost.pem'),
-            };
-            https.createServer(httpsOptions, app).listen(PORT, () => {
-                console.log(`🛡️  Local HTTPS: https://localhost:${PORT}`);
-            });
+        const devHttps =
+            process.env.NODE_ENV === "development" &&
+            (process.env.DEV_HTTPS === "true" || process.env.DEV_HTTPS === "1");
+        const certDir = path.join(__dirname, "..");
+        const keyPath = path.join(certDir, "localhost-key.pem");
+        const certPath = path.join(certDir, "localhost.pem");
+
+        if (devHttps) {
+            try {
+                const httpsOptions = {
+                    key: fs.readFileSync(keyPath),
+                    cert: fs.readFileSync(certPath),
+                };
+                https.createServer(httpsOptions, app).listen(PORT, () => {
+                    console.log(`🛡️  Local HTTPS: https://localhost:${PORT}`);
+                });
+            } catch (e) {
+                console.error(
+                    "Certificats HTTPS introuvables, démarrage en HTTP (proxy Vite → http://localhost:%s) :",
+                    PORT,
+                    e,
+                );
+                app.listen(PORT, () => {
+                    console.log(`🚀 Dev HTTP: http://localhost:${PORT}`);
+                });
+            }
         } else {
             app.listen(PORT, () => {
-                console.log(`🚀 Production HTTP (behind Proxy): http://localhost:${PORT}`);
+                const msg =
+                    process.env.NODE_ENV === "development"
+                        ? `🚀 Dev HTTP: http://localhost:${PORT} (proxy Vite /api)`
+                        : `🚀 Production HTTP (behind proxy): http://localhost:${PORT}`;
+                console.log(msg);
             });
         }
 

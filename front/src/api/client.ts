@@ -43,6 +43,7 @@ function apiOriginForUploads(apiBase: string): string {
 export const filesBaseUrl = filesBaseOverride || apiOriginForUploads(baseURL);
 
 const TOKEN_KEY = "equilife_token";
+const USER_EMAIL_KEY = "equilife_user_email";
 
 const apiClient = axios.create({
     baseURL,
@@ -64,7 +65,12 @@ apiClient.interceptors.response.use(
     (err) => {
         if (err?.response?.status === 401) {
             sessionStorage.removeItem(TOKEN_KEY);
-            if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+            sessionStorage.removeItem(USER_EMAIL_KEY);
+            if (
+                typeof window !== "undefined" &&
+                !window.location.pathname.includes("/login") &&
+                !window.location.pathname.includes("/register")
+            ) {
                 window.dispatchEvent(new CustomEvent("auth:unauthorized"));
             }
         }

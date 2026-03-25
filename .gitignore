@@ -1,3 +1,11 @@
+# Racine (script dev api + front)
+/node_modules/
+
 # Certificats SSL (ne jamais committer)
 certs/*.pem
 certs/*.key
+
+# Secrets backend (JWT, DB, etc.)
+back/.env
+back/.env.local
+back/.env.production

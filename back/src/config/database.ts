@@ -1,7 +1,5 @@
+import "./loadEnv";
 import { Pool, PoolConfig } from "pg";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const isProduction = process.env.NODE_ENV === "production";
 const databaseUrl = process.env.DATABASE_URL?.trim();

@@ -24,6 +24,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import "@mdi/font/css/materialdesignicons.css";
+import "@fontsource/playfair-display/700.css";
+import "@fontsource/playfair-display/900.css";
 // import "@/styles/Global.css";
 // import "@/styles/main.scss";
 import "vuetify/styles";

@@ -1,9 +1,9 @@
 export const swaggerSpec = {
     openapi: "3.0.3",
     info: {
-        title: "Horse Care App API",
+        title: "Equilife API",
         version: "1.0.0",
-        description: "Documentation de l'API Horse Care App.",
+        description: "Documentation de l'API Equilife.",
     },
     servers: [
         {

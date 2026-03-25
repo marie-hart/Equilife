@@ -2,51 +2,48 @@
 
 ## Authentification backend
 
-L'authentification est **désactivée par défaut**. L'utilisateur peut utiliser l'app sans mot de passe.
+L’API utilise des **comptes utilisateurs** (e-mail + mot de passe, hachage bcrypt). Les JWT portent l’identifiant utilisateur (UUID) et sont valides 7 jours.
 
-### Activation de l'authentification (optionnelle)
+### Activation
 
-1. Ajouter `AUTH_ENABLED=true` dans `back/.env`
-2. Définir `JWT_SECRET` et `APP_PIN` :
+1. Déployer la migration des tables `users` (et liaisons chevaux / notes rapides si besoin).
+2. Dans `back/.env` :
    ```
-   AUTH_ENABLED=true
+   USER_AUTH_ENABLED=true
    JWT_SECRET=un_secret_long_et_aleatoire_min_32_caracteres
-   APP_PIN=1234
    ```
 
-3. Le frontend affichera automatiquement l'écran de connexion.
-4. L'utilisateur entre le PIN configuré pour obtenir une session (JWT valide 7 jours).
+3. Le frontend affiche les écrans **Connexion** et **Inscription** ; l’utilisateur obtient un JWT via `POST /api/auth/login` (e-mail + mot de passe).
+
+Sans `USER_AUTH_ENABLED=true`, les routes peuvent rester ouvertes (usage local uniquement).
 
 ### Routes protégées (quand auth activée)
 
 - **Publiques** : `/`, `/health`, `/api/auth/*`, `/api/push/public-key`
-- **Protégées** (JWT requis) : toutes les autres routes (`/api/events`, `/api/products`, `/api/horses`, etc.)
-
-Sans `AUTH_ENABLED=true`, toutes les routes sont ouvertes.
+- **Protégées** (JWT requis) : les autres routes API (`/api/events`, `/api/products`, `/api/horses`, etc.)
 
 ### Bonnes pratiques
 
 - **JWT_SECRET** : minimum 32 caractères, aléatoire. Ne jamais le committer.
-- **APP_PIN** : code connu uniquement du propriétaire. En production, utiliser un PIN complexe.
+- Politique de mot de passe côté serveur : longueur minimale, majuscule, caractère spécial (voir `passwordPolicy` backend).
 
 ## Secrets côté frontend
 
-Le frontend **n'expose aucun secret** :
+Le frontend **n’expose aucun secret** :
 
 - Pas de clé API, mot de passe ou JWT hardcodé
-- Le JWT est obtenu via `POST /api/auth/login` après saisie du PIN par l'utilisateur
-- Le token est stocké en `sessionStorage` (supprimé à la fermeture de l'onglet)
+- Le JWT est obtenu via `POST /api/auth/login` après saisie de l’e-mail et du mot de passe
+- Le token est stocké en `sessionStorage` (supprimé à la fermeture de l’onglet)
 - La clé VAPID publique des notifications push est récupérée depuis le backend (elle est conçue pour être publique)
 
 ## Variables d'environnement
 
-| Variable      | Où      | Sensible | Description                          |
-|---------------|---------|----------|--------------------------------------|
-| DB_PASSWORD   | Backend | Oui      | **Obligatoire en prod.** Refus de "horse_password" en production. |
-| CORS_ORIGIN   | Backend | Non      | **Obligatoire en prod.** Origine(s) du frontend (ex: https://app.equilife.com). |
-| AUTH_ENABLED  | Backend | Non      | `true` pour activer le PIN (sinon app ouverte) |
-| JWT_SECRET    | Backend | Oui      | Secret de signature des JWT (si auth activée) |
-| APP_PIN       | Backend | Oui      | Code d'accès pour la connexion (si auth activée) |
-| VAPID_PRIVATE_KEY | Backend | Oui  | Clé privée Web Push (jamais exposée) |
-| VAPID_PUBLIC_KEY  | Backend | Non   | Exposée via `/api/push/public-key`   |
-| VITE_API_BASE_URL | Frontend | Non | URL de l'API (publique)              |
+| Variable           | Où      | Sensible | Description |
+|--------------------|---------|----------|-------------|
+| DB_PASSWORD        | Backend | Oui      | **Obligatoire en prod.** Refus de "horse_password" en production. |
+| CORS_ORIGIN        | Backend | Non      | **Obligatoire en prod.** Origine(s) du frontend. |
+| USER_AUTH_ENABLED  | Backend | Non      | `true` pour activer comptes e-mail / mot de passe. |
+| JWT_SECRET         | Backend | Oui      | Secret de signature des JWT (si auth activée). |
+| VAPID_PRIVATE_KEY  | Backend | Oui      | Clé privée Web Push (jamais exposée) |
+| VAPID_PUBLIC_KEY   | Backend | Non      | Exposée via `/api/push/public-key` |
+| VITE_API_BASE_URL  | Frontend | Non     | URL de l’API (publique) |

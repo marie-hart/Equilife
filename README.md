@@ -1,4 +1,4 @@
-# Horse Care App 🐴
+# Equilife 🐴
 
 Application de gestion globale pour propriétaires et gestionnaires d'écuries, permettant de centraliser les soins, l'alimentation et l'inventaire.
 
@@ -48,6 +48,10 @@ Docker Desktop ou Docker Engine
 
 Node.js 20 (pour le dev local)
 
+### Dev local (API + frontend sans Docker)
+
+À la racine du dépôt : `npm install` puis **`npm run dev`** — lance l’API (`back`, HTTP sur le port du `back/.env`, souvent 3001) et Vite (`front`, https://localhost:5173). Le proxy Vite envoie `/api` vers cette API ; les deux processus doivent tourner (d’où ce script). Pour HTTPS sur l’API en dev uniquement : `DEV_HTTPS=true` dans `back/.env` et certificats `localhost-key.pem` / `localhost.pem` dans `back/`.
+
 ### Démarrage Express
 ```Bash
 # 1. Lancer l'infrastructure (DB + Redis + API)
@@ -63,19 +67,16 @@ L'API est maintenant accessible sur http://localhost:3000.
 
 **Production :** Créer un `.env` à la racine avec `DB_PASSWORD` et `CORS_ORIGIN` obligatoires. Voir `docs/DEPLOYMENT.md` pour la checklist complète.
 
-### Authentification (optionnelle)
+### Authentification (e-mail / mot de passe)
 
-Par défaut, l'app fonctionne **sans mot de passe**.
+L’app et l’API sont prévues pour une **connexion par compte utilisateur** (e-mail + mot de passe, hachage bcrypt). Définir dans `back/.env` :
 
-Pour activer l'authentification par PIN, définir dans `back/.env` :
 ```bash
-AUTH_ENABLED=true
+USER_AUTH_ENABLED=true
 JWT_SECRET=secret_long_aleatoire_min_32_caracteres
-APP_PIN=1234
 ```
-Le frontend affichera un écran de connexion.
 
-Voir `docs/SECURITY.md` pour les détails.
+Sans ces variables, l’API peut fonctionner en mode ouvert (développement uniquement). Voir `docs/SECURITY.md` pour les détails.
 
 ### API en HTTPS (reverse proxy)
 

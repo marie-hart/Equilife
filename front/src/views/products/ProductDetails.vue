@@ -141,8 +141,6 @@
 </template>
 
 <style scoped>
-/* On ré-importe la police élégante */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
 .shadow-subtle {
   box-shadow: 0 4px 15px rgba(123, 91, 62, 0.05) !important;
   border: 1px solid rgba(168, 159, 148, 0.15) !important;

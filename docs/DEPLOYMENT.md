@@ -20,6 +20,22 @@ Ou déployer via le fichier **`render.yaml`** à la racine du repo (définit dé
 
 `typescript` et les `@types/*` sont dans **`dependencies`** du `back/package.json` pour que le build Render (souvent sans devDependencies) trouve toujours `tsc` et les déclarations. Le `render.yaml` utilise `YARN_PRODUCTION=false` en complément.
 
+### Migrations Sqitch vers la base Render
+
+1. Dans Render : service **PostgreSQL** → **Connect** → copier l’**Internal Database URL** (ou l’URL complète `postgresql://...`).
+2. En local, dans un terminal :
+
+```bash
+export DATABASE_URL='postgresql://...'   # l’URL copiée
+cd migrations
+chmod +x deploy-remote.sh
+./deploy-remote.sh
+```
+
+**Pourquoi pas `sqitch deploy db:pg:$DATABASE_URL` ?** Si `DATABASE_URL` n’est pas exportée, Sqitch tente une connexion **locale** (socket Unix) → erreur *« connection on socket ... failed »*. Si la variable est définie mais au format `postgresql://...`, la cible `db:pg:postgresql://...` est **invalide** pour Sqitch : il faut une URI du type `db:pg://user:pass@host:5432/nom_base`. Le script `deploy-remote.sh` fait cette conversion.
+
+Il faut **Sqitch** installé localement (`apt install sqitch libdbd-pg-perl` sur Debian/Ubuntu, ou `brew install sqitch` sur macOS).
+
 ## 1. Variables d'environnement (obligatoires)
 
 Créer un `.env` à la racine du projet (utilisé par docker-compose).
@@ -79,7 +95,7 @@ VITE_API_BASE_URL=https://api.votredomaine.com yarn build
 - Ne jamais committer `.env`, certificats ou secrets.
 - `DB_PASSWORD` ≠ `horse_password` en production (contrôlé par le backend).
 - `CORS_ORIGIN` doit contenir uniquement les origines autorisées.
-- Authentification optionnelle : `AUTH_ENABLED=true` + `JWT_SECRET` + `APP_PIN` (voir `docs/SECURITY.md`).
+- Authentification comptes : `USER_AUTH_ENABLED=true` + `JWT_SECRET` (voir `docs/SECURITY.md`).
 
 ## 6. PM2 (redémarrage automatique)
 

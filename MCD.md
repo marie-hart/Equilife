@@ -1,4 +1,4 @@
-Modèle Conceptuel de Données (MCD) - Application Horse Care
+Modèle Conceptuel de Données (MCD) — Equilife
 Vue d'ensemble
 Le Modèle Conceptuel de Données décrit les entités principales de l'application et leurs relations. Le modèle a évolué d'une gestion simple de listes vers un système centralisé autour du cheval.
 

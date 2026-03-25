@@ -5,3 +5,4 @@
 init 2024-05-20T10:00:00Z mariehdek <mariehdek@yahoo.fr> # Création de horses, products et fonctions de base
 horses_links [init] 2024-05-20T11:00:00Z mariehdek <mariehdek@yahoo.fr> # Ajout de la table events
 rations_table [init] 2024-01-01T00:05:00Z mariehdek <mariehdek@yahoo.fr> # Tables rations et ration_items
+users_horses_notes [rations_table] 2026-03-26T12:00:00Z mariehdek <mariehdek@yahoo.fr> # users, horses.user_id, quick_notes
