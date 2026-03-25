@@ -1,10 +1,46 @@
 import axios from "axios";
 
+/**
+ * Le backend monte les routes sous `/api/*`. Si `VITE_API_BASE_URL` est une origine
+ * seule (ex. `https://api.equilife.ovh`), on ajoute `/api` pour éviter les 404.
+ */
+function normalizeApiBaseUrl(raw: string): string {
+    const trimmed = raw.trim();
+    if (!trimmed) return "/api";
+    const noTrailingSlash = trimmed.replace(/\/+$/, "");
+    if (noTrailingSlash.startsWith("/")) {
+        return noTrailingSlash;
+    }
+    try {
+        const u = new URL(noTrailingSlash);
+        const pathOnly = (u.pathname.replace(/\/+$/, "") || "/") as string;
+        if (pathOnly === "/") {
+            return `${noTrailingSlash}/api`;
+        }
+        return noTrailingSlash;
+    } catch {
+        return noTrailingSlash;
+    }
+}
+
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || "/api";
 const filesBaseOverride = import.meta.env.VITE_API_PROXY_TARGET || "";
-const baseURL = rawBaseUrl.endsWith("/") ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
+const baseURL = normalizeApiBaseUrl(rawBaseUrl);
 export const apiBaseUrl = baseURL;
-export const filesBaseUrl = filesBaseOverride || apiBaseUrl;
+
+/** Origine de l’API pour `/uploads/...` (hors préfixe `/api`). */
+function apiOriginForUploads(apiBase: string): string {
+    if (apiBase.startsWith("http")) {
+        try {
+            return new URL(apiBase).origin;
+        } catch {
+            return apiBase;
+        }
+    }
+    return apiBase;
+}
+
+export const filesBaseUrl = filesBaseOverride || apiOriginForUploads(baseURL);
 
 const TOKEN_KEY = "equilife_token";
 

@@ -203,6 +203,7 @@ import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
+import { parseDateOnly } from "@/libs/date";
 import type { CreateHorseDto } from "@/types";
 import type { VForm } from "vuetify/components";
 
@@ -241,11 +242,13 @@ const rules = {
     required: (v: any) => !!v || "Ce champ est obligatoire",
     isPast: (v: string) => {
         if (!v) return true;
-        const selected = new Date(v);
+        const selected = parseDateOnly(v);
+        if (Number.isNaN(selected.getTime())) return true;
+        selected.setHours(0, 0, 0, 0);
         const today = new Date();
-        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
         return selected <= today || "La date ne peut pas être dans le futur";
-    }
+    },
 };
 
 const formRef = ref<VForm | null>(null);

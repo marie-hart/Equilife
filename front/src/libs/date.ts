@@ -26,8 +26,8 @@ export const isSameDayFilter = (
     return date === target;
 };
 
-/** Parse une chaîne date (YYYY-MM-DD ou ISO) en Date locale sans décalage horaire */
-const parseDateOnly = (dateString: string): Date => {
+/** Parse une chaîne date (YYYY-MM-DD ou ISO) en Date locale sans décalage UTC (évite les bugs fuseau) */
+export const parseDateOnly = (dateString: string): Date => {
     const match = String(dateString).match(/(\d{4})-(\d{2})-(\d{2})/);
     if (match) {
         return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
