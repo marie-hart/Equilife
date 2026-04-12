@@ -40,8 +40,19 @@ const props = defineProps<{ product: Product }>();
 
 const STOCK_TYPES = ["Granulés", "Complément"];
 
-const isStockManaged = computed(() =>
-  STOCK_TYPES.includes(props.product.category || "")
+const hasStockTrackingData = computed(
+  () =>
+    Boolean(props.product.last_purchase_date) &&
+    typeof props.product.quantity_purchased === "number" &&
+    props.product.quantity_purchased > 0 &&
+    typeof props.product.daily_usage === "number" &&
+    props.product.daily_usage > 0
+);
+
+const isStockManaged = computed(
+  () =>
+    STOCK_TYPES.includes(props.product.category || "") &&
+    hasStockTrackingData.value
 );
 
 const endDate = computed(() => {

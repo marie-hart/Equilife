@@ -110,7 +110,7 @@ const getMealIcon = (key: string) => {
 
 const getItemSubtitle = (item: RationItem): string => {
     const parts = [];
-    if (item.quantity) parts.push(`${item.quantity}kg`);
+    if (item.quantity) parts.push(formatQuantity(item.quantity));
     if (item.type) parts.push(props.itemTypeLabel(item.type));
     return parts.join(" • ") || "-";
 };
@@ -134,4 +134,11 @@ const confirmAndDelete = () => {
     confirmDelete.value = false;
     emit("delete", props.ration);
 };
+
+function formatQuantity(raw: string): string {
+    const value = (raw || "").trim();
+    if (!value) return "";
+    if (/^[0-9]+(?:[.,][0-9]+)?$/.test(value)) return `${value}kg`;
+    return value;
+}
 </script>

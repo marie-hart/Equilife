@@ -80,8 +80,11 @@
                 <template v-slot:prepend>
                   <v-icon size="18" color="#A89F94" class="me-2">mdi-scale-balanced</v-icon>
                 </template>
-                <v-list-item-title class="text-body-2" style="color: #2E4B36">
+                <v-list-item-title v-if="product.daily_usage && product.unit" class="text-body-2" style="color: #2E4B36">
                   {{ product.daily_usage }} {{ product.unit }} / jour
+                </v-list-item-title>
+                <v-list-item-title v-else class="text-body-2" style="color: #2E4B36">
+                  Non renseigné
                 </v-list-item-title>
                 <v-list-item-subtitle class="text-caption">Consommation quotidienne</v-list-item-subtitle>
               </v-list-item>
@@ -171,7 +174,14 @@ const productId = route.params.id as string;
 
 const isManaged = computed(() => {
     const cats = ["Granulés", "Complément", "Aliments"];
-    return product.value && cats.includes(product.value.category || "");
+    if (!product.value || !cats.includes(product.value.category || "")) return false;
+    return Boolean(
+        product.value.last_purchase_date &&
+            typeof product.value.quantity_purchased === "number" &&
+            product.value.quantity_purchased > 0 &&
+            typeof product.value.daily_usage === "number" &&
+            product.value.daily_usage > 0,
+    );
 });
 
 const remainingDays = computed(() => {

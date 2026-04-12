@@ -5,6 +5,7 @@ import { CacheKeys } from "../services/cacheKeys";
 
 const FORBIDDEN_HORSE_ERROR = "FORBIDDEN_HORSE";
 const HORSE_REQUIRED_ERROR = "HORSE_REQUIRED";
+const PRODUCT_NAME_CONFLICT_ERROR = "PRODUCT_NAME_CONFLICT";
 
 export class ProductRepository {
     async findAll(
@@ -112,6 +113,11 @@ export class ProductRepository {
         if (ownerUserId && data.horse_id) {
             const isOwner = await this.horseBelongsToUser(data.horse_id, ownerUserId);
             if (!isOwner) throw new Error(FORBIDDEN_HORSE_ERROR);
+            const hasDuplicate = await this.hasNameConflictForUser(
+                data.name,
+                ownerUserId,
+            );
+            if (hasDuplicate) throw new Error(PRODUCT_NAME_CONFLICT_ERROR);
         }
 
         const result = await pool.query(
@@ -153,6 +159,14 @@ export class ProductRepository {
         if (ownerUserId && data.horse_id) {
             const isOwner = await this.horseBelongsToUser(data.horse_id, ownerUserId);
             if (!isOwner) throw new Error(FORBIDDEN_HORSE_ERROR);
+        }
+        if (ownerUserId && data.name) {
+            const hasDuplicate = await this.hasNameConflictForUser(
+                data.name,
+                ownerUserId,
+                id,
+            );
+            if (hasDuplicate) throw new Error(PRODUCT_NAME_CONFLICT_ERROR);
         }
 
         const result = await pool.query(
@@ -273,6 +287,34 @@ export class ProductRepository {
         return (result.rowCount ?? 0) > 0;
     }
 
+    private async hasNameConflictForUser(
+        name: string,
+        ownerUserId: string,
+        excludeProductId?: string,
+    ): Promise<boolean> {
+        const trimmedName = name.trim();
+        if (!trimmedName) return false;
+        const values: string[] = [ownerUserId, trimmedName];
+        let excludeClause = "";
+        if (excludeProductId) {
+            values.push(excludeProductId);
+            excludeClause = " AND p.id <> $3";
+        }
+        const result = await pool.query(
+            `
+                SELECT 1
+                FROM products p
+                INNER JOIN horses h ON h.id = p.horse_id
+                WHERE h.user_id = $1
+                  AND LOWER(TRIM(p.name)) = LOWER(TRIM($2))
+                  ${excludeClause}
+                LIMIT 1
+            `,
+            values,
+        );
+        return (result.rowCount ?? 0) > 0;
+    }
+
     private mapRow(row: any): Product {
         return {
             ...row,
@@ -285,5 +327,9 @@ export class ProductRepository {
     }
 }
 
-export { FORBIDDEN_HORSE_ERROR as PRODUCT_FORBIDDEN_HORSE_ERROR, HORSE_REQUIRED_ERROR as PRODUCT_HORSE_REQUIRED_ERROR };
+export {
+    FORBIDDEN_HORSE_ERROR as PRODUCT_FORBIDDEN_HORSE_ERROR,
+    HORSE_REQUIRED_ERROR as PRODUCT_HORSE_REQUIRED_ERROR,
+    PRODUCT_NAME_CONFLICT_ERROR,
+};
 export default new ProductRepository();

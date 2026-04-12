@@ -44,7 +44,7 @@
 
             <div class="mb-4 d-flex align-center">
                 <v-icon icon="mdi-clipboard-pulse-outline" size="18" color="#7B5B3E" class="me-2" />
-                <span class="text-overline font-weight-bold" style="color: #7B5B3E">Carnet de santé</span>
+                <span class="text-overline font-weight-bold" style="color: #7B5B3E">A venir</span>
             </div>
 
             <v-skeleton-loader
@@ -67,7 +67,7 @@
             <div v-if="!isLoading && filteredHistory.length" class="mt-8">
                 <div class="mb-4 d-flex align-center">
                     <v-icon icon="mdi-history" size="18" color="#7B5B3E" class="me-2" />
-                    <span class="text-overline font-weight-bold" style="color: #7B5B3E">Historique des soins</span>
+                    <span class="text-overline font-weight-bold" style="color: #7B5B3E">Historique</span>
                 </div>
                 <HealthList
                     :items="filteredHistoryForList"
@@ -128,12 +128,12 @@ import { useFilters } from "@/composables/useFilters";
 import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore"; 
 import { useEventsStore } from "@/stores/EventsStore";
-import type { CareAction, CareStatus, Event, CareHistoryEntry } from "@/types";
+import type { CareAction, Event, CareHistoryEntry } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import {
     formatDateLong,
     formatDateMobile,
-    isSameDay,
+    parseDateOnly,
     startOfDay,
     toDateInputValue,
 } from "@/libs/date";
@@ -166,13 +166,6 @@ const goToCareDetails = (care: Event | CareHistoryEntry) => {
     router.push({ name: "HealthDetails", params: { id: care.id } });
 };
 
-const statusOptions = [
-    { title: "Tous", value: "all" },
-    { title: "Passé", value: "past" },
-    { title: "Aujourd'hui", value: "today" },
-    { title: "À venir", value: "upcoming" },
-];
-
 const careTypeOptions = computed(() => {
     const uniqueTypes = Array.from(
         new Set(
@@ -187,6 +180,28 @@ const careTypeOptions = computed(() => {
     ];
 });
 
+const careCategoryOptions = computed(() => {
+    const categories = new Set<string>([
+        "Maladie",
+        "Bobo",
+        "Soins courants et cures",
+    ]);
+    for (const care of cares.value) {
+        const value = care.category?.trim();
+        if (value) categories.add(value);
+    }
+    for (const historyEntry of careHistory.value) {
+        const value = historyEntry.category?.trim();
+        if (value) categories.add(value);
+    }
+    return [
+        { title: "Toutes", value: "all" },
+        ...Array.from(categories)
+            .sort((a, b) => a.localeCompare(b, "fr"))
+            .map((value) => ({ title: value, value })),
+    ];
+});
+
 const filters: readonly FilterDefinition<string>[] = [
     {
         key: "horseId",
@@ -196,24 +211,26 @@ const filters: readonly FilterDefinition<string>[] = [
         options: horsesStore.horseFilterOptions,
     },
     {
-        key: "status",
-        type: "select",
-        label: "Statut",
-        defaultValue: "all",
-        options: statusOptions,
-    },
-    {
         key: "type",
         type: "select",
         label: "Type de soin",
         defaultValue: "all",
         options: careTypeOptions.value,
     },
+    {
+        key: "category",
+        type: "select",
+        label: "Catégorie",
+        defaultValue: "all",
+        options: careCategoryOptions.value,
+    },
 ];
 
 const { filterValues } = useFilters(filters);
 
 const getCareType = (care: Event): string => (care.name || "").trim();
+const getCareCategory = (care: Event | CareHistoryEntry): string =>
+    (care.category || "").trim();
 
 const deleteMessage = computed(() => 
     selectedCare.value 
@@ -225,23 +242,22 @@ const applyCareFilters = (
     items: Event[],
     overrides: Partial<{
         horseId: string;
-        status: "all" | CareStatus;
         type: string;
+        category: string;
     }> = {},
 ) => {
     const horseId = overrides.horseId ?? filterValues.horseId;
-    const status = (overrides.status ??
-        filterValues.status) as "all" | CareStatus;
     const type = overrides.type ?? filterValues.type;
+    const category = overrides.category ?? filterValues.category;
     let result = items;
     if (horseId !== "all") {
         result = result.filter((care) => care.horse_id === horseId);
     }
-    if (status !== "all") {
-        result = result.filter((care) => getStatusKey(care) === status);
-    }
     if (type !== "all") {
         result = result.filter((care) => getCareType(care) === type);
+    }
+    if (category !== "all") {
+        result = result.filter((care) => getCareCategory(care) === category);
     }
     return result;
 };
@@ -268,25 +284,6 @@ const availableHorseOptions = computed(() => {
     return options.length ? options : base;
 });
 
-const availableStatusOptions = computed(() => {
-    const filtered = applyCareFilters(cares.value, { status: "all" });
-    const statuses = new Set(filtered.map((care) => getStatusKey(care)));
-    let options = statusOptions.filter(
-        (option) =>
-            option.value === "all" ||
-            statuses.has(option.value as CareStatus),
-    );
-    const selected = filterValues.status;
-    if (
-        selected !== "all" &&
-        !options.some((option) => option.value === selected)
-    ) {
-        const match = statusOptions.find((option) => option.value === selected);
-        if (match) options = [...options, match];
-    }
-    return options.length ? options : statusOptions;
-});
-
 const availableTypeOptions = computed(() => {
     const filtered = applyCareFilters(cares.value, { type: "all" });
     const uniqueTypes = Array.from(
@@ -303,10 +300,36 @@ const availableTypeOptions = computed(() => {
     return dynamic.length ? dynamic : careTypeOptions.value;
 });
 
+const availableCategoryOptions = computed(() => {
+    const careSide = applyCareFilters(cares.value, { category: "all" });
+    let historySide = careHistory.value;
+    if (filterValues.horseId !== "all") {
+        historySide = historySide.filter((h) => h.horse_id === filterValues.horseId);
+    }
+    const values = new Set<string>([
+        "Maladie",
+        "Bobo",
+        "Soins courants et cures",
+        ...careSide.map(getCareCategory).filter(Boolean),
+        ...historySide.map(getCareCategory).filter(Boolean),
+    ]);
+    const dynamic = [
+        { title: "Toutes", value: "all" },
+        ...Array.from(values)
+            .sort((a, b) => a.localeCompare(b, "fr"))
+            .map((value) => ({ title: value, value })),
+    ];
+    const selected = filterValues.category;
+    if (selected !== "all" && !dynamic.some((option) => option.value === selected)) {
+        dynamic.push({ title: selected, value: selected });
+    }
+    return dynamic.length ? dynamic : careCategoryOptions.value;
+});
+
 const filterDefinitions = computed(() => [
     { ...filters[0], options: availableHorseOptions.value },
-    { ...filters[1], options: availableStatusOptions.value },
-    { ...filters[2], options: availableTypeOptions.value },
+    { ...filters[1], options: availableTypeOptions.value },
+    { ...filters[2], options: availableCategoryOptions.value },
 ]);
 
 const recurrenceLabel = (care: Event | CareHistoryEntry): string => {
@@ -322,19 +345,17 @@ const recurrenceLabel = (care: Event | CareHistoryEntry): string => {
     return "-";
 };
 
-const getStatusKey = (care: Event): "past" | "today" | "upcoming" => {
-    const today = startOfDay(new Date());
-    if (isSameDay(care.event_date, today)) {
-        return "today";
-    }
-    return new Date(care.event_date) < today ? "past" : "upcoming";
-};
+const todayStartTimestamp = computed(() =>
+    startOfDay(new Date()).getTime(),
+);
 
 const filteredCares = computed(() => {
-    const result = applyCareFilters(cares.value);
+    const result = applyCareFilters(cares.value).filter(
+        (care) => parseDateOnly(care.event_date).getTime() >= todayStartTimestamp.value,
+    );
     return [...result].sort(
         (a, b) =>
-            new Date(a.event_date).getTime() - new Date(b.event_date).getTime(),
+            parseDateOnly(b.event_date).getTime() - parseDateOnly(a.event_date).getTime(),
     );
 });
 
@@ -342,6 +363,9 @@ const filteredHistory = computed(() => {
     let result = careHistory.value;
     if (filterValues.horseId !== "all") {
         result = result.filter((h) => h.horse_id === filterValues.horseId);
+    }
+    if (filterValues.category !== "all") {
+        result = result.filter((h) => getCareCategory(h) === filterValues.category);
     }
     return result;
 });

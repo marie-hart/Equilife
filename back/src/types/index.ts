@@ -7,6 +7,7 @@ export interface Event {
     horse_id?: string;
     product_id?: string;
     product_ids?: string[];
+    category?: string;
     is_care?: boolean;
     reminder_type?: "soin" | "activité" | "alimentation" | "autres";
     activity_type?: string;
@@ -30,6 +31,7 @@ export interface CreateEventDto {
     horse_id?: string;
     product_id?: string;
     product_ids?: string[];
+    category?: string;
     is_care?: boolean;
     reminder_type?: "soin" | "activité" | "alimentation" | "autres";
     activity_type?: string;
@@ -48,6 +50,7 @@ export interface CareHistoryEntry {
     original_event_id?: string;
     horse_id: string;
     product_id?: string;
+    category?: string;
     name: string;
     description?: string;
     event_date: Date;
@@ -59,6 +62,7 @@ export interface CreateCareHistoryDto {
     original_event_id: string;
     horse_id: string;
     product_id?: string;
+    category?: string;
     name: string;
     description?: string;
     event_date: string; // date de réalisation (YYYY-MM-DD)
@@ -71,6 +75,7 @@ export interface UpdateEventDto {
     horse_id?: string;
     product_id?: string;
     product_ids?: string[];
+    category?: string;
     is_care?: boolean;
     reminder_type?: "soin" | "activité" | "alimentation" | "autres";
     activity_type?: string;

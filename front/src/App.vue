@@ -122,6 +122,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  transform: translateY(-8vh);
 }
 
 .splash-logo {

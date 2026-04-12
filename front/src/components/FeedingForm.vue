@@ -113,11 +113,11 @@
                       class="mb-3"
                     />
                   </v-col>
-                  <v-col cols="6">
+                  <v-col cols="4">
                     <v-text-field
                       v-model="item.quantity"
                       label="Quantité"
-                      placeholder="Ex: 2L"
+                      placeholder="Ex: 2"
                       variant="solo"
                       flat
                       bg-color="white"
@@ -126,7 +126,20 @@
                       hide-details
                     />
                   </v-col>
-                  <v-col cols="6">
+                  <v-col cols="4">
+                    <v-select
+                      v-model="item.unit"
+                      :items="unitOptions"
+                      label="Unité"
+                      variant="solo"
+                      flat
+                      bg-color="white"
+                      rounded="lg"
+                      density="comfortable"
+                      hide-details
+                    />
+                  </v-col>
+                  <v-col cols="4">
                     <v-select
                       v-model="item.type"
                       :items="itemTypeOptions"
@@ -292,6 +305,11 @@ const itemTypeOptions = [
     { title: "Complément", value: "Complément" },
     { title: "Autre", value: "Autres" },
 ];
+const unitOptions = [
+    { title: "kg", value: "kg" },
+    { title: "L", value: "L" },
+    { title: "g", value: "g" },
+];
 
 const productOptions = computed(() => {
     const allowed = new Set(["Granulés", "Complément"]);
@@ -313,6 +331,7 @@ const addItem = () => {
         key: `${Date.now()}-${Math.random()}`,
         productId: "",
         quantity: "",
+        unit: "kg",
         frequency: [],
         type: "Granulés",
     });
@@ -360,7 +379,8 @@ const loadRation = async () => {
             items: ration.items.map((item) => ({
                 key: `${item.id}-${Math.random()}`,
                 productId: item.product_id || "",
-                quantity: item.quantity || "",
+                quantity: parseQuantity(item.quantity).quantity,
+                unit: parseQuantity(item.quantity).unit,
                 frequency: item.frequency || [],
                 type: item.type || "Granulés",
             })),
@@ -401,7 +421,8 @@ const saveRation = async () => {
             is_active: form.value.isActive,
             items: validItems.map((item) => ({
                 product_id: item.productId,
-                quantity: item.quantity,
+                quantity: formatQuantity(item.quantity, item.unit),
+                unit: item.unit,
                 frequency: item.frequency,
                 type: item.type,
             })),
@@ -427,6 +448,30 @@ const saveRation = async () => {
 const goBack = () => {
     router.push(horsesStore.horseId ? { name: "FeedingView" } : { name: "Horses" });
 };
+
+function parseQuantity(
+    raw?: string,
+): { quantity: string; unit: "kg" | "L" | "g" } {
+    const cleaned = (raw || "").trim();
+    if (!cleaned) return { quantity: "", unit: "kg" };
+    const m = cleaned.match(/^([0-9]+(?:[.,][0-9]+)?)\s*(kg|g|L)$/i);
+    if (m) {
+        return {
+            quantity: m[1].replace(",", "."),
+            unit: m[2] === "l" || m[2] === "L" ? "L" : (m[2].toLowerCase() as "kg" | "g"),
+        };
+    }
+    if (/^[0-9]+(?:[.,][0-9]+)?$/.test(cleaned)) {
+        return { quantity: cleaned.replace(",", "."), unit: "kg" };
+    }
+    return { quantity: cleaned, unit: "kg" };
+}
+
+function formatQuantity(quantity: string, unit: "kg" | "L" | "g"): string {
+    const q = (quantity || "").trim();
+    if (!q) return "";
+    return `${q}${unit}`;
+}
 
 onMounted(async () => {
     isLoading.value = true;

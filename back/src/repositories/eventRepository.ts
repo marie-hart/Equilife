@@ -106,10 +106,10 @@ export class EventRepository {
 
         const result = await pool.query(
             `INSERT INTO events (
-                name, description, event_date, horse_id, product_id, is_care, reminder_type,
+                name, description, event_date, horse_id, product_id, category, is_care, reminder_type,
                 activity_type, activity_duration_minutes, activity_intensity, activity_comment,
                 reminder_enabled, reminder_interval_days, reminder_interval_months, reminder_interval_years, next_reminder_date
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
             RETURNING *`,
             [
                 data.name,
@@ -117,6 +117,7 @@ export class EventRepository {
                 data.event_date,
                 data.horse_id || null,
                 data.product_id || null,
+                data.category?.trim() || null,
                 data.is_care || false,
                 data.reminder_type || null,
                 data.activity_type || null,
@@ -201,18 +202,19 @@ export class EventRepository {
                 event_date = COALESCE($3, event_date),
                 horse_id = COALESCE($4, horse_id),
                 product_id = COALESCE($5, product_id),
-                is_care = COALESCE($6, is_care),
-                reminder_type = COALESCE($7, reminder_type),
-                activity_type = COALESCE($8, activity_type),
-                activity_duration_minutes = COALESCE($9, activity_duration_minutes),
-                activity_intensity = COALESCE($10, activity_intensity),
-                activity_comment = COALESCE($11, activity_comment),
-                reminder_enabled = COALESCE($12, reminder_enabled),
-                reminder_interval_days = COALESCE($13, reminder_interval_days),
-                reminder_interval_months = COALESCE($14, reminder_interval_months),
-                reminder_interval_years = COALESCE($15, reminder_interval_years),
-                next_reminder_date = $16
-            WHERE id = $17
+                category = COALESCE($6, category),
+                is_care = COALESCE($7, is_care),
+                reminder_type = COALESCE($8, reminder_type),
+                activity_type = COALESCE($9, activity_type),
+                activity_duration_minutes = COALESCE($10, activity_duration_minutes),
+                activity_intensity = COALESCE($11, activity_intensity),
+                activity_comment = COALESCE($12, activity_comment),
+                reminder_enabled = COALESCE($13, reminder_enabled),
+                reminder_interval_days = COALESCE($14, reminder_interval_days),
+                reminder_interval_months = COALESCE($15, reminder_interval_months),
+                reminder_interval_years = COALESCE($16, reminder_interval_years),
+                next_reminder_date = $17
+            WHERE id = $18
             RETURNING *`,
             [
                 data.name || null,
@@ -220,6 +222,7 @@ export class EventRepository {
                 data.event_date || null,
                 data.horse_id || null,
                 data.product_id || null,
+                data.category !== undefined ? data.category.trim() || null : null,
                 data.is_care !== undefined ? data.is_care : null,
                 data.reminder_type || null,
                 data.activity_type || null,
@@ -360,6 +363,7 @@ export class EventRepository {
             event_date: new Date(row.event_date),
             horse_id: row.horse_id || undefined,
             product_id: row.product_id || undefined,
+            category: row.category || undefined,
             product_ids: Array.isArray(row.product_ids)
                 ? row.product_ids.map(String)
                 : undefined,

@@ -55,6 +55,21 @@
                 :error-messages="fieldErrors.careDescription ? [fieldErrors.careDescription] : undefined"
               />
             </v-col>
+
+            <v-col cols="12" md="6">
+              <v-combobox
+                v-model="form.category"
+                :items="careCategoryOptions"
+                label="Catégorie *"
+                placeholder="Ex: Maladie"
+                density="comfortable"
+                variant="outlined"
+                color="#2E4B36"
+                rounded="lg"
+                clearable
+                :error-messages="fieldErrors.category ? [fieldErrors.category] : undefined"
+              />
+            </v-col>
             
             <v-col cols="12" md="6">
               <v-select
@@ -166,6 +181,7 @@ const eventsStore = useEventsStore();
 const isLoading = ref(true);
 const isSubmitting = ref(false);
 const products = ref<Product[]>([]);
+const careCategoryOptions = ref<string[]>([]);
 const event = ref<Event | null>(null);
 const fieldErrors = ref<Record<string, string>>({});
 const snackbar = ref({ show: false, message: "", color: "success" });
@@ -176,12 +192,19 @@ const form = ref({
     horseIds: [] as string[],
     productIds: [] as string[],
     careDescription: "",
+    category: "",
     date: "",
     isRecurring: false,
     recurrenceInterval: 1,
     recurrenceUnit: "months" as RecurrenceUnit,
     note: "",
 });
+
+const DEFAULT_CARE_CATEGORIES = [
+    "Maladie",
+    "Bobo",
+    "Soins courants et cures",
+] as const;
 
 const horseOptions = computed(() =>
     horsesStore.horses.map((horse) => ({ title: horse.name, value: horse.id })),
@@ -234,6 +257,7 @@ const fillForm = (event: Event) => {
                   ? [event.product_id]
                   : [],
         careDescription: event.name || "",
+        category: event.category || "",
         date: toDateInputValue(event.event_date),
         isRecurring: Boolean(event.reminder_enabled) && (hasMonthly || hasYearly || hasDaily),
         recurrenceInterval,
@@ -246,6 +270,7 @@ const handleSubmit = async () => {
     const { errors, firstError } = await validateRequiredFieldsMap([
         { key: "horseIds", label: "au moins un cheval", value: form.value.horseIds?.length ? form.value.horseIds[0] : "" },
         { key: "careDescription", label: "le type de soin", value: form.value.careDescription?.trim() },
+        { key: "category", label: "la catégorie", value: form.value.category?.trim() },
         { key: "date", label: "la date du soin", value: form.value.date },
     ]);
     fieldErrors.value = errors;
@@ -268,6 +293,7 @@ const handleSubmit = async () => {
             product_ids: form.value.productIds.length
                 ? [...form.value.productIds]
                 : undefined,
+            category: form.value.category.trim(),
             description: form.value.note.trim() || undefined,
             is_care: true,
             
@@ -344,12 +370,38 @@ const loadProducts = async () => {
     }
 };
 
+const loadCareCategories = async () => {
+    try {
+        const [events, history] = await Promise.all([
+            eventsStore.fetchEvents(),
+            eventsStore.fetchCareHistory(),
+        ]);
+        const dynamic = [
+            ...events
+                .filter((item) => item.is_care)
+                .map((item) => item.category?.trim())
+                .filter((value): value is string => Boolean(value)),
+            ...history
+                .map((item) => item.category?.trim())
+                .filter((value): value is string => Boolean(value)),
+        ];
+        const merged = new Set<string>([...DEFAULT_CARE_CATEGORIES, ...dynamic]);
+        careCategoryOptions.value = Array.from(merged).sort((a, b) =>
+            a.localeCompare(b, "fr"),
+        );
+    } catch (error) {
+        logger.error("Error loading care categories:", error);
+        careCategoryOptions.value = [...DEFAULT_CARE_CATEGORIES];
+    }
+};
+
 onMounted(async () => {
     isLoading.value = true;
     try {
         await Promise.all([
             horsesStore.loadHorses(),
-            loadProducts()
+            loadProducts(),
+            loadCareCategories(),
         ]);
 
         if (isEdit.value) {

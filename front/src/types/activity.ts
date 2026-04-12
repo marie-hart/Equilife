@@ -33,6 +33,8 @@ export interface CreateEventDto {
     event_date: string;
     horse_id?: string;
     product_id?: string;
+    product_ids?: string[];
+    category?: string;
     is_care?: boolean;
     reminder_type?: "soin" | "activité" | "alimentation" | "autres";
     activity_type?: string;

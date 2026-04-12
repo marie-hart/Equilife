@@ -5,6 +5,7 @@ export interface RationItem {
     ration_id: string;
     product_id?: string;
     quantity?: string;
+    unit?: "kg" | "L" | "g";
     frequency: string[];
     type?: "Granulés" | "Complément" | "Autres";
     created_at: string;
@@ -68,6 +69,7 @@ export type RationFormItem = {
     key: string;
     productId: string;
     quantity: string;
+    unit: "kg" | "L" | "g";
     frequency: string[];
     type: "Granulés" | "Complément" | "Autres";
 };

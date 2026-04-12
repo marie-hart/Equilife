@@ -69,7 +69,7 @@
                         </v-list-item-title>
                         
                         <v-list-item-subtitle class="text-body-2">
-                          <span class="font-weight-black" style="color: #7B5B3E">{{ item.quantity }}kg</span>
+                          <span class="font-weight-black" style="color: #7B5B3E">{{ formatQuantity(item.quantity) }}</span>
                           <span class="mx-2">•</span>
                           <span>{{ item.type || 'Aliment' }}</span>
                         </v-list-item-subtitle>
@@ -202,6 +202,13 @@ const loadData = async () => {
 const handleEdit = () => {
   if (ration.value?.horse_id) horsesStore.sethorseId(ration.value.horse_id);
   router.push({ name: "FeedingEdit", params: { rationId: rationId.value } });
+};
+
+const formatQuantity = (raw?: string) => {
+  const value = (raw || "").trim();
+  if (!value) return "—";
+  if (/^[0-9]+(?:[.,][0-9]+)?$/.test(value)) return `${value}kg`;
+  return value;
 };
 
 onMounted(loadData);

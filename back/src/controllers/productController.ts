@@ -4,6 +4,7 @@ import { CreateProductDto, UpdateProductDto } from "../types";
 import {
     PRODUCT_FORBIDDEN_HORSE_ERROR,
     PRODUCT_HORSE_REQUIRED_ERROR,
+    PRODUCT_NAME_CONFLICT_ERROR,
 } from "../repositories/productRepository";
 
 export class ProductController {
@@ -82,6 +83,15 @@ export class ProductController {
                 res.status(403).json({ error: "Accès refusé à ce cheval" });
                 return;
             }
+            if (
+                error instanceof Error &&
+                error.message === PRODUCT_NAME_CONFLICT_ERROR
+            ) {
+                res.status(409).json({
+                    error: "Un produit avec ce nom existe déjà pour cet utilisateur",
+                });
+                return;
+            }
             if ((error as { code?: string }).code === "23505") {
                 res.status(409).json({ error: "Product with this name already exists" });
                 return;
@@ -119,6 +129,15 @@ export class ProductController {
                 error.message === PRODUCT_FORBIDDEN_HORSE_ERROR
             ) {
                 res.status(403).json({ error: "Accès refusé à ce cheval" });
+                return;
+            }
+            if (
+                error instanceof Error &&
+                error.message === PRODUCT_NAME_CONFLICT_ERROR
+            ) {
+                res.status(409).json({
+                    error: "Un produit avec ce nom existe déjà pour cet utilisateur",
+                });
                 return;
             }
             // ... gestion erreur 23505 et dbMessage identique à create

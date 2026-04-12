@@ -52,8 +52,21 @@
         <v-col cols="12" v-if="isStockManaged">
           <div class="text-overline mb-2 ps-1" :style="{ color: '#7B5B3E' }">Suivi des stocks</div>
           <v-card variant="flat" color="#F5EFE6" rounded="xl" class="pa-4 mb-4">
+            <v-switch
+              v-model="stockTrackingEnabled"
+              color="#2E4B36"
+              inset
+              hide-details
+              class="mb-3"
+              label="Activer le suivi des stocks"
+            />
+
+            <p v-if="!stockTrackingEnabled" class="text-caption mb-0" style="color: #7B5B3E;">
+              Optionnel: vous pouvez enregistrer le produit sans suivi de stock.
+            </p>
+
             <v-row dense>
-              <v-col cols="12">
+              <v-col cols="12" v-if="stockTrackingEnabled">
                 <v-menu :close-on-content-click="false">
                   <template v-slot:activator="{ props }">
                     <v-text-field
@@ -78,7 +91,7 @@
                 </v-menu>
               </v-col>
 
-              <v-col cols="6">
+              <v-col cols="6" v-if="stockTrackingEnabled">
                 <v-text-field
                   v-model.number="localForm.quantity_purchased"
                   label="Quantité reçue *"
@@ -92,7 +105,7 @@
                 />
               </v-col>
 
-              <v-col cols="6">
+              <v-col cols="6" v-if="stockTrackingEnabled">
                 <v-select
                   v-model="localForm.unit"
                   :items="unitOptions"
@@ -105,7 +118,7 @@
                 />
               </v-col>
 
-              <v-col cols="12">
+              <v-col cols="12" v-if="stockTrackingEnabled">
                 <v-text-field
                   v-model.number="localForm.daily_usage"
                   :label="dailyUsageLabel"
@@ -170,7 +183,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import type { Product } from "@/types";
 import { toDateInputValue, formatDateShort } from "@/libs/date";
 
@@ -212,6 +225,31 @@ const STOCK_TYPES = ["Granulés", "Complément"];
 const isStockManaged = computed(() =>
   STOCK_TYPES.includes(localForm.category || "")
 );
+
+const hasStockTrackingData = computed(
+  () =>
+    Boolean(localForm.last_purchase_date) &&
+    typeof localForm.quantity_purchased === "number" &&
+    localForm.quantity_purchased > 0 &&
+    typeof localForm.daily_usage === "number" &&
+    localForm.daily_usage > 0
+);
+
+const stockTrackingEnabled = ref(hasStockTrackingData.value);
+
+watch(
+  () => props.modelValue,
+  () => {
+    stockTrackingEnabled.value = hasStockTrackingData.value;
+  },
+  { deep: true }
+);
+
+watch(isStockManaged, (enabled) => {
+  if (!enabled) {
+    stockTrackingEnabled.value = false;
+  }
+});
 
 const typeOptions = [
   "Granulés",
@@ -265,7 +303,7 @@ const validate = () => {
   
   if (!localForm.category) errors.category = ["Champ obligatoire"];
 
-  if (isStockManaged.value) {
+  if (isStockManaged.value && stockTrackingEnabled.value) {
     if (!localForm.last_purchase_date) errors.last_purchase_date = ["Champ obligatoire"];
     if (!localForm.quantity_purchased) errors.quantity_purchased = ["Champ obligatoire"];
     if (!localForm.daily_usage) errors.daily_usage = ["Champ obligatoire"];
@@ -276,6 +314,12 @@ const validate = () => {
 
 const handleSubmit = () => {
   if (!validate()) return;
+  if (isStockManaged.value && !stockTrackingEnabled.value) {
+    localForm.last_purchase_date = undefined;
+    localForm.quantity_purchased = undefined;
+    localForm.daily_usage = undefined;
+    localForm.unit = undefined;
+  }
   emit("submit");
 };
 </script>

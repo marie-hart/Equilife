@@ -152,6 +152,7 @@ export class EventController {
                 original_event_id: id,
                 horse_id: event.horse_id!,
                 product_id: event.product_id,
+                category: event.category,
                 name: event.name,
                 description: event.description,
                 event_date: doneDateStr,
