@@ -173,7 +173,7 @@ const snackbar = ref({ show: false, message: "", color: "success" });
 const productId = route.params.id as string;
 
 const isManaged = computed(() => {
-    const cats = ["Granulés", "Complément", "Aliments"];
+    const cats = ["Granulés", "Complément", "Pharmacie", "Aliments"];
     if (!product.value || !cats.includes(product.value.category || "")) return false;
     const quantity = Number(product.value.quantity_purchased);
     const daily = Number(product.value.daily_usage);

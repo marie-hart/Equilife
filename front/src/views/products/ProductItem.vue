@@ -38,7 +38,7 @@ import type { Product } from "@/types";
 
 const props = defineProps<{ product: Product }>();
 
-const STOCK_TYPES = ["Granulés", "Complément"];
+const STOCK_TYPES = ["Granulés", "Complément", "Pharmacie"];
 
 const asPositiveNumber = (value: unknown): number | null => {
   if (value === null || value === undefined || value === "") return null;

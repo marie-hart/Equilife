@@ -220,7 +220,7 @@ watch(
   { deep: true }
 );
 
-const STOCK_TYPES = ["Granulés", "Complément"];
+const STOCK_TYPES = ["Granulés", "Complément", "Pharmacie"];
 
 const isStockManaged = computed(() =>
   STOCK_TYPES.includes(localForm.category || "")

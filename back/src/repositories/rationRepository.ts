@@ -4,6 +4,9 @@ import cacheService from "../services/cacheService";
 import { syncProductDailyUsageFromRations } from "../services/rationProductSyncService";
 import { CreateRationDto, UpdateRationDto, Ration, RationItem } from "../types";
 
+const FORBIDDEN_HORSE_ERROR = "FORBIDDEN_HORSE";
+const HORSE_REQUIRED_ERROR = "HORSE_REQUIRED";
+
 export class RationRepository {
     private hasRationsTableCache: boolean | null = null;
     private hasRationItemsTableCache: boolean | null = null;
@@ -36,19 +39,37 @@ export class RationRepository {
         }
         return exists;
     }
-    async findAll(horseId?: string): Promise<Ration[]> {
+    async findAll(horseId?: string, ownerUserId?: string): Promise<Ration[]> {
         const hasRationsTable = await this.hasTable("rations", "rations");
         if (!hasRationsTable) {
             return [];
         }
-        const rationsResult = horseId
-            ? await pool.query(
-                  `SELECT * FROM rations WHERE horse_id = $1 ORDER BY start_date DESC NULLS LAST, created_at DESC`,
-                  [horseId],
-              )
-            : await pool.query(
-                  `SELECT * FROM rations ORDER BY start_date DESC NULLS LAST, created_at DESC`,
-              );
+        const rationsResult = ownerUserId
+            ? horseId
+                ? await pool.query(
+                      `SELECT r.*
+                       FROM rations r
+                       INNER JOIN horses h ON h.id = r.horse_id
+                       WHERE h.user_id = $1 AND r.horse_id = $2
+                       ORDER BY r.start_date DESC NULLS LAST, r.created_at DESC`,
+                      [ownerUserId, horseId],
+                  )
+                : await pool.query(
+                      `SELECT r.*
+                       FROM rations r
+                       INNER JOIN horses h ON h.id = r.horse_id
+                       WHERE h.user_id = $1
+                       ORDER BY r.start_date DESC NULLS LAST, r.created_at DESC`,
+                      [ownerUserId],
+                  )
+            : horseId
+              ? await pool.query(
+                    `SELECT * FROM rations WHERE horse_id = $1 ORDER BY start_date DESC NULLS LAST, created_at DESC`,
+                    [horseId],
+                )
+              : await pool.query(
+                    `SELECT * FROM rations ORDER BY start_date DESC NULLS LAST, created_at DESC`,
+                );
 
         if (rationsResult.rows.length === 0) {
             return [];
@@ -85,7 +106,14 @@ export class RationRepository {
         });
     }
 
-    async create(data: CreateRationDto): Promise<Ration> {
+    async create(data: CreateRationDto, ownerUserId?: string): Promise<Ration> {
+        if (ownerUserId && !data.horse_id) {
+            throw new Error(HORSE_REQUIRED_ERROR);
+        }
+        if (ownerUserId && data.horse_id) {
+            const isOwner = await this.horseBelongsToUser(data.horse_id, ownerUserId);
+            if (!isOwner) throw new Error(FORBIDDEN_HORSE_ERROR);
+        }
         const client = await pool.connect();
         try {
             await client.query("BEGIN");
@@ -150,15 +178,20 @@ export class RationRepository {
         }
     }
 
-    async findById(id: string): Promise<Ration | null> {
+    async findById(id: string, ownerUserId?: string): Promise<Ration | null> {
         const hasRationsTable = await this.hasTable("rations", "rations");
         if (!hasRationsTable) {
             return null;
         }
-        const rationsResult = await pool.query(
-            `SELECT * FROM rations WHERE id = $1`,
-            [id],
-        );
+        const rationsResult = ownerUserId
+            ? await pool.query(
+                  `SELECT r.*
+                   FROM rations r
+                   INNER JOIN horses h ON h.id = r.horse_id
+                   WHERE r.id = $1 AND h.user_id = $2`,
+                  [id, ownerUserId],
+              )
+            : await pool.query(`SELECT * FROM rations WHERE id = $1`, [id]);
         if (rationsResult.rows.length === 0) {
             return null;
         }
@@ -178,13 +211,33 @@ export class RationRepository {
         return { ...ration, items };
     }
 
-    async update(id: string, data: UpdateRationDto): Promise<Ration | null> {
+    async update(
+        id: string,
+        data: UpdateRationDto,
+        ownerUserId?: string,
+    ): Promise<Ration | null> {
+        const existing = await this.findById(id, ownerUserId);
+        if (!existing) return null;
         const client = await pool.connect();
         try {
             await client.query("BEGIN");
             const hasRationsTable = await this.hasTable("rations", "rations");
             if (!hasRationsTable) {
                 throw new Error("Missing table rations");
+            }
+            const values: unknown[] = [
+                data.name ?? null,
+                data.start_date ?? null,
+                data.end_date ?? null,
+                data.note ?? null,
+                data.is_active ?? null,
+                id,
+            ];
+            let whereClause = "WHERE id = $6";
+            if (ownerUserId) {
+                values.push(ownerUserId);
+                whereClause =
+                    "WHERE id = $6 AND horse_id IN (SELECT id FROM horses WHERE user_id = $7)";
             }
             const result = await client.query(
                 `UPDATE rations
@@ -193,16 +246,9 @@ export class RationRepository {
                     end_date = $3,      -- On enlève COALESCE pour autoriser le NULL
                     note = $4,          -- On enlève COALESCE pour autoriser le NULL
                     is_active = COALESCE($5, is_active)
-                WHERE id = $6
+                ${whereClause}
                 RETURNING *`,
-                [
-                    data.name ?? null,
-                    data.start_date ?? null, // Si c'est null, ça videra la colonne en base
-                    data.end_date ?? null,
-                    data.note ?? null,
-                    data.is_active ?? null,
-                    id,
-                ],
+                values,
             );
             if (result.rows.length === 0) {
                 await client.query("ROLLBACK");
@@ -296,11 +342,11 @@ private async invalidateRationCache(ration: Ration): Promise<void> {
     }
 }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: string, ownerUserId?: string): Promise<boolean> {
     const client = await pool.connect();
     try {
         // 1. Récupérer la ration avant de la supprimer pour connaître le horse_id (utile pour le cache)
-        const existing = await this.findById(id);
+        const existing = await this.findById(id, ownerUserId);
         if (!existing) return false;
 
         await client.query("BEGIN");
@@ -309,7 +355,14 @@ private async invalidateRationCache(ration: Ration): Promise<void> {
         await client.query(`DELETE FROM ration_items WHERE ration_id = $1`, [id]);
         
         // Supprimer la ration
-        const result = await client.query(`DELETE FROM rations WHERE id = $1`, [id]);
+        const result = ownerUserId
+            ? await client.query(
+                  `DELETE FROM rations
+                   WHERE id = $1
+                     AND horse_id IN (SELECT id FROM horses WHERE user_id = $2)`,
+                  [id, ownerUserId],
+              )
+            : await client.query(`DELETE FROM rations WHERE id = $1`, [id]);
         
         await client.query("COMMIT");
 
@@ -368,6 +421,18 @@ private async invalidateRationCache(ration: Ration): Promise<void> {
             updated_at: new Date(row.updated_at),
         };
     }
+
+    private async horseBelongsToUser(
+        horseId: string,
+        ownerUserId: string,
+    ): Promise<boolean> {
+        const result = await pool.query(
+            `SELECT 1 FROM horses WHERE id = $1 AND user_id = $2`,
+            [horseId, ownerUserId],
+        );
+        return (result.rowCount ?? 0) > 0;
+    }
 }
 
 export default new RationRepository();
+export { FORBIDDEN_HORSE_ERROR, HORSE_REQUIRED_ERROR };

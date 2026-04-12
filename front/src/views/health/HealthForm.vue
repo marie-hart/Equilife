@@ -212,9 +212,8 @@ const horseOptions = computed(() =>
 );
 
 const productOptions = computed(() => {
-    const excluded = new Set(["Aliment", "Complément"]);
     return products.value
-        .filter((p) => p.is_active && (!p.category || !excluded.has(p.category)))
+        .filter((p) => p.is_active)
         .map((p) => ({
             title: `${p.name} ${p.brand ? `(${p.brand})` : ''}`,
             value: p.id

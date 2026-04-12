@@ -1,6 +1,6 @@
 import type { Product } from "@/types";
 
-const STOCK_MANAGED_TYPES = ["Granulés", "Complément"];
+const STOCK_MANAGED_TYPES = ["Granulés", "Complément", "Pharmacie"];
 
 export const isStockManaged = (product: Product) =>
   STOCK_MANAGED_TYPES.includes(product.category);
