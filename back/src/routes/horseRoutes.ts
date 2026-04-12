@@ -1,7 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import horseController from "../controllers/horseController";
-import { upload } from "../config/upload";
+import { horsePhotoMaxMb, upload } from "../config/upload";
 
 const router = Router();
 
@@ -18,7 +18,9 @@ router.post("/:id/photo", (req, res, next) => {
         }
         if (err instanceof multer.MulterError) {
             if (err.code === "LIMIT_FILE_SIZE") {
-                res.status(400).json({ error: "Image trop volumineuse (max 5MB)" });
+                res.status(400).json({
+                    error: `Image trop volumineuse (max ${horsePhotoMaxMb}MB)`,
+                });
                 return;
             }
             res.status(400).json({ error: err.message || "Fichier invalide" });

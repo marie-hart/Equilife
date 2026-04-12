@@ -17,6 +17,11 @@ const ALLOWED_IMAGE_EXT = [
     ".heic",
     ".heif",
 ];
+const HORSE_PHOTO_MAX_MB = Number(process.env.HORSE_PHOTO_MAX_MB || "8");
+const HORSE_PHOTO_MAX_BYTES = Math.max(
+    1,
+    Math.floor(HORSE_PHOTO_MAX_MB * 1024 * 1024),
+);
 
 /** Extension sûre uniquement (évite path traversal / double extension). */
 function getSafeImageExtension(originalname: string): string {
@@ -60,9 +65,10 @@ const fileFilter = (
 export const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB max
+        fileSize: HORSE_PHOTO_MAX_BYTES,
     },
     fileFilter: fileFilter,
 });
 
 export const uploadsDirPath = uploadsDir;
+export const horsePhotoMaxMb = HORSE_PHOTO_MAX_MB;
