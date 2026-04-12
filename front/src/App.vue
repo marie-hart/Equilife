@@ -53,12 +53,7 @@ const authStore = useAuthStore();
 
 const isAppReady = ref(false);
 const horsesStore = useHorsesStore();
-const isAndroid = /Android/i.test(window.navigator.userAgent || "");
-const isStandalone =
-    window.matchMedia?.("(display-mode: standalone)")?.matches === true ||
-    (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-const skipInAppSplash = isAndroid && isStandalone;
-const showInAppSplash = computed(() => !isAppReady.value && !skipInAppSplash);
+const showInAppSplash = computed(() => !isAppReady.value);
 
 const handleUnauthorized = () => {
     authStore.logout();
@@ -89,7 +84,7 @@ onMounted(async () => {
 
     setTimeout(() => {
       isAppReady.value = true;
-    }, skipInAppSplash ? 0 : 1500);
+    }, 1500);
 
   } catch (error) {
     logger.error("Erreur au chargement:", error);
