@@ -58,13 +58,16 @@
             
             <v-col cols="12" md="6">
               <v-select
-                v-model="form.productId"
+                v-model="form.productIds"
                 :items="productOptions"
-                label="Produit utilisé (optionnel)"
+                label="Produits utilisés (optionnel)"
                 density="comfortable"
                 variant="outlined"
                 color="#2E4B36"
                 rounded="lg"
+                multiple
+                chips
+                closable-chips
                 clearable
               />
             </v-col>
@@ -171,7 +174,7 @@ const isEdit = computed(() => Boolean(route.name === 'HealthEdit'));
 
 const form = ref({
     horseIds: [] as string[],
-    productId: "",
+    productIds: [] as string[],
     careDescription: "",
     date: "",
     isRecurring: false,
@@ -224,7 +227,12 @@ const fillForm = (event: Event) => {
 
     form.value = {
         horseIds: [event.horse_id || ""],
-        productId: event.product_id || "",
+        productIds:
+            event.product_ids && event.product_ids.length > 0
+                ? [...event.product_ids]
+                : event.product_id
+                  ? [event.product_id]
+                  : [],
         careDescription: event.name || "",
         date: toDateInputValue(event.event_date),
         isRecurring: Boolean(event.reminder_enabled) && (hasMonthly || hasYearly || hasDaily),
@@ -256,7 +264,10 @@ const handleSubmit = async () => {
         const basePayload = {
             name: form.value.careDescription.trim(),
             event_date: localDate.toISOString(),
-            product_id: form.value.productId || undefined, 
+            product_id: form.value.productIds[0] || undefined,
+            product_ids: form.value.productIds.length
+                ? [...form.value.productIds]
+                : undefined,
             description: form.value.note.trim() || undefined,
             is_care: true,
             

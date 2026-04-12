@@ -419,12 +419,15 @@ const handleSubmit = async () => {
 
     } catch (error: any) {
         logger.error("Save error:", error);
-        const serverMsg = error.response?.data?.message || "";
-        formError.value = `Erreur serveur (500): ${serverMsg || "Vérifiez les champs"}`;
+        const serverMsg =
+            error.response?.data?.error ||
+            error.response?.data?.message ||
+            "";
+        formError.value = serverMsg || "Enregistrement impossible. Vérifiez les champs.";
         
         snackbar.value = {
             show: true,
-            message: "Enregistrement impossible.",
+            message: serverMsg || "Enregistrement impossible.",
             color: "error",
         };
     } finally {

@@ -108,7 +108,7 @@
               <v-col cols="12">
                 <v-text-field
                   v-model.number="localForm.daily_usage"
-                  label="Consommation journalière *"
+                  :label="dailyUsageLabel"
                   placeholder="0.0"
                   type="number"
                   variant="solo"
@@ -117,6 +117,7 @@
                   rounded="lg"
                   density="comfortable"
                   prepend-inner-icon="mdi-silverware-fork-knife"
+                  :suffix="dailyUsageSuffix"
                   :error-messages="errors.daily_usage"
                 />
               </v-col>
@@ -242,6 +243,20 @@ const onDateSelected = () => {
 };
 
 const unitOptions = ["kg", "L", "g"];
+
+const dailyUsageSuffix = computed(() => {
+  if (localForm.unit === "L") return "L/jour";
+  if (localForm.unit === "kg") return "kg/jour";
+  if (localForm.unit === "g") return "g/jour";
+  return "/jour";
+});
+
+const dailyUsageLabel = computed(() => {
+  if (localForm.unit === "L") return "Consommation journalière (L) *";
+  if (localForm.unit === "kg") return "Consommation journalière (kg) *";
+  if (localForm.unit === "g") return "Consommation journalière (g) *";
+  return "Consommation journalière *";
+});
 
 const validate = () => {
   Object.keys(errors).forEach(k => delete errors[k]);

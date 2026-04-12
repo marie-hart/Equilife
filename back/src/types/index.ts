@@ -6,6 +6,7 @@ export interface Event {
     event_date: Date;
     horse_id?: string;
     product_id?: string;
+    product_ids?: string[];
     is_care?: boolean;
     reminder_type?: "soin" | "activité" | "alimentation" | "autres";
     activity_type?: string;
@@ -28,6 +29,7 @@ export interface CreateEventDto {
     event_date: string; // Format: YYYY-MM-DD
     horse_id?: string;
     product_id?: string;
+    product_ids?: string[];
     is_care?: boolean;
     reminder_type?: "soin" | "activité" | "alimentation" | "autres";
     activity_type?: string;
@@ -68,6 +70,7 @@ export interface UpdateEventDto {
     event_date?: string;
     horse_id?: string;
     product_id?: string;
+    product_ids?: string[];
     is_care?: boolean;
     reminder_type?: "soin" | "activité" | "alimentation" | "autres";
     activity_type?: string;

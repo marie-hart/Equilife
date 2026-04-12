@@ -112,7 +112,7 @@
 }
 </style>
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onActivated, onMounted, ref } from "vue";
 import { logger } from "@/services/LoggerService";
 import type { Product } from "@/types";
 import ProductItem from "./ProductItem.vue";
@@ -156,21 +156,21 @@ const normalProducts = computed(() =>
   searchedProducts.value.filter(p => !['rupture', 'low'].includes(getStockStatus(p)))
 );
 
-const currentProducts = computed(() => 
-  props.products?.length ? props.products : localProducts.value
-);
-
-onMounted(async () => {
-  if (allProducts.value.length === 0) {
-    try {
-      localProducts.value = await productApi.getAll();
-    } catch (error) {
-      logger.error("Erreur:", error);
-    } finally {
-      isLoading.value = false;
-    }
-  } else {
+async function loadProducts() {
+  if (props.products && props.products.length > 0) {
+    isLoading.value = false;
+    return;
+  }
+  isLoading.value = true;
+  try {
+    localProducts.value = await productApi.getAll();
+  } catch (error) {
+    logger.error("Erreur:", error);
+  } finally {
     isLoading.value = false;
   }
-});
+}
+
+onMounted(loadProducts);
+onActivated(loadProducts);
 </script>

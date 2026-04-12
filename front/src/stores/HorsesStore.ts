@@ -170,25 +170,34 @@ export const useHorsesStore = defineStore('horses', () => {
 
     async function uploadHorsePhoto(id: string, file: File): Promise<void> {
         try {
-            await horsesApi.uploadPhoto(id, file);
+            const updatedHorse = await horsesApi.uploadPhoto(id, file);
+            const base64String = await fileToDataUrl(file);
+            setStoredHorsePhoto(id, base64String);
 
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => {
-                const base64String = reader.result as string;
-
-                setStoredHorsePhoto(id, base64String);
-
-                const horseIndex = horses.value.findIndex(h => h.id === id);
-                if (horseIndex !== -1) {
-                    horses.value[horseIndex].photoBase64 = base64String;
-                }
+            const enriched = {
+                ...enrichHorseWithStoredPhoto(updatedHorse),
+                photoBase64: base64String,
             };
-
-            await loadHorseById(id);
+            const horseIndex = horses.value.findIndex((h) => h.id === id);
+            if (horseIndex !== -1) {
+                horses.value[horseIndex] = enriched;
+            } else {
+                horses.value.push(enriched);
+            }
         } catch (error) {
             logger.error("Erreur upload photo:", error);
+            throw error;
         }   
 }
-    
+
+    function fileToDataUrl(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ""));
+            reader.onerror = () =>
+                reject(reader.error || new Error("Impossible de lire l'image"));
+            reader.readAsDataURL(file);
+        });
+    }
+
 })

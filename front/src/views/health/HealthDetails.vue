@@ -52,9 +52,9 @@
           <v-col cols="6">
             <v-card variant="flat" color="#F5EFE6" rounded="xl" class="pa-4 text-center">
               <v-icon color="#7B5B3E" class="mb-1">mdi-pill</v-icon>
-              <div class="text-caption" style="color: #7B5B3E">Produit</div>
+              <div class="text-caption" style="color: #7B5B3E">Produits</div>
               <div class="text-subtitle-1 font-weight-bold" style="color: #2E4B36">
-                {{ productName || '—' }}
+                {{ productNamesLabel }}
               </div>
             </v-card>
           </v-col>
@@ -145,7 +145,7 @@ const router = useRouter();
 const horsesStore = useHorsesStore();
 const eventsStore = useEventsStore();
 const care = ref<Event | null>(null);
-const productName = ref<string>("");
+const productNames = ref<string[]>([]);
 const isLoading = ref(true);
 const deleteDialogOpen = ref(false);
 const snackbar = ref({ show: false, message: "", color: "#2E4B36" });
@@ -164,16 +164,33 @@ const recurrenceLabel = computed(() => {
     return "";
 });
 
+const productNamesLabel = computed(() =>
+    productNames.value.length ? productNames.value.join(", ") : "—",
+);
+
 const loadCare = async () => {
     try {
         care.value = await eventsApi.getById(id);
-        if (care.value?.product_id) {
-            try {
-                const p = await productApi.getById(care.value.product_id);
-                productName.value = p?.name || "";
-            } catch {
-                productName.value = "";
-            }
+        const productIds =
+            care.value?.product_ids && care.value.product_ids.length
+                ? care.value.product_ids
+                : care.value?.product_id
+                  ? [care.value.product_id]
+                  : [];
+        if (productIds.length > 0) {
+            const names = await Promise.all(
+                productIds.map(async (productId) => {
+                    try {
+                        const p = await productApi.getById(productId);
+                        return p?.name || "";
+                    } catch {
+                        return "";
+                    }
+                }),
+            );
+            productNames.value = names.filter(Boolean);
+        } else {
+            productNames.value = [];
         }
     } catch (error) {
         logger.error("Error loading care details", error);

@@ -8,7 +8,15 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const ALLOWED_IMAGE_EXT = [".jpeg", ".jpg", ".png", ".gif", ".webp"];
+const ALLOWED_IMAGE_EXT = [
+    ".jpeg",
+    ".jpg",
+    ".png",
+    ".gif",
+    ".webp",
+    ".heic",
+    ".heif",
+];
 
 /** Extension sûre uniquement (évite path traversal / double extension). */
 function getSafeImageExtension(originalname: string): string {
@@ -32,7 +40,7 @@ const fileFilter = (
     file: Express.Multer.File,
     cb: multer.FileFilterCallback,
 ) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const allowedTypes = /jpeg|jpg|png|gif|webp|heic|heif/;
     const extname = allowedTypes.test(
         path.extname(file.originalname).toLowerCase(),
     );
@@ -43,7 +51,7 @@ const fileFilter = (
     } else {
         cb(
             new Error(
-                "Seules les images sont autorisées (jpeg, jpg, png, gif, webp)",
+                "Seules les images sont autorisées (jpeg, jpg, png, gif, webp, heic, heif)",
             ),
         );
     }

@@ -8,7 +8,10 @@ const FORBIDDEN_HORSE_ERROR = "FORBIDDEN_HORSE";
 const HORSE_REQUIRED_ERROR = "HORSE_REQUIRED";
 
 export class EventRepository {
+    private eventProductsReady = false;
+
     async findAll(horseId?: string, ownerUserId?: string): Promise<Event[]> {
+        await this.ensureEventProductsTable();
         const cacheKey = CacheKeys.eventsListKey(horseId, ownerUserId);
         const cached = await cacheService.get<Event[]>(cacheKey);
         if (cached) return cached;
@@ -42,12 +45,13 @@ export class EventRepository {
                 )
               : await pool.query("SELECT * FROM events ORDER BY event_date DESC");
 
-        const events = result.rows.map(this.mapRowToEvent);
+        const events = await this.attachProductIds(result.rows.map(this.mapRowToEvent));
         await cacheService.set(cacheKey, events, 300);
         return events;
     }
 
     async findById(id: string, ownerUserId?: string): Promise<Event | null> {
+        await this.ensureEventProductsTable();
         if (!ownerUserId) {
             const cacheKey = CacheKeys.eventKey(id);
             const cached = await cacheService.get<Event>(cacheKey);
@@ -67,7 +71,7 @@ export class EventRepository {
             : await pool.query("SELECT * FROM events WHERE id = $1", [id]);
 
         if (result.rows.length === 0) return null;
-        const event = this.mapRowToEvent(result.rows[0]);
+        const [event] = await this.attachProductIds([this.mapRowToEvent(result.rows[0])]);
         if (!ownerUserId) {
             await cacheService.set(CacheKeys.eventKey(id), event, 600);
         }
@@ -75,6 +79,7 @@ export class EventRepository {
     }
 
     async create(data: CreateEventDto, ownerUserId?: string): Promise<Event> {
+        await this.ensureEventProductsTable();
         if (ownerUserId && !data.horse_id) {
             throw new Error(HORSE_REQUIRED_ERROR);
         }
@@ -127,8 +132,13 @@ export class EventRepository {
         );
 
         const event = this.mapRowToEvent(result.rows[0]);
+        await this.syncEventProducts(
+            event.id,
+            this.normalizeProductIds(data.product_ids, data.product_id),
+        );
+        const [eventWithProducts] = await this.attachProductIds([event]);
         await this.invalidateCache(event.id, event.horse_id, ownerUserId);
-        return event;
+        return eventWithProducts;
     }
 
     async update(
@@ -136,6 +146,7 @@ export class EventRepository {
         data: UpdateEventDto,
         ownerUserId?: string,
     ): Promise<Event | null> {
+        await this.ensureEventProductsTable();
         const existing = await this.findById(id, ownerUserId);
         if (!existing) return null;
         if (ownerUserId && data.horse_id) {
@@ -234,11 +245,19 @@ export class EventRepository {
 
         if (result.rows.length === 0) return null;
         const event = this.mapRowToEvent(result.rows[0]);
+        if (data.product_ids !== undefined || data.product_id !== undefined) {
+            await this.syncEventProducts(
+                id,
+                this.normalizeProductIds(data.product_ids, data.product_id),
+            );
+        }
+        const [eventWithProducts] = await this.attachProductIds([event]);
         await this.invalidateCache(id, event.horse_id, ownerUserId);
-        return event;
+        return eventWithProducts;
     }
 
     async delete(id: string, ownerUserId?: string): Promise<boolean> {
+        await this.ensureEventProductsTable();
         const existing = await this.findById(id, ownerUserId);
         if (!existing) return false;
         const result = await pool.query("DELETE FROM events WHERE id = $1", [id]);
@@ -250,6 +269,7 @@ export class EventRepository {
     }
 
     async getReminders(horseId?: string, ownerUserId?: string): Promise<Event[]> {
+        await this.ensureEventProductsTable();
         const safeHorseId = horseId && horseId.length > 0 ? horseId : undefined;
         const cacheKey = CacheKeys.eventsRemindersKey(safeHorseId, ownerUserId);
         const cached = await cacheService.get<Event[]>(cacheKey);
@@ -298,7 +318,7 @@ export class EventRepository {
                     `,
                 );
 
-        const events = result.rows.map(this.mapRowToEvent);
+        const events = await this.attachProductIds(result.rows.map(this.mapRowToEvent));
         await cacheService.set(cacheKey, events, 60);
         return events;
     }
@@ -340,6 +360,9 @@ export class EventRepository {
             event_date: new Date(row.event_date),
             horse_id: row.horse_id || undefined,
             product_id: row.product_id || undefined,
+            product_ids: Array.isArray(row.product_ids)
+                ? row.product_ids.map(String)
+                : undefined,
             reminder_enabled: row.reminder_enabled,
             reminder_type: row.reminder_type || undefined,
             activity_type: row.activity_type || undefined,
@@ -359,6 +382,72 @@ export class EventRepository {
             created_at: new Date(row.created_at),
             updated_at: new Date(row.updated_at),
         };
+    }
+
+    private normalizeProductIds(
+        productIds?: string[] | null,
+        productId?: string | null,
+    ): string[] {
+        const ids = (productIds && productIds.length > 0 ? productIds : productId ? [productId] : [])
+            .map((id) => String(id).trim())
+            .filter(Boolean);
+        return Array.from(new Set(ids));
+    }
+
+    private async ensureEventProductsTable(): Promise<void> {
+        if (this.eventProductsReady) return;
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS event_products (
+                event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+                product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                PRIMARY KEY (event_id, product_id)
+            );
+        `);
+        this.eventProductsReady = true;
+    }
+
+    private async syncEventProducts(
+        eventId: string,
+        productIds: string[],
+    ): Promise<void> {
+        await pool.query(`DELETE FROM event_products WHERE event_id = $1`, [eventId]);
+        if (!productIds.length) return;
+        await pool.query(
+            `
+                INSERT INTO event_products (event_id, product_id)
+                SELECT $1::uuid, unnest($2::uuid[])
+                ON CONFLICT DO NOTHING
+            `,
+            [eventId, productIds],
+        );
+    }
+
+    private async attachProductIds(events: Event[]): Promise<Event[]> {
+        if (!events.length) return events;
+        const ids = events.map((event) => event.id);
+        const result = await pool.query(
+            `
+                SELECT event_id::text, array_agg(product_id::text) AS product_ids
+                FROM event_products
+                WHERE event_id = ANY($1::uuid[])
+                GROUP BY event_id
+            `,
+            [ids],
+        );
+        const map = new Map<string, string[]>(
+            result.rows.map((row) => [
+                String(row.event_id),
+                Array.isArray(row.product_ids) ? row.product_ids.map(String) : [],
+            ]),
+        );
+        return events.map((event) => {
+            const merged = this.normalizeProductIds(
+                map.get(event.id) ?? [],
+                event.product_id,
+            );
+            return { ...event, product_ids: merged.length ? merged : undefined };
+        });
     }
 }
 
