@@ -87,16 +87,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
-import { eventsApi } from "@/api/events";
 import { ConfirmDeleteDialog } from "@/components";
 import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
+import { useEventsStore } from "@/stores/EventsStore";
 import { formatMonthLabel, sortByDateAsc, toMonthKey } from "@/libs/date";
 import type { ActivityAction, ActivityGroup, Event } from "@/types";
 import { ActivityList } from "@/views/activities";
 
 const { mdAndUp } = useDisplay();
 const horsesStore = useHorsesStore();
+const eventsStore = useEventsStore();
     
 const activities = ref<Event[]>([]);
 const isLoading = ref(true);
@@ -183,7 +184,7 @@ const deleteMessage = computed(() =>
 const confirmDelete = async () => {
     if (!selectedActivity.value) return;
     try {
-        await eventsApi.delete(selectedActivity.value.id);
+        await eventsStore.deleteEvent(selectedActivity.value.id);
         activities.value = activities.value.filter(
             (item) => item.id !== selectedActivity.value?.id,
         );
@@ -206,7 +207,7 @@ const loadActivities = async () => {
     isLoading.value = true;
     try {
         const horseFilter = horsesStore.horseId !== "all" ? horsesStore.horseId : undefined;
-        activities.value = await eventsApi.getAll(horseFilter as string);
+        activities.value = await eventsStore.fetchEvents(horseFilter as string);
     } catch (error) {
         logger.error("Error loading activities:", error);
     } finally {

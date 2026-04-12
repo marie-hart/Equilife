@@ -9,17 +9,26 @@
           <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
         </div>
         
-        <v-btn
-          variant="flat"
-          color="#2E4B36"
-          rounded="xl"
-          class="text-none font-weight-bold"
-          elevation="4"
-          @click="goToReminderCreate"
-        >
-          <v-icon icon="mdi-plus" class="me-1" />
-          Nouveau
-        </v-btn>
+        <div class="d-flex ga-2">
+          <v-btn
+            icon="mdi-refresh"
+            variant="tonal"
+            color="#7B5B3E"
+            rounded="xl"
+            @click="loadReminders(true)"
+          />
+          <v-btn
+            variant="flat"
+            color="#2E4B36"
+            rounded="xl"
+            class="text-none font-weight-bold"
+            elevation="4"
+            @click="goToReminderCreate"
+          >
+            <v-icon icon="mdi-plus" class="me-1" />
+            Nouveau
+          </v-btn>
+        </div>
       </div>
 
       <FiltersPanel
@@ -105,9 +114,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { eventsApi } from "@/api/events";
 import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
+import { useEventsStore } from "@/stores/EventsStore";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import { toDateInputValue, getReminderDate, fromDateInputValue, formatDateLong } from "@/libs/date";
 import { ConfirmDeleteDialog, DatePickerField, FiltersPanel } from "@/components";
@@ -145,6 +154,7 @@ const snackbar = ref({ show: false, message: "", color: "success" });
 const router = useRouter();
 const route = useRoute();
 const horsesStore = useHorsesStore(); 
+const eventsStore = useEventsStore();
 
 const statusOptions = [
     { title: "Tous", value: "all" },
@@ -269,7 +279,7 @@ const markDone = async (reminder: Event) => {
         return;
     }
     try {
-        await eventsApi.update(reminder.id, { reminder_enabled: false });
+        await eventsStore.updateEvent(reminder.id, { reminder_enabled: false });
         reminders.value = reminders.value.filter(item => item.id !== reminder.id);
         snackbar.value = { show: true, message: "Rappel marqué comme fait.", color: "success" };
     } catch (error) {
@@ -321,8 +331,8 @@ const saveEdit = async () => {
             reminder_interval_years: editForm.value.isRecurring && editForm.value.recurrenceUnit === "years" ? editForm.value.recurrenceInterval : 0,
         };
 
-        await eventsApi.update(selectedReminder.value.id, payload);
-        await loadReminders();
+        await eventsStore.updateEvent(selectedReminder.value.id, payload);
+        await loadReminders(true);
         isEditOpen.value = false;
         snackbar.value = { show: true, message: "Rappel mis à jour.", color: "success" };
     } catch (error) {
@@ -338,7 +348,7 @@ const openDelete = (reminder: Event) => {
 const confirmDelete = async () => {
     if (!selectedReminder.value) return;
     try {
-        await eventsApi.delete(selectedReminder.value.id);
+        await eventsStore.deleteEvent(selectedReminder.value.id);
         reminders.value = reminders.value.filter(item => item.id !== selectedReminder.value?.id);
         isDeleteOpen.value = false;
         snackbar.value = { show: true, message: "Rappel supprimé.", color: "success" };
@@ -353,19 +363,19 @@ const saveCareDone = async () => {
         const appointmentDate = fromDateInputValue(careDoneForm.value.date);
         const type = selectedReminder.value.reminder_type ?? "autres";
         
-        await eventsApi.create({
+        await eventsStore.createEvent({
             ...selectedReminder.value,
             event_date: appointmentDate,
             reminder_enabled: false,
             is_care: type === "soin",
         });
         
-        await eventsApi.update(selectedReminder.value.id, {
+        await eventsStore.updateEvent(selectedReminder.value.id, {
             event_date: appointmentDate,
             reminder_enabled: true,
         });
         
-        await loadReminders();
+        await loadReminders(true);
         isCareDoneOpen.value = false;
         snackbar.value = { show: true, message: "Soin enregistré et reprogrammé.", color: "success" };
     } catch (error) {
@@ -373,14 +383,13 @@ const saveCareDone = async () => {
     }
 };
 
-const loadReminders = async () => {
+const loadReminders = async (forceRefresh = false) => {
     isLoading.value = true;
     try {
         // Force le chargement des chevaux si nécessaire avant les rappels
         if (horsesStore.horses.length === 0) await horsesStore.loadHorses();
         
-        // Récupération directe
-        const data = await eventsApi.getReminders();
+        const data = await eventsStore.fetchReminders(undefined, forceRefresh);
         reminders.value = Array.isArray(data) ? data : [];
     } catch (error) {
         logger.error("Erreur chargement rappels:", error);

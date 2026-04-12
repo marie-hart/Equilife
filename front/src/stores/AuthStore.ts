@@ -10,10 +10,10 @@ const VITE_REQUIRE_LOGIN =
     import.meta.env.VITE_REQUIRE_LOGIN === "true";
 
 export const useAuthStore = defineStore("auth", () => {
-    const token = ref<string | null>(sessionStorage.getItem(TOKEN_KEY));
+    const token = ref<string | null>(localStorage.getItem(TOKEN_KEY));
     const authRequired = ref<boolean | null>(null);
     const authMode = ref<AuthMode | null>(null);
-    const userEmail = ref<string | null>(sessionStorage.getItem(USER_EMAIL_KEY));
+    const userEmail = ref<string | null>(localStorage.getItem(USER_EMAIL_KEY));
 
     const isAuthenticated = computed(() => Boolean(token.value));
     const isAuthKnown = computed(() => authRequired.value !== null);
@@ -27,18 +27,18 @@ export const useAuthStore = defineStore("auth", () => {
     function setToken(value: string | null) {
         token.value = value;
         if (value) {
-            sessionStorage.setItem(TOKEN_KEY, value);
+            localStorage.setItem(TOKEN_KEY, value);
         } else {
-            sessionStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(TOKEN_KEY);
         }
     }
 
     function setUserEmail(email: string | null) {
         userEmail.value = email;
         if (email) {
-            sessionStorage.setItem(USER_EMAIL_KEY, email);
+            localStorage.setItem(USER_EMAIL_KEY, email);
         } else {
-            sessionStorage.removeItem(USER_EMAIL_KEY);
+            localStorage.removeItem(USER_EMAIL_KEY);
         }
     }
 

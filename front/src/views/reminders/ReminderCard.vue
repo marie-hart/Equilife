@@ -53,7 +53,7 @@
   <script setup lang="ts">
   import { computed, onMounted, watch } from "vue";
   import { useHorsesStore } from "@/stores/HorsesStore";
-  import { eventsApi } from "@/api/events";
+  import { useEventsStore } from "@/stores/EventsStore";
   import { logger } from "@/services/LoggerService";
   import {
     sortByDateAsc,
@@ -64,6 +64,7 @@
   import { ref } from "vue";
   
   const horsesStore = useHorsesStore();
+  const eventsStore = useEventsStore();
   const reminders = ref<Event[]>([]);
   
   const getReminderDate = (reminder: Event): string =>
@@ -73,8 +74,8 @@
     try {
       const horseId = horsesStore.horseId !== "all" ? horsesStore.horseId : undefined;
       reminders.value = horseId
-        ? await eventsApi.getReminders(horseId)
-        : await eventsApi.getReminders();
+        ? await eventsStore.fetchReminders(horseId)
+        : await eventsStore.fetchReminders();
     } catch (error) {
       logger.error("Error loading reminders:", error);
       reminders.value = [];

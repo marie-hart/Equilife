@@ -53,7 +53,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-    const token = sessionStorage.getItem(TOKEN_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -64,8 +64,8 @@ apiClient.interceptors.response.use(
     (r) => r,
     (err) => {
         if (err?.response?.status === 401) {
-            sessionStorage.removeItem(TOKEN_KEY);
-            sessionStorage.removeItem(USER_EMAIL_KEY);
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_EMAIL_KEY);
             if (
                 typeof window !== "undefined" &&
                 !window.location.pathname.includes("/login") &&

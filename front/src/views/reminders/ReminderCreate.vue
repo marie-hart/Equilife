@@ -35,15 +35,16 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { eventsApi } from "@/api/events";
 import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
+import { useEventsStore } from "@/stores/EventsStore";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import { ReminderForm } from "@/views/reminders";
 import type { ReminderFormValue } from "@/types";
 
 const router = useRouter();
 const horsesStore = useHorsesStore();
+const eventsStore = useEventsStore();
 
 const isLoading = ref(false);
 const errors = ref<Record<string, string>>({});
@@ -97,7 +98,7 @@ const handleCreate = async () => {
         const cleanDate = new Intl.DateTimeFormat('sv-SE').format(dateObj);
 
         const promises = form.value.horseIds.map(horseId => {
-            return eventsApi.create({
+            return eventsStore.createEvent({
                 horse_id: horseId,
                 name: form.value.description,
                 description: form.value.description,

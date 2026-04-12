@@ -114,6 +114,7 @@
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
+import { useEventsStore } from "@/stores/EventsStore";
 import { formatDateLong } from "@/libs/date";
 import { ConfirmDeleteDialog } from "@/components";
 import { logger } from "@/services/LoggerService";
@@ -121,6 +122,7 @@ import type { Event } from "@/types";
 
 const route = useRoute();
 const router = useRouter();
+const eventsStore = useEventsStore();
 const event = ref<Event | null>(null);
 const isLoading = ref(true);
 const deleteDialogOpen = ref(false);
@@ -159,7 +161,7 @@ const loadEvent = async () => {
 
 const confirmDelete = async () => {
     try {
-        await eventsApi.delete(id);
+        await eventsStore.deleteEvent(id);
         snackbar.value = { show: true, message: "Activité supprimée", color: "#2E4B36" };
         setTimeout(() => router.push({ name: "HorseActivities" }), 1000);
     } catch (error) {

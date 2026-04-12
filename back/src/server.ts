@@ -60,7 +60,14 @@ app.get("/api/docs", swaggerUi.setup(swaggerSpec) as express.RequestHandler);
 
 // 3. Fichiers statiques
 // Note: Assure-toi que le dossier 'uploads' existe au démarrage
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use(
+    "/uploads",
+    express.static(path.join(__dirname, "../uploads"), {
+        maxAge: process.env.UPLOADS_CACHE_MAX_AGE ?? "30d",
+        etag: true,
+        lastModified: true,
+    }),
+);
 
 // 4. Routes de l'API
 app.use("/api/auth", authRoutes);

@@ -14,6 +14,26 @@
       </v-avatar>
 
       <div class="flex-grow-1">
+        <div v-if="!horsesStore.horses.length" class="d-flex flex-column ga-3">
+          <h3 class="text-h6 font-weight-medium" style="color: #2e4b36;">
+            Aucun cheval enregistré
+          </h3>
+          <p class="text-body-2 mb-0" style="color: #7b5b3e;">
+            Ajoutez un compagnon pour suivre soins, rappels et activités.
+          </p>
+          <v-btn
+            :to="{ name: 'HorseCreate' }"
+            color="#2E4B36"
+            variant="flat"
+            rounded="lg"
+            class="text-none align-self-start"
+          >
+            <v-icon start size="20">mdi-plus</v-icon>
+            Ajouter un cheval
+          </v-btn>
+        </div>
+
+        <template v-else>
         <div class="d-flex align-center ga-2">
           <h3 class="text-h6 font-weight-medium">
             {{ selectedHorse?.name || "Mon cheval" }}
@@ -77,6 +97,7 @@
             {{ selectedHorse.breed }}
           </v-chip>
         </div>
+        </template>
 
       </div>
     </div>

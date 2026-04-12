@@ -132,6 +132,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
+import { useEventsStore } from "@/stores/EventsStore";
 import { productApi } from "@/api/product";
 import { formatDateLong } from "@/libs/date";
 import { ConfirmDeleteDialog } from "@/components";
@@ -142,6 +143,7 @@ import { useHorsesStore } from "@/stores/HorsesStore";
 const route = useRoute();
 const router = useRouter();
 const horsesStore = useHorsesStore();
+const eventsStore = useEventsStore();
 const care = ref<Event | null>(null);
 const productName = ref<string>("");
 const isLoading = ref(true);
@@ -182,7 +184,7 @@ const loadCare = async () => {
 
 const confirmDelete = async () => {
     try {
-        await eventsApi.delete(id);
+        await eventsStore.deleteEvent(id);
         snackbar.value = { show: true, message: "Soin supprimé", color: "#2E4B36" };
         setTimeout(() => router.back(), 1000);
     } catch (error) {

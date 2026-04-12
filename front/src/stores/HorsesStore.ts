@@ -1,5 +1,12 @@
 import { horsesApi } from "@/api/horses";
-import { getStoredHorseId, getStoredHorsePhoto, setStoredHorseId, setStoredHorsePhoto } from "@/libs/horseProfile";
+import {
+    cacheHorsePhotoFromUrl,
+    getStoredHorseId,
+    getStoredHorsePhoto,
+    setStoredHorseId,
+    setStoredHorsePhoto,
+    clearStoredHorseId,
+} from "@/libs/horseProfile";
 import { logger } from "@/services/LoggerService";
 import { CreateHorseDto, Horse } from "@/types";
 import { defineStore } from "pinia";
@@ -14,13 +21,31 @@ export const useHorsesStore = defineStore('horses', () => {
     const horses = ref<HorseWithPhoto[]>([]);
 
     const enrichHorseWithStoredPhoto = (horse: Horse): HorseWithPhoto => {
-        if (horse.id === horseId.value) {
-            return {
-                ...horse,
-                photoBase64: getStoredHorsePhoto(horse.id)
-            };
-        }
-        return horse;
+        const cachedPhoto = getStoredHorsePhoto(horse.id);
+        return {
+            ...horse,
+            photoBase64: horse.photoBase64 ?? cachedPhoto,
+        };
+    };
+
+    const warmHorsePhotoCache = (items: HorseWithPhoto[]) => {
+        void Promise.all(
+            items.map(async (horse) => {
+                if (horse.photoBase64 || !horse.photo_path) return;
+                const cached = await cacheHorsePhotoFromUrl(
+                    horse.id,
+                    horse.photo_path,
+                );
+                if (!cached) return;
+                const index = horses.value.findIndex((h) => h.id === horse.id);
+                if (index !== -1) {
+                    horses.value[index] = {
+                        ...horses.value[index],
+                        photoBase64: cached,
+                    };
+                }
+            }),
+        );
     };
 
     const horseOptions = computed(() =>
@@ -74,6 +99,15 @@ export const useHorsesStore = defineStore('horses', () => {
     async function loadHorses() {
             const data = await horsesApi.getAll();
             horses.value = data.map(enrichHorseWithStoredPhoto);
+            warmHorsePhotoCache(horses.value);
+            const validIds = new Set(data.map((h) => h.id));
+            if (data.length === 0) {
+                if (horseId.value) {
+                    sethorseId(null);
+                }
+            } else if (!horseId.value || !validIds.has(horseId.value)) {
+                sethorseId(data[0].id);
+            }
             return horses.value;
     };
 
@@ -87,6 +121,7 @@ export const useHorsesStore = defineStore('horses', () => {
                     const index = horses.value.findIndex(h => h.id === id);
                     if (index !== -1) horses.value[index] = horse;
                     else horses.value.push(horse);
+                    warmHorsePhotoCache([horse]);
                 }
             } else {
                 const index = horses.value.findIndex(h => h.id === id);
@@ -98,26 +133,37 @@ export const useHorsesStore = defineStore('horses', () => {
 
     async function createHorse(data: CreateHorseDto): Promise<Horse> {
         const newHorse = await horsesApi.create(data);
-        horses.value.push(newHorse);
+        const enriched = enrichHorseWithStoredPhoto(newHorse);
+        horses.value.push(enriched);
+        warmHorsePhotoCache([enriched]);
         return newHorse;
     }
 
     async function updateHorse(id: string, data: CreateHorseDto): Promise<Horse> {
         const updatedHorse = await horsesApi.update(id, data);
         const index = horses.value.findIndex(h => h.id === id);
-        if (index !== -1) horses.value[index] = updatedHorse;
+        const enriched = enrichHorseWithStoredPhoto(updatedHorse);
+        if (index !== -1) horses.value[index] = enriched;
+        warmHorsePhotoCache([enriched]);
         return updatedHorse;
     }
 
-    async function deleteHorse(horseId: string) {
-        await horsesApi.delete(horseId);
+    async function deleteHorse(idToDelete: string) {
+        await horsesApi.delete(idToDelete);
 
-        horses.value = horses.value.filter((h) => h.id !== horseId);
+        horses.value = horses.value.filter((h) => h.id !== idToDelete);
+        if (horseId.value === idToDelete) {
+            sethorseId(horses.value.length > 0 ? horses.value[0].id : null);
+        }
     }
 
     function sethorseId(id: string | null) {
         horseId.value = id;
-        setStoredHorseId(id || '');
+        if (id) {
+            setStoredHorseId(id);
+        } else {
+            clearStoredHorseId();
+        }
 
         horses.value = horses.value.map(enrichHorseWithStoredPhoto);
     }
@@ -130,9 +176,9 @@ export const useHorsesStore = defineStore('horses', () => {
             reader.readAsDataURL(file);
             reader.onload = () => {
                 const base64String = reader.result as string;
-                
-                localStorage.setItem(`horse_photo_${id}`, base64String);
-                
+
+                setStoredHorsePhoto(id, base64String);
+
                 const horseIndex = horses.value.findIndex(h => h.id === id);
                 if (horseIndex !== -1) {
                     horses.value[horseIndex].photoBase64 = base64String;

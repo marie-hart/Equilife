@@ -24,11 +24,9 @@ import { HealthView } from "@/views/health";
 import { FeedingDetails } from "@/views/feeding";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { useAuthStore } from "@/stores/AuthStore";
-import { getStoredHorseId } from "@/libs/horseProfile";
-
 /** Routes that require a horse to be selected (store). Redirect to /horses if none. */
 const ROUTES_REQUIRING_HORSE = new Set([
-    "HorseDetails", "HorseEdit", "Reminders", "ReminderCreate", "HorseDashboardView",
+    "HorseDetails", "HorseEdit", "Reminders", "ReminderCreate",
     "HealthView", "HealthCreate", "HorseActivities", "ActivityCreate",
     "FeedingView", "FeedingCreate", "FeedingEdit", "FeedingDetails",
     "Products", "ProductCreate",
@@ -59,11 +57,7 @@ const router = createRouter({
         {
             path: "/",
             name: "Dashboard",
-            redirect: () => {
-                const storedHorseId = getStoredHorseId();
-                if (storedHorseId) return "/dashboard";
-                return "/horses";
-            },
+            redirect: "/dashboard",
         },
         {
             path: "/reminders",

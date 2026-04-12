@@ -1,7 +1,7 @@
 <template>
   <v-app class="safe-layout">
     <transition name="splash-fade">
-      <div v-if="!isAppReady" class="splash-screen">
+      <div v-if="showInAppSplash" class="splash-screen">
         <div class="splash-content">
           <v-img
             src="/splash-logo.png" 
@@ -53,6 +53,12 @@ const authStore = useAuthStore();
 
 const isAppReady = ref(false);
 const horsesStore = useHorsesStore();
+const isAndroid = /Android/i.test(window.navigator.userAgent || "");
+const isStandalone =
+    window.matchMedia?.("(display-mode: standalone)")?.matches === true ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+const skipInAppSplash = isAndroid && isStandalone;
+const showInAppSplash = computed(() => !isAppReady.value && !skipInAppSplash);
 
 const handleUnauthorized = () => {
     authStore.logout();
@@ -76,10 +82,15 @@ onMounted(async () => {
     }
     try {
     await horsesStore.loadHorses();
+
+    if (!isLoginRoute.value && route.name !== "HorseDashboardView") {
+        await router.replace({ name: "HorseDashboardView" });
+    }
+
     setTimeout(() => {
       isAppReady.value = true;
-    }, 1500);
-    
+    }, skipInAppSplash ? 0 : 1500);
+
   } catch (error) {
     logger.error("Erreur au chargement:", error);
     isAppReady.value = true; 

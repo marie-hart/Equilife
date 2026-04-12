@@ -152,11 +152,13 @@ import { logger } from "@/services/LoggerService";
 import type { Product, Event, RecurrenceUnit, CreateEventDto } from "@/types";
 import { fromDateInputValue, toDateInputValue } from "@/libs/date";
 import { useHorsesStore } from "@/stores/HorsesStore";
+import { useEventsStore } from "@/stores/EventsStore";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 
 const route = useRoute();
 const router = useRouter();
 const horsesStore = useHorsesStore();
+const eventsStore = useEventsStore();
 
 const isLoading = ref(true);
 const isSubmitting = ref(false);
@@ -271,22 +273,36 @@ const handleSubmit = async () => {
                 throw new Error("ID du soin manquant dans l'URL");
             }
 
-            await eventsApi.update(idToUpdate, {
+            await eventsStore.updateEvent(idToUpdate, {
                 ...basePayload,
-                horse_id: form.value.horseIds[0] 
+                horse_id: form.value.horseIds[0],
             });
-            
-            snackbar.value = { show: true, message: "Soin mis à jour.", color: "success" };
+            if (form.value.horseIds[0]) {
+                horsesStore.sethorseId(form.value.horseIds[0]);
+            }
+
+            snackbar.value = {
+                show: true,
+                message: "Soin mis à jour.",
+                color: "success",
+            };
         } else {
             await Promise.all(
-                form.value.horseIds.map(horseId => 
-                    eventsApi.create({
+                form.value.horseIds.map((horseId) =>
+                    eventsStore.createEvent({
                         ...basePayload,
-                        horse_id: horseId
-                    } as CreateEventDto)
-                )
+                        horse_id: horseId,
+                    } as CreateEventDto),
+                ),
             );
-            snackbar.value = { show: true, message: "Soin(s) ajouté(s).", color: "success" };
+            if (form.value.horseIds[0]) {
+                horsesStore.sethorseId(form.value.horseIds[0]);
+            }
+            snackbar.value = {
+                show: true,
+                message: "Soin(s) ajouté(s).",
+                color: "success",
+            };
         }
 
         setTimeout(() => goBack(), 1000);
@@ -303,7 +319,11 @@ const handleSubmit = async () => {
     }
 };
 
-const goBack = () => router.push({ name: "HealthView" });
+const goBack = () =>
+    router.push({
+        name: "HealthView",
+        query: { forceHorseFilter: "all" },
+    });
 
 const loadProducts = async () => {
     try {

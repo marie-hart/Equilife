@@ -108,7 +108,7 @@ const goToDashboard = (horseId: string) => {
                 variant="flat"
                 rounded="xl"
                 class="horse-card pa-5 shadow-subtle border-light bg-white"
-                @click="goToDashboard(horse.id)"
+                @click="goToDetails(horse)"
             >
                 <div class="d-flex align-center justify-space-between mb-4">
                     <div class="text-h5 font-weight-black" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
@@ -153,6 +153,7 @@ const goToDashboard = (horseId: string) => {
                     color="#F3EEE7"
                     class="text-none font-weight-bold"
                     style="color: #554338 !important;"
+                    @click.stop="goToDashboard(horse.id)"
                 >
                     Dashboard
                     <v-icon end size="18">mdi-arrow-right</v-icon>

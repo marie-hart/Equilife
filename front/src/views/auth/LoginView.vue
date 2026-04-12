@@ -68,9 +68,11 @@
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/AuthStore";
+import { useHorsesStore } from "@/stores/HorsesStore";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const horsesStore = useHorsesStore();
 
 const ready = ref(false);
 const email = ref("");
@@ -99,7 +101,8 @@ const handleSubmit = async () => {
     isSubmitting.value = true;
     try {
         await authStore.loginWithPassword(email.value, password.value);
-        router.replace({ name: "Dashboard" });
+        await horsesStore.loadHorses();
+        router.replace({ name: "HorseDashboardView" });
     } catch (err: unknown) {
         const ax = err as { response?: { data?: { error?: string } } };
         error.value = ax?.response?.data?.error || "Erreur de connexion";

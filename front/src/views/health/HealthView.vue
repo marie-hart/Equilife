@@ -10,17 +10,26 @@
                     <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
                 </div>
                 
-                <v-btn
-                    variant="flat"
-                    color="#2E4B36"
-                    rounded="xl"
-                    class="text-none font-weight-bold"
-                    elevation="4"
-                    :to="{ name: 'HealthCreate' }"
-                >
-                    <v-icon icon="mdi-plus" class="me-1" />
-                    Ajouter
-                </v-btn>
+                <div class="d-flex ga-2">
+                    <v-btn
+                        icon="mdi-refresh"
+                        variant="tonal"
+                        color="#7B5B3E"
+                        rounded="xl"
+                        @click="loadCares(true)"
+                    />
+                    <v-btn
+                        variant="flat"
+                        color="#2E4B36"
+                        rounded="xl"
+                        class="text-none font-weight-bold"
+                        elevation="4"
+                        :to="{ name: 'HealthCreate' }"
+                    >
+                        <v-icon icon="mdi-plus" class="me-1" />
+                        Ajouter
+                    </v-btn>
+                </div>
             </div>
 
             <FiltersPanel
@@ -110,11 +119,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
-import { eventsApi, careHistoryApi } from "@/api/events";
+import { useRoute, useRouter } from "vue-router";
 import { useFilters } from "@/composables/useFilters";
 import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore"; 
+import { useEventsStore } from "@/stores/EventsStore";
 import type { CareAction, CareStatus, Event, CareHistoryEntry } from "@/types";
 import type { FilterDefinition } from "@/types/filters";
 import {
@@ -141,7 +150,9 @@ const snackbar = ref({
 });
 
 const router = useRouter();
+const route = useRoute();
 const horsesStore = useHorsesStore();
+const eventsStore = useEventsStore();
 
 const goToCareDetails = (care: Event | CareHistoryEntry) => {
     if ("care_status" in care) return;
@@ -335,12 +346,12 @@ const filteredHistoryForList = computed(() =>
     ),
 );
 
-const loadCares = async () => {
+const loadCares = async (forceRefresh = false) => {
     isLoading.value = true;
     try {
         const [events, history] = await Promise.all([
-            eventsApi.getAll(),
-            careHistoryApi.getAll(),
+            eventsStore.fetchEvents(undefined, forceRefresh),
+            eventsStore.fetchCareHistory(undefined, forceRefresh),
         ]);
         cares.value = events.filter((event) => event.is_care);
         careHistory.value = history;
@@ -351,9 +362,12 @@ const loadCares = async () => {
     }
 };
 
-const loadHistory = async () => {
+const loadHistory = async (forceRefresh = false) => {
     try {
-        careHistory.value = await careHistoryApi.getAll();
+        careHistory.value = await eventsStore.fetchCareHistory(
+            undefined,
+            forceRefresh,
+        );
     } catch (error) {
         logger.error("Error loading care history:", error);
     }
@@ -379,7 +393,7 @@ const saveCareDone = async () => {
     if (!selectedCare.value) return;
     try {
         const care = selectedCare.value;
-        await eventsApi.markCareDone(care.id, careDoneForm.value.date);
+        await eventsStore.markCareDone(care.id, careDoneForm.value.date);
 
         snackbar.value.message = isCareRecurring(care)
             ? "Soin historisé avec tag 'done' et prochain rendez-vous planifié."
@@ -387,8 +401,8 @@ const saveCareDone = async () => {
         snackbar.value.show = true;
         snackbar.value.color = "success";
         isCareDoneOpen.value = false;
-        await loadCares();
-        await loadHistory();
+        await loadCares(true);
+        await loadHistory(true);
     } catch (error) {
         logger.error("Erreur lors de la validation:", error);
         snackbar.value = { show: true, message: "Action impossible.", color: "error" };
@@ -431,8 +445,8 @@ const getCareActions = (care: Event | CareHistoryEntry): CareAction[] => {
 const confirmDelete = async () => {
     if (!selectedCare.value) return;
     try {
-        await eventsApi.delete(selectedCare.value.id);
-        await loadCares();
+        await eventsStore.deleteEvent(selectedCare.value.id);
+        await loadCares(true);
         isDeleteOpen.value = false;
         snackbar.value = {
             show: true,
@@ -449,8 +463,13 @@ const confirmDelete = async () => {
     }
 };
 
-onMounted(() => {
-    loadCares();
+onMounted(async () => {
+    await loadCares();
+    if (route.query.forceHorseFilter === "all") {
+        filterValues.horseId = "all";
+        const { forceHorseFilter: _drop, ...restQuery } = route.query;
+        await router.replace({ query: restQuery });
+    }
 });
 
 watch(

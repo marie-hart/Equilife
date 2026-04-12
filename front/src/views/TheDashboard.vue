@@ -20,6 +20,7 @@
                             color="#2E4B36"
                             class="text-none"
                             elevation="2"
+                            :disabled="!hasSelectedHorse"
                         >
                             <v-icon start size="20">mdi-horse-variant</v-icon>
                             Activités
@@ -34,6 +35,7 @@
                             color="#6B4F3A"
                             class="text-none"
                             elevation="2"
+                            :disabled="!hasSelectedHorse"
                         >
                             <v-icon start size="20">mdi-food-apple</v-icon>
                             Rations
@@ -67,7 +69,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from "vue";
-import { eventsApi } from "../api/events";
 import { logger } from "@/services/LoggerService";
 import type { Event, SelectedKind } from "../types";
 import { ReminderCard } from "./reminders";
@@ -76,6 +77,7 @@ import { useDisplay } from "vuetify";
 import { HorseProfileCard } from "./horses";
 import type { Horse } from "@/types";
 import { useHorsesStore } from "@/stores/HorsesStore";
+import { useEventsStore } from "@/stores/EventsStore";
 import { useRoute } from 'vue-router';
 
 const events = ref<Event[]>([]);
@@ -84,7 +86,17 @@ const isLoading = ref(true);
 
 const { smAndDown } = useDisplay();
 const horsesStore = useHorsesStore();
-const route = useRoute()
+const eventsStore = useEventsStore();
+const route = useRoute();
+
+const hasSelectedHorse = computed(
+    () =>
+        Boolean(
+            horsesStore.horseId &&
+                horsesStore.horseId !== "all" &&
+                horsesStore.selectedHorse,
+        ),
+);
 
 const snackbar = ref({
     show: false,
@@ -96,7 +108,7 @@ const selectedKind = ref<SelectedKind>(null);
 const selectedEvent = ref<Event | null>(null);
 const deleteDialogOpen = ref(false);
 
-const loadDashboard = async () => {
+const loadDashboard = async (forceRefresh = false) => {
     isLoading.value = true;
     try {
        const currentHorseId = horsesStore.horseId;
@@ -104,8 +116,8 @@ const loadDashboard = async () => {
        if (!currentHorseId) return;
 
         const [eventsResponse, remindersResponse] = await Promise.all([
-            eventsApi.getAll(String(currentHorseId)),
-            eventsApi.getReminders(String(currentHorseId)),
+            eventsStore.fetchEvents(String(currentHorseId), forceRefresh),
+            eventsStore.fetchReminders(String(currentHorseId), forceRefresh),
         ]);
 
         events.value = eventsResponse;
@@ -120,10 +132,10 @@ const loadDashboard = async () => {
 const confirmDelete = async () => {
     try {
         if (selectedKind.value === "event" && selectedEvent.value) {
-            await eventsApi.delete(selectedEvent.value.id);
+            await eventsStore.deleteEvent(selectedEvent.value.id);
         }
         deleteDialogOpen.value = false;
-        await loadDashboard();
+        await loadDashboard(true);
         snackbar.value = {
             show: true,
             message: "Suppression effectuée.",

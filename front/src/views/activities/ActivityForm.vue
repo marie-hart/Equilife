@@ -186,11 +186,13 @@ import { logger } from "@/services/LoggerService";
 import { DatePickerField } from "@/components";
 import { validateRequiredFieldsMap } from "@/utils/validation";
 import { useHorsesStore } from "@/stores/HorsesStore";
+import { useEventsStore } from "@/stores/EventsStore";
 import { IntensityValue } from "@/types";
 
 const route = useRoute();
 const router = useRouter();
 const horsesStore = useHorsesStore(); 
+const eventsStore = useEventsStore();
 
 const isEditMode = computed(() => Boolean(route.name === 'ActivityEdit'));
 const eventId = computed(() => route.params.id as string);
@@ -294,10 +296,10 @@ const submitForm = async () => {
         };
 
         if (isEditMode.value) {
-            await eventsApi.update(eventId.value, payload);
+            await eventsStore.updateEvent(eventId.value, payload);
             snackbar.value = { show: true, message: "Activité mise à jour.", color: "success" };
         } else {
-            await eventsApi.create(payload);
+            await eventsStore.createEvent(payload);
             snackbar.value = { show: true, message: "Activité ajoutée.", color: "success" };
         }
         goBack();
