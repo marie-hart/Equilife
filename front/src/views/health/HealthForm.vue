@@ -203,7 +203,8 @@ const form = ref({
 const DEFAULT_CARE_CATEGORIES = [
     "Maladie",
     "Bobo",
-    "Soins courants et cures",
+    "Soins courants",
+    "Cures",
 ] as const;
 
 const horseOptions = computed(() =>

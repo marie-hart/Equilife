@@ -175,12 +175,14 @@ const productId = route.params.id as string;
 const isManaged = computed(() => {
     const cats = ["Granulés", "Complément", "Aliments"];
     if (!product.value || !cats.includes(product.value.category || "")) return false;
+    const quantity = Number(product.value.quantity_purchased);
+    const daily = Number(product.value.daily_usage);
     return Boolean(
         product.value.last_purchase_date &&
-            typeof product.value.quantity_purchased === "number" &&
-            product.value.quantity_purchased > 0 &&
-            typeof product.value.daily_usage === "number" &&
-            product.value.daily_usage > 0,
+            Number.isFinite(quantity) &&
+            quantity > 0 &&
+            Number.isFinite(daily) &&
+            daily > 0,
     );
 });
 

@@ -226,13 +226,17 @@ const isStockManaged = computed(() =>
   STOCK_TYPES.includes(localForm.category || "")
 );
 
+const asPositiveNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
 const hasStockTrackingData = computed(
   () =>
     Boolean(localForm.last_purchase_date) &&
-    typeof localForm.quantity_purchased === "number" &&
-    localForm.quantity_purchased > 0 &&
-    typeof localForm.daily_usage === "number" &&
-    localForm.daily_usage > 0
+    asPositiveNumber(localForm.quantity_purchased) !== null &&
+    asPositiveNumber(localForm.daily_usage) !== null
 );
 
 const stockTrackingEnabled = ref(hasStockTrackingData.value);

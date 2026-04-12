@@ -40,13 +40,17 @@ const props = defineProps<{ product: Product }>();
 
 const STOCK_TYPES = ["Granulés", "Complément"];
 
+const asPositiveNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
 const hasStockTrackingData = computed(
   () =>
     Boolean(props.product.last_purchase_date) &&
-    typeof props.product.quantity_purchased === "number" &&
-    props.product.quantity_purchased > 0 &&
-    typeof props.product.daily_usage === "number" &&
-    props.product.daily_usage > 0
+    asPositiveNumber(props.product.quantity_purchased) !== null &&
+    asPositiveNumber(props.product.daily_usage) !== null
 );
 
 const isStockManaged = computed(

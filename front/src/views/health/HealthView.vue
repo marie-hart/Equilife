@@ -184,7 +184,8 @@ const careCategoryOptions = computed(() => {
     const categories = new Set<string>([
         "Maladie",
         "Bobo",
-        "Soins courants et cures",
+        "Soins courants",
+        "Cures",
     ]);
     for (const care of cares.value) {
         const value = care.category?.trim();
@@ -309,7 +310,8 @@ const availableCategoryOptions = computed(() => {
     const values = new Set<string>([
         "Maladie",
         "Bobo",
-        "Soins courants et cures",
+        "Soins courants",
+        "Cures",
         ...careSide.map(getCareCategory).filter(Boolean),
         ...historySide.map(getCareCategory).filter(Boolean),
     ]);
