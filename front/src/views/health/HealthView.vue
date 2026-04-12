@@ -1,5 +1,10 @@
 <template>
-    <v-sheet color="#EDE4D8" >
+    <v-sheet
+        color="#EDE4D8"
+        @touchstart.passive="onPullStart"
+        @touchend.passive="onPullEnd"
+        @touchcancel.passive="resetPullState"
+    >
         <v-container class="px-4 pb-10">
         
             <div class="d-flex align-center justify-space-between mb-6 mt-2">
@@ -10,27 +15,26 @@
                     <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
                 </div>
                 
-                <div class="d-flex ga-2">
-                    <v-btn
-                        icon="mdi-refresh"
-                        variant="tonal"
-                        color="#7B5B3E"
-                        rounded="xl"
-                        @click="loadCares(true)"
-                    />
-                    <v-btn
-                        variant="flat"
-                        color="#2E4B36"
-                        rounded="xl"
-                        class="text-none font-weight-bold"
-                        elevation="4"
-                        :to="{ name: 'HealthCreate' }"
-                    >
-                        <v-icon icon="mdi-plus" class="me-1" />
-                        Ajouter
-                    </v-btn>
-                </div>
+                <v-btn
+                    variant="flat"
+                    color="#2E4B36"
+                    rounded="xl"
+                    class="text-none font-weight-bold"
+                    elevation="4"
+                    :to="{ name: 'HealthCreate' }"
+                >
+                    <v-icon icon="mdi-plus" class="me-1" />
+                    Ajouter
+                </v-btn>
             </div>
+
+            <v-progress-linear
+                v-if="isPullRefreshing"
+                indeterminate
+                color="#7B5B3E"
+                rounded
+                class="mb-3"
+            />
 
             <FiltersPanel
                 :filters="filterDefinitions"
@@ -143,6 +147,9 @@ const isDeleteOpen = ref(false);
 const selectedCare = ref<Event | null>(null);
 const isCareDoneOpen = ref(false);
 const careDoneForm = ref({ date: "" });
+const pullStartY = ref<number | null>(null);
+const pullCanRefresh = ref(false);
+const isPullRefreshing = ref(false);
 const snackbar = ref({
     show: false,
     message: "",
@@ -350,8 +357,14 @@ const loadCares = async (forceRefresh = false) => {
     isLoading.value = true;
     try {
         const [events, history] = await Promise.all([
-            eventsStore.fetchEvents(undefined, forceRefresh),
-            eventsStore.fetchCareHistory(undefined, forceRefresh),
+            eventsStore.fetchEvents(undefined, forceRefresh).catch((error) => {
+                logger.error("Error loading care events:", error);
+                return [] as Event[];
+            }),
+            eventsStore.fetchCareHistory(undefined, forceRefresh).catch((error) => {
+                logger.error("Error loading care history:", error);
+                return [] as CareHistoryEntry[];
+            }),
         ]);
         cares.value = events.filter((event) => event.is_care);
         careHistory.value = history;
@@ -372,6 +385,42 @@ const loadHistory = async (forceRefresh = false) => {
         logger.error("Error loading care history:", error);
     }
 };
+
+function isMainScrollerAtTop(): boolean {
+    const scroller = document.querySelector(".v-main__scroller") as HTMLElement | null;
+    if (scroller) return scroller.scrollTop <= 0;
+    return window.scrollY <= 0;
+}
+
+function onPullStart(event: TouchEvent) {
+    if (event.touches.length !== 1) return;
+    pullCanRefresh.value = isMainScrollerAtTop();
+    pullStartY.value = event.touches[0].clientY;
+}
+
+function resetPullState() {
+    pullCanRefresh.value = false;
+    pullStartY.value = null;
+}
+
+async function onPullEnd(event: TouchEvent) {
+    if (!pullCanRefresh.value || pullStartY.value === null || isPullRefreshing.value) {
+        resetPullState();
+        return;
+    }
+
+    const endY = event.changedTouches[0]?.clientY ?? pullStartY.value;
+    const deltaY = endY - pullStartY.value;
+    resetPullState();
+    if (deltaY < 80) return;
+
+    isPullRefreshing.value = true;
+    try {
+        await loadCares(true);
+    } finally {
+        isPullRefreshing.value = false;
+    }
+}
 
 const isCareRecurring = (care: Event): boolean =>
     care.reminder_enabled &&

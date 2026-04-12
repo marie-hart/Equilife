@@ -1,5 +1,10 @@
 <template>
-  <v-sheet color="#EDE4D8" >
+  <v-sheet
+    color="#EDE4D8"
+    @touchstart.passive="onPullStart"
+    @touchend.passive="onPullEnd"
+    @touchcancel.passive="resetPullState"
+  >
     <v-container class="px-4">
       <div class="d-flex align-center justify-space-between mb-6 mt-2">
         <div>
@@ -9,27 +14,26 @@
           <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
         </div>
         
-        <div class="d-flex ga-2">
-          <v-btn
-            icon="mdi-refresh"
-            variant="tonal"
-            color="#7B5B3E"
-            rounded="xl"
-            @click="loadReminders(true)"
-          />
-          <v-btn
-            variant="flat"
-            color="#2E4B36"
-            rounded="xl"
-            class="text-none font-weight-bold"
-            elevation="4"
-            @click="goToReminderCreate"
-          >
-            <v-icon icon="mdi-plus" class="me-1" />
-            Nouveau
-          </v-btn>
-        </div>
+        <v-btn
+          variant="flat"
+          color="#2E4B36"
+          rounded="xl"
+          class="text-none font-weight-bold"
+          elevation="4"
+          @click="goToReminderCreate"
+        >
+          <v-icon icon="mdi-plus" class="me-1" />
+          Nouveau
+        </v-btn>
       </div>
+
+      <v-progress-linear
+        v-if="isPullRefreshing"
+        indeterminate
+        color="#7B5B3E"
+        rounded
+        class="mb-3"
+      />
 
       <FiltersPanel
         :filters="filterDefinitions"
@@ -134,6 +138,9 @@ const isEditOpen = ref(false);
 const isDeleteOpen = ref(false);
 const isCareDoneOpen = ref(false);
 const selectedReminder = ref<Event | null>(null);
+const pullStartY = ref<number | null>(null);
+const pullCanRefresh = ref(false);
+const isPullRefreshing = ref(false);
 
 const editForm = ref<ReminderFormValue>({
     id: "",
@@ -382,6 +389,42 @@ const saveCareDone = async () => {
         snackbar.value = { show: true, message: "Erreur lors de la validation.", color: "error" };
     }
 };
+
+function isMainScrollerAtTop(): boolean {
+    const scroller = document.querySelector(".v-main__scroller") as HTMLElement | null;
+    if (scroller) return scroller.scrollTop <= 0;
+    return window.scrollY <= 0;
+}
+
+function onPullStart(event: TouchEvent) {
+    if (event.touches.length !== 1) return;
+    pullCanRefresh.value = isMainScrollerAtTop();
+    pullStartY.value = event.touches[0].clientY;
+}
+
+function resetPullState() {
+    pullCanRefresh.value = false;
+    pullStartY.value = null;
+}
+
+async function onPullEnd(event: TouchEvent) {
+    if (!pullCanRefresh.value || pullStartY.value === null || isPullRefreshing.value) {
+        resetPullState();
+        return;
+    }
+
+    const endY = event.changedTouches[0]?.clientY ?? pullStartY.value;
+    const deltaY = endY - pullStartY.value;
+    resetPullState();
+    if (deltaY < 80) return;
+
+    isPullRefreshing.value = true;
+    try {
+        await loadReminders(true);
+    } finally {
+        isPullRefreshing.value = false;
+    }
+}
 
 const loadReminders = async (forceRefresh = false) => {
     isLoading.value = true;

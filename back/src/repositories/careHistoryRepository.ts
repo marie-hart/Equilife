@@ -30,7 +30,7 @@ export class CareHistoryRepository {
                       `
                         SELECT ch.*
                         FROM care_history ch
-                        INNER JOIN horses h ON h.id = ch.horse_id
+                        INNER JOIN horses h ON h.id::text = ch.horse_id::text
                         WHERE h.user_id = $1
                           AND ch.horse_id = $2
                         ORDER BY ch.event_date DESC
@@ -41,7 +41,7 @@ export class CareHistoryRepository {
                       `
                         SELECT ch.*
                         FROM care_history ch
-                        INNER JOIN horses h ON h.id = ch.horse_id
+                        INNER JOIN horses h ON h.id::text = ch.horse_id::text
                         WHERE h.user_id = $1
                         ORDER BY ch.event_date DESC
                       `,
