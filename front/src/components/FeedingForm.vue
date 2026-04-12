@@ -303,6 +303,7 @@ const frequencyOptions = [
 const itemTypeOptions = [
     { title: "Granulés", value: "Granulés" },
     { title: "Complément", value: "Complément" },
+    { title: "Pharmacie", value: "Pharmacie" },
     { title: "Autre", value: "Autres" },
 ];
 const unitOptions = [
@@ -312,7 +313,7 @@ const unitOptions = [
 ];
 
 const productOptions = computed(() => {
-    const allowed = new Set(["Granulés", "Complément"]);
+    const allowed = new Set(["Granulés", "Complément", "Pharmacie"]);
     const seen = new Set<string>();
     const hasCategory = products.value.some((product) => Boolean(product.category));
     return products.value

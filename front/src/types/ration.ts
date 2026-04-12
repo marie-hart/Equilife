@@ -7,7 +7,7 @@ export interface RationItem {
     quantity?: string;
     unit?: "kg" | "L" | "g";
     frequency: string[];
-    type?: "Granulés" | "Complément" | "Autres";
+    type?: "Granulés" | "Complément" | "Pharmacie" | "Autres";
     created_at: string;
     updated_at: string;
 }
@@ -46,7 +46,7 @@ export interface CreateRationDto {
         product_id?: string;
         quantity?: string;
         frequency?: string[];
-        type?: "Granulés" | "Complément" | "Autres";
+        type?: "Granulés" | "Complément" | "Pharmacie" | "Autres";
     }>;
 }
 
@@ -71,5 +71,5 @@ export type RationFormItem = {
     quantity: string;
     unit: "kg" | "L" | "g";
     frequency: string[];
-    type: "Granulés" | "Complément" | "Autres";
+    type: "Granulés" | "Complément" | "Pharmacie" | "Autres";
 };

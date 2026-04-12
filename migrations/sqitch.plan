@@ -8,3 +8,4 @@ rations_table [init] 2024-01-01T00:05:00Z mariehdek <mariehdek@yahoo.fr> # Table
 users_horses_notes [rations_table] 2026-03-26T12:00:00Z mariehdek <mariehdek@yahoo.fr> # users, horses.user_id, quick_notes
 care_categories [users_horses_notes] 2026-04-12T12:30:00Z mariehdek <mariehdek@yahoo.fr> # categories soins sur events + care_history
 products_name_per_user [care_categories] 2026-04-12T13:10:00Z mariehdek <mariehdek@yahoo.fr> # suppression unique global products.name + controle par utilisateur
+quick_notes_by_horse [products_name_per_user] 2026-04-12T14:00:00Z mariehdek <mariehdek@yahoo.fr> # lier quick_notes au cheval sélectionné

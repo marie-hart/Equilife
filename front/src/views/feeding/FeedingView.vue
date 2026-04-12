@@ -1,6 +1,20 @@
 <template>
-  <v-sheet color="#EDE4D8" min-height="100vh" class="pb-10">
+  <v-sheet
+    color="#EDE4D8"
+    min-height="100vh"
+    class="pb-10"
+    @touchstart.passive="onPullStart"
+    @touchend.passive="onPullEnd"
+    @touchcancel.passive="resetPullState"
+  >
     <v-container class="px-4 py-2">
+      <v-progress-linear
+        v-if="isPullRefreshing"
+        indeterminate
+        color="#7B5B3E"
+        rounded
+        class="mb-3"
+      />
       
       <div class="d-flex align-center justify-space-between mb-6">
         <div>
@@ -76,6 +90,7 @@ import type { Product, Ration } from "@/types";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { FeedingList } from "@/views/feeding";
 import { generateRationPDF } from "@/utils/RationPdfService";
+import { usePullToRefresh } from "@/composables/usePullToRefresh";
 
 const router = useRouter();
 const horsesStore = useHorsesStore(); 
@@ -126,6 +141,11 @@ const loadRations = async () => {
         isLoading.value = false;
     }
 };
+
+const { isPullRefreshing, onPullStart, onPullEnd, resetPullState } =
+    usePullToRefresh(async () => {
+        await Promise.all([loadProducts(), loadRations()]);
+    });
 
 const shareRation = async (ration: Ration) => {
     const horseName = horsesStore.getHorseNameById(ration.horse_id) || "mon cheval";

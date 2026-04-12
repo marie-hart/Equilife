@@ -374,7 +374,7 @@ export const swaggerSpec = {
                     type: {
                         type: "string",
                         nullable: true,
-                        enum: ["Granulés", "Complément", "Autres"],
+                        enum: ["Granulés", "Complément", "Pharmacie", "Autres"],
                     },
                     created_at: { type: "string", format: "date-time" },
                     updated_at: { type: "string", format: "date-time" },

@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useHorsesStore } from "@/stores/HorsesStore"; 
 import { HorseList } from ".";
+import { usePullToRefresh } from "@/composables/usePullToRefresh";
 
 const { loadHorses } = useHorsesStore();
 
@@ -21,12 +22,31 @@ async function loadHorseData() {
     }
 }
 
+const { isPullRefreshing, onPullStart, onPullEnd, resetPullState } =
+    usePullToRefresh(async () => {
+        await loadHorseData();
+    });
+
 loadHorseData()
 </script>
 
 <template>
-    <v-sheet color="#EDE4D8" min-height="100vh" class="pb-10">
+    <v-sheet
+        color="#EDE4D8"
+        min-height="100vh"
+        class="pb-10"
+        @touchstart.passive="onPullStart"
+        @touchend.passive="onPullEnd"
+        @touchcancel.passive="resetPullState"
+    >
         <v-container>
+            <v-progress-linear
+                v-if="isPullRefreshing"
+                indeterminate
+                color="#7B5B3E"
+                rounded
+                class="mb-3"
+            />
             <div class="d-flex align-center justify-space-between mb-8 mt-2 px-2">
                 <div>
                     <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">

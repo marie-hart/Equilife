@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { authApi, type AuthMode } from "@/api/auth";
+import { useHorsesStore } from "@/stores/HorsesStore";
 
 const TOKEN_KEY = "equilife_token";
 const USER_EMAIL_KEY = "equilife_user_email";
@@ -78,6 +79,8 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     function logout() {
+        const horsesStore = useHorsesStore();
+        horsesStore.resetHorseContext();
         setToken(null);
         setUserEmail(null);
     }

@@ -35,20 +35,20 @@
 
         <template v-else>
         <div class="d-flex align-center ga-2">
-          <h3 class="text-h6 font-weight-medium">
-            {{ selectedHorse?.name || "Mon cheval" }}
-          </h3>
-
           <v-menu v-if="showHorseSwitcher" location="bottom">
             <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon
-                size="x-small"
-                variant="text"
-              >
-                <v-icon size="18">mdi-chevron-down</v-icon>
-              </v-btn>
+              <div v-bind="props" class="d-flex align-center ga-1 horse-switcher-activator">
+                <h3 class="text-h6 font-weight-medium mb-0">
+                  {{ selectedHorse?.name || "Mon cheval" }}
+                </h3>
+                <v-btn
+                  icon
+                  size="x-small"
+                  variant="text"
+                >
+                  <v-icon size="18">mdi-chevron-down</v-icon>
+                </v-btn>
+              </div>
             </template>
 
             <v-list density="compact">
@@ -78,6 +78,10 @@
               </v-list-item>
             </v-list>
           </v-menu>
+
+          <h3 v-else class="text-h6 font-weight-medium">
+            {{ selectedHorse?.name || "Mon cheval" }}
+          </h3>
         </div>
 
         <div class="d-flex ga-2 mt-2 flex-wrap">
@@ -114,3 +118,9 @@ const selectedHorse = computed(() => horsesStore.selectedHorse);
 
 const showHorseSwitcher = computed(() => horsesStore.horses.length > 1);
 </script>
+
+<style scoped>
+.horse-switcher-activator {
+  cursor: pointer;
+}
+</style>

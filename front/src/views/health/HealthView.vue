@@ -64,12 +64,27 @@
                 @click:care="goToCareDetails"
             />
 
-            <div v-if="!isLoading && filteredHistory.length" class="mt-8">
+            <div
+                v-if="!isLoading && (filteredPastCaresForList.length || filteredHistoryForList.length)"
+                class="mt-8"
+            >
                 <div class="mb-4 d-flex align-center">
                     <v-icon icon="mdi-history" size="18" color="#7B5B3E" class="me-2" />
                     <span class="text-overline font-weight-bold" style="color: #7B5B3E">Historique</span>
                 </div>
                 <HealthList
+                    v-if="filteredPastCaresForList.length"
+                    :items="filteredPastCaresForList"
+                    :format-date="formatDateLong"
+                    :format-date-mobile="formatDateMobile"
+                    :get-horse-name="horsesStore.getHorseNameById"
+                    :recurrence-label="recurrenceLabel"
+                    :get-care-actions="getCareActions"
+                    @click:care="goToCareDetails"
+                />
+                <HealthList
+                    v-if="filteredHistoryForList.length"
+                    class="mt-4"
                     :items="filteredHistoryForList"
                     :format-date="formatDateLong"
                     :format-date-mobile="formatDateMobile"
@@ -361,10 +376,26 @@ const filteredCares = computed(() => {
     );
 });
 
+const filteredPastCares = computed(() =>
+    applyCareFilters(cares.value).filter(
+        (care) => parseDateOnly(care.event_date).getTime() < todayStartTimestamp.value,
+    ),
+);
+
+const filteredPastCaresForList = computed(() =>
+    [...filteredPastCares.value].sort(
+        (a, b) =>
+            parseDateOnly(b.event_date).getTime() - parseDateOnly(a.event_date).getTime(),
+    ),
+);
+
 const filteredHistory = computed(() => {
     let result = careHistory.value;
     if (filterValues.horseId !== "all") {
         result = result.filter((h) => h.horse_id === filterValues.horseId);
+    }
+    if (filterValues.type !== "all") {
+        result = result.filter((h) => (h.name || "").trim() === filterValues.type);
     }
     if (filterValues.category !== "all") {
         result = result.filter((h) => getCareCategory(h) === filterValues.category);

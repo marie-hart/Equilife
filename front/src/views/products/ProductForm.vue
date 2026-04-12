@@ -239,12 +239,31 @@ const hasStockTrackingData = computed(
     asPositiveNumber(localForm.daily_usage) !== null
 );
 
-const stockTrackingEnabled = ref(hasStockTrackingData.value);
+const hasAnyStockTrackingValue = computed(
+  () =>
+    Boolean(localForm.last_purchase_date) ||
+    localForm.quantity_purchased !== undefined ||
+    localForm.daily_usage !== undefined ||
+    Boolean(localForm.unit)
+);
+
+const stockTrackingEnabled = ref(
+  hasStockTrackingData.value || hasAnyStockTrackingValue.value
+);
 
 watch(
   () => props.modelValue,
   () => {
-    stockTrackingEnabled.value = hasStockTrackingData.value;
+    if (!isStockManaged.value) {
+      stockTrackingEnabled.value = false;
+      return;
+    }
+    // Ne jamais couper le toggle pendant que l'utilisateur édite :
+    // si activé, il reste activé ; on l'active auto seulement si des données existent déjà.
+    stockTrackingEnabled.value =
+      stockTrackingEnabled.value ||
+      hasStockTrackingData.value ||
+      hasAnyStockTrackingValue.value;
   },
   { deep: true }
 );

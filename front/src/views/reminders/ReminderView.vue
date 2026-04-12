@@ -279,6 +279,14 @@ const isReminderRecurring = (reminder: Event): boolean =>
     reminder.reminder_enabled && Boolean(reminder.reminder_interval_days || reminder.reminder_interval_months || reminder.reminder_interval_years);
 
 const markDone = async (reminder: Event) => {
+    if (reminder.is_care) {
+        selectedReminder.value = reminder;
+        careDoneForm.value = {
+            date: toDateInputValue(getReminderDate(reminder)),
+        };
+        isCareDoneOpen.value = true;
+        return;
+    }
     if (isReminderRecurring(reminder)) {
         selectedReminder.value = reminder;
         careDoneForm.value = { date: toDateInputValue(getReminderDate(reminder)) };
@@ -368,19 +376,24 @@ const saveCareDone = async () => {
     if (!selectedReminder.value) return;
     try {
         const appointmentDate = fromDateInputValue(careDoneForm.value.date);
-        const type = selectedReminder.value.reminder_type ?? "autres";
-        
-        await eventsStore.createEvent({
-            ...selectedReminder.value,
-            event_date: appointmentDate,
-            reminder_enabled: false,
-            is_care: type === "soin",
-        });
-        
-        await eventsStore.updateEvent(selectedReminder.value.id, {
-            event_date: appointmentDate,
-            reminder_enabled: true,
-        });
+        const reminder = selectedReminder.value;
+        const type = reminder.reminder_type ?? "autres";
+
+        if (reminder.is_care) {
+            await eventsStore.markCareDone(reminder.id, appointmentDate);
+        } else {
+            await eventsStore.createEvent({
+                ...reminder,
+                event_date: appointmentDate,
+                reminder_enabled: false,
+                is_care: type === "soin",
+            });
+
+            await eventsStore.updateEvent(reminder.id, {
+                event_date: appointmentDate,
+                reminder_enabled: true,
+            });
+        }
         
         await loadReminders(true);
         isCareDoneOpen.value = false;

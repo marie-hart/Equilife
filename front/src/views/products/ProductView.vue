@@ -3,8 +3,18 @@
     color="#EDE4D8"
     min-height="100vh"
     class="pa-0"
+    @touchstart.passive="onPullStart"
+    @touchend.passive="onPullEnd"
+    @touchcancel.passive="resetPullState"
   >
     <v-container>
+      <v-progress-linear
+        v-if="isPullRefreshing"
+        indeterminate
+        color="#7B5B3E"
+        rounded
+        class="mb-3"
+      />
       
       <div class="d-flex align-center justify-space-between mb-8 mt-2 px-2">
         <div>
@@ -118,6 +128,7 @@ import type { Product } from "@/types";
 import ProductItem from "./ProductItem.vue";
 import { getStockStatus } from "@/utils/productStock";
 import { productApi } from "@/api/product";
+import { usePullToRefresh } from "@/composables/usePullToRefresh";
 
 const props = withDefaults(defineProps<{ 
   products?: Product[] 
@@ -170,6 +181,11 @@ async function loadProducts() {
     isLoading.value = false;
   }
 }
+
+const { isPullRefreshing, onPullStart, onPullEnd, resetPullState } =
+    usePullToRefresh(async () => {
+        await loadProducts();
+    });
 
 onMounted(loadProducts);
 onActivated(loadProducts);

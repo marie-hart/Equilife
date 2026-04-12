@@ -1,6 +1,5 @@
 import pool from "../config/database";
 import { Event, CreateEventDto, UpdateEventDto } from "../types";
-import { calculateNextReminderDate } from "../utils/dateUtils";
 import cacheService from "../services/cacheService";
 import { CacheKeys } from "../services/cacheKeys";
 
@@ -88,21 +87,7 @@ export class EventRepository {
             if (!isOwner) throw new Error(FORBIDDEN_HORSE_ERROR);
         }
 
-        const eventDate = new Date(data.event_date);
-        let nextReminderDate: Date | null = null;
-        if (
-            data.reminder_enabled &&
-            (data.reminder_interval_days ||
-                data.reminder_interval_months ||
-                data.reminder_interval_years)
-        ) {
-            nextReminderDate = calculateNextReminderDate(
-                eventDate,
-                data.reminder_interval_days,
-                data.reminder_interval_months,
-                data.reminder_interval_years,
-            );
-        }
+        const nextReminderDate: Date | null = null;
 
         const result = await pool.query(
             `INSERT INTO events (
@@ -155,45 +140,10 @@ export class EventRepository {
             if (!isOwner) throw new Error(FORBIDDEN_HORSE_ERROR);
         }
 
-        let nextReminderDate: Date | null = existing.next_reminder_date ?? null;
-        if (
-            data.reminder_enabled !== undefined ||
-            data.event_date ||
-            data.reminder_interval_days !== undefined ||
-            data.reminder_interval_months !== undefined ||
-            data.reminder_interval_years !== undefined
-        ) {
-            const eventDate = data.event_date
-                ? new Date(data.event_date)
-                : existing.event_date;
-            const reminderEnabled =
-                data.reminder_enabled !== undefined
-                    ? data.reminder_enabled
-                    : existing.reminder_enabled;
-            const intervalDays =
-                data.reminder_interval_days !== undefined
-                    ? data.reminder_interval_days
-                    : existing.reminder_interval_days || undefined;
-            const intervalMonths =
-                data.reminder_interval_months !== undefined
-                    ? data.reminder_interval_months
-                    : existing.reminder_interval_months || undefined;
-            const intervalYears =
-                data.reminder_interval_years !== undefined
-                    ? data.reminder_interval_years
-                    : existing.reminder_interval_years || undefined;
-
-            if (reminderEnabled && (intervalDays || intervalMonths || intervalYears)) {
-                nextReminderDate = calculateNextReminderDate(
-                    eventDate,
-                    intervalDays,
-                    intervalMonths,
-                    intervalYears,
-                );
-            } else {
-                nextReminderDate = null;
-            }
-        }
+        const nextReminderDate: Date | null =
+            data.reminder_enabled === false || data.event_date !== undefined
+                ? null
+                : existing.next_reminder_date ?? null;
 
         const result = await pool.query(
             `UPDATE events SET

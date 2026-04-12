@@ -81,6 +81,7 @@ export const useHorsesStore = defineStore('horses', () => {
         uploadHorsePhoto,
         createHorse,
         deleteHorse,
+        resetHorseContext,
     }
 
     function getHorseNameById(id?: string): string {
@@ -166,6 +167,11 @@ export const useHorsesStore = defineStore('horses', () => {
         }
 
         horses.value = horses.value.map(enrichHorseWithStoredPhoto);
+    }
+
+    function resetHorseContext() {
+        horses.value = [];
+        sethorseId(null);
     }
 
     async function uploadHorsePhoto(id: string, file: File): Promise<void> {

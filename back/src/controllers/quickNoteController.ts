@@ -8,15 +8,30 @@ function getUserId(req: Request): string | undefined {
 export default {
     async list(req: Request, res: Response): Promise<void> {
         const userId = getUserId(req);
+        const horseId =
+            typeof req.query.horseId === "string" ? req.query.horseId.trim() : "";
         if (!userId) {
             res.status(401).json({ error: "Authentification requise" });
             return;
         }
+        if (!horseId) {
+            res.status(400).json({ error: "horseId requis" });
+            return;
+        }
         try {
-            const rows = await quickNoteRepository.findAllByUserId(userId);
+            const isOwner = await quickNoteRepository.horseBelongsToUser(
+                horseId,
+                userId,
+            );
+            if (!isOwner) {
+                res.status(403).json({ error: "Accès refusé à ce cheval" });
+                return;
+            }
+            const rows = await quickNoteRepository.findAllByUserId(userId, horseId);
             res.json(
                 rows.map((r) => ({
                     id: r.id,
+                    horse_id: r.horse_id,
                     content: r.content,
                     created_at: r.created_at.toISOString(),
                     updated_at: r.updated_at.toISOString(),
@@ -30,8 +45,14 @@ export default {
 
     async create(req: Request, res: Response): Promise<void> {
         const userId = getUserId(req);
+        const horseId =
+            typeof req.body?.horse_id === "string" ? req.body.horse_id.trim() : "";
         if (!userId) {
             res.status(401).json({ error: "Authentification requise" });
+            return;
+        }
+        if (!horseId) {
+            res.status(400).json({ error: "horse_id requis" });
             return;
         }
         const content =
@@ -41,9 +62,18 @@ export default {
             return;
         }
         try {
-            const row = await quickNoteRepository.create(userId, content);
+            const isOwner = await quickNoteRepository.horseBelongsToUser(
+                horseId,
+                userId,
+            );
+            if (!isOwner) {
+                res.status(403).json({ error: "Accès refusé à ce cheval" });
+                return;
+            }
+            const row = await quickNoteRepository.create(userId, horseId, content);
             res.status(201).json({
                 id: row.id,
+                horse_id: row.horse_id,
                 content: row.content,
                 created_at: row.created_at.toISOString(),
                 updated_at: row.updated_at.toISOString(),
@@ -75,6 +105,7 @@ export default {
             }
             res.json({
                 id: row.id,
+                horse_id: row.horse_id,
                 content: row.content,
                 created_at: row.created_at.toISOString(),
                 updated_at: row.updated_at.toISOString(),

@@ -1,6 +1,19 @@
 <template>
-    <v-sheet color="#EDE4D8" class="pb-nav">
+    <v-sheet
+        color="#EDE4D8"
+        class="pb-nav"
+        @touchstart.passive="onPullStart"
+        @touchend.passive="onPullEnd"
+        @touchcancel.passive="resetPullState"
+    >
         <v-container fluid class="pa-3">
+            <v-progress-linear
+                v-if="isPullRefreshing"
+                indeterminate
+                color="#7B5B3E"
+                rounded
+                class="mb-3"
+            />
             <v-skeleton-loader v-if="isLoading" type="card, article" bg-color="transparent" />
 
             <template v-else>
@@ -79,6 +92,7 @@ import type { Horse } from "@/types";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { useEventsStore } from "@/stores/EventsStore";
 import { useRoute } from 'vue-router';
+import { usePullToRefresh } from "@/composables/usePullToRefresh";
 
 const events = ref<Event[]>([]);
 const reminders = ref<Event[]>([]);
@@ -128,6 +142,11 @@ const loadDashboard = async (forceRefresh = false) => {
         isLoading.value = false;
     }
 };
+
+const { isPullRefreshing, onPullStart, onPullEnd, resetPullState } =
+    usePullToRefresh(async () => {
+        await loadDashboard(true);
+    });
 
 const confirmDelete = async () => {
     try {

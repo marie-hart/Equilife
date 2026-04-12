@@ -2,8 +2,18 @@
   <v-sheet
     color="#EDE4D8"
     class="pa-0 pb-10"
+    @touchstart.passive="onPullStart"
+    @touchend.passive="onPullEnd"
+    @touchcancel.passive="resetPullState"
   >
     <v-container class="px-4 py-2">
+      <v-progress-linear
+        v-if="isPullRefreshing"
+        indeterminate
+        color="#7B5B3E"
+        rounded
+        class="mb-3"
+      />
       
       <div class="d-flex align-center justify-space-between mb-6">
         <div>
@@ -94,6 +104,7 @@ import { useEventsStore } from "@/stores/EventsStore";
 import { formatMonthLabel, sortByDateAsc, toMonthKey } from "@/libs/date";
 import type { ActivityAction, ActivityGroup, Event } from "@/types";
 import { ActivityList } from "@/views/activities";
+import { usePullToRefresh } from "@/composables/usePullToRefresh";
 
 const { mdAndUp } = useDisplay();
 const horsesStore = useHorsesStore();
@@ -214,6 +225,11 @@ const loadActivities = async () => {
         isLoading.value = false;
     }
 };
+
+const { isPullRefreshing, onPullStart, onPullEnd, resetPullState } =
+    usePullToRefresh(async () => {
+        await loadActivities();
+    });
 
 onMounted(async () => {
     await horsesStore.loadHorses();

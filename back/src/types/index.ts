@@ -236,7 +236,7 @@ export interface RationItem {
     product_id?: string;
     quantity?: string;
     frequency: string[];
-    type?: "Granulés" | "Complément" | "Autres";
+    type?: "Granulés" | "Complément" | "Pharmacie" | "Autres";
     created_at: Date;
     updated_at: Date;
 }
@@ -252,7 +252,7 @@ export interface CreateRationDto {
         product_id?: string;
         quantity?: string;
         frequency?: string[];
-        type?: "Granulés" | "Complément" | "Autres";
+        type?: "Granulés" | "Complément" | "Pharmacie" | "Autres";
     }>;
 }
 
@@ -266,6 +266,6 @@ export interface UpdateRationDto {
         product_id?: string;
         quantity?: string;
         frequency?: string[];
-        type?: "Granulés" | "Complément" | "Autres";
+        type?: "Granulés" | "Complément" | "Pharmacie" | "Autres";
     }>;
 }

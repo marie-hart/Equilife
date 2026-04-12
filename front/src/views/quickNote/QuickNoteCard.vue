@@ -32,7 +32,6 @@
         hide-details
         class="mb-2"
         @keydown.enter.prevent
-        @blur="$emit('save')"
       />
 
       <!-- Bouton -->
