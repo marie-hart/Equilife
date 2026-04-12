@@ -1,17 +1,37 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import { startReminderNotifications, requestPermission, supportsPush, ensurePushSubscription } from "@/utils/notifications";
+import {
+    startReminderNotifications,
+    stopReminderNotifications,
+    requestPermission,
+    supportsPush,
+    ensurePushSubscription,
+} from "@/utils/notifications";
 import { logger } from "@/services/LoggerService";
 import type { Event, StockNotification } from "@/types"
 
+const NOTIFICATIONS_ENABLED_KEY = "equilife_notifications_enabled";
+
 export const useNotificationStore = defineStore("notifications", () => {
+    const notificationsEnabled = ref<boolean>(
+        (() => {
+            try {
+                const raw = localStorage.getItem(NOTIFICATIONS_ENABLED_KEY);
+                return raw === null ? true : raw === "true";
+            } catch {
+                return true;
+            }
+        })(),
+    );
     const permission = ref<NotificationPermission>("default");
     const isSubscribing = ref(false);
     const unreadReminders = ref<Event[]>([]);
      const unreadStockAlerts = ref<StockNotification[]>([]);
     
     const isSupported = computed(() => supportsPush());
-    const isEnabled = computed(() => permission.value === "granted");
+    const isEnabled = computed(
+        () => permission.value === "granted" && notificationsEnabled.value,
+    );
 
     // Détecter si on est sur un appareil iOS
     const isIOS = computed(() => {
@@ -37,6 +57,7 @@ export const useNotificationStore = defineStore("notifications", () => {
 
     return {
         permission,
+        notificationsEnabled,
         isSubscribing,
         unreadReminders,
         isSupported,
@@ -46,6 +67,7 @@ export const useNotificationStore = defineStore("notifications", () => {
         needsInstallation,
         hasUnread,
         enableNotifications,
+        disableNotifications,
         checkCurrentPermission,
         addUnreadReminder,
         markAsRead,
@@ -62,33 +84,54 @@ export const useNotificationStore = defineStore("notifications", () => {
             permission.value = Notification.permission;
             
             // Si c'est déjà accordé, on s'assure que le poller/push est actif
-            if (permission.value === "granted") {
+            if (permission.value === "granted" && notificationsEnabled.value) {
                 startReminderNotifications();
+            } else {
+                stopReminderNotifications();
             }
         }
     }
 
     async function enableNotifications() {
-    isSubscribing.value = true;
-    try {
-        const result = await requestPermission();
-        permission.value = result;
-        
-        if (result === "granted") {
-            // ÉTAPE CRUCIALE POUR LE MOBILE :
-            // On enregistre l'appareil auprès du service de Push (Google/Apple)
-            // et on envoie le token au backend
-            await ensurePushSubscription(); 
+        isSubscribing.value = true;
+        try {
+            const result = await requestPermission();
+            permission.value = result;
             
-            // On lance le poller local en complément
-            startReminderNotifications();
+            if (result === "granted") {
+                notificationsEnabled.value = true;
+                persistNotificationsEnabled(true);
+                // ÉTAPE CRUCIALE POUR LE MOBILE :
+                // On enregistre l'appareil auprès du service de Push (Google/Apple)
+                // et on envoie le token au backend
+                await ensurePushSubscription(); 
+                
+                // On lance le poller local en complément
+                startReminderNotifications();
+            } else {
+                notificationsEnabled.value = false;
+                persistNotificationsEnabled(false);
+            }
+        } catch (err) {
+            logger.error("Échec de l'abonnement push", err);
+        } finally {
+            isSubscribing.value = false;
         }
-    } catch (err) {
-        logger.error("Échec de l'abonnement push", err);
-    } finally {
-        isSubscribing.value = false;
     }
-}
+
+    function disableNotifications() {
+        notificationsEnabled.value = false;
+        persistNotificationsEnabled(false);
+        stopReminderNotifications();
+    }
+
+    function persistNotificationsEnabled(value: boolean) {
+        try {
+            localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, String(value));
+        } catch {
+            // no-op
+        }
+    }
 
     /* =========================
         REMINDERS

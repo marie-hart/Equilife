@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import productRepository from "../repositories/productRepository";
 import { CreateProductDto, UpdateProductDto } from "../types";
+import {
+    PRODUCT_FORBIDDEN_HORSE_ERROR,
+    PRODUCT_HORSE_REQUIRED_ERROR,
+} from "../repositories/productRepository";
 
 export class ProductController {
     // Message d'aide pour le debug si la DB n'est pas à jour
@@ -21,6 +25,7 @@ export class ProductController {
             const products = await productRepository.findAll(
                 includeInactive,
                 horseId,
+                req.userId,
             );
             res.json(products);
         } catch (error) {
@@ -32,7 +37,7 @@ export class ProductController {
     async getById(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const product = await productRepository.findById(id);
+            const product = await productRepository.findById(id, req.userId);
 
             if (!product) {
                 res.status(404).json({ error: "Product not found" });
@@ -58,9 +63,25 @@ export class ProductController {
                 return;
             }
 
-            const product = await productRepository.create(data);
+            const product = await productRepository.create(data, req.userId);
             res.status(201).json(product);
         } catch (error) {
+            if (
+                error instanceof Error &&
+                error.message === PRODUCT_HORSE_REQUIRED_ERROR
+            ) {
+                res.status(400).json({
+                    error: "horse_id est requis pour créer un produit en mode utilisateur",
+                });
+                return;
+            }
+            if (
+                error instanceof Error &&
+                error.message === PRODUCT_FORBIDDEN_HORSE_ERROR
+            ) {
+                res.status(403).json({ error: "Accès refusé à ce cheval" });
+                return;
+            }
             if ((error as { code?: string }).code === "23505") {
                 res.status(409).json({ error: "Product with this name already exists" });
                 return;
@@ -84,7 +105,7 @@ export class ProductController {
                 data.name = data.name.trim();
             }
 
-            const product = await productRepository.update(id, data);
+            const product = await productRepository.update(id, data, req.userId);
 
             if (!product) {
                 res.status(404).json({ error: "Product not found" });
@@ -93,6 +114,13 @@ export class ProductController {
 
             res.json(product);
         } catch (error) {
+            if (
+                error instanceof Error &&
+                error.message === PRODUCT_FORBIDDEN_HORSE_ERROR
+            ) {
+                res.status(403).json({ error: "Accès refusé à ce cheval" });
+                return;
+            }
             // ... gestion erreur 23505 et dbMessage identique à create
             console.error("Error updating product:", error);
             res.status(500).json({ error: "Failed to update product" });
@@ -102,7 +130,7 @@ export class ProductController {
     async delete(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const deleted = await productRepository.delete(id);
+            const deleted = await productRepository.delete(id, req.userId);
 
             if (!deleted) {
                 res.status(404).json({ error: "Product not found" });
@@ -126,9 +154,19 @@ export class ProductController {
                 res.status(400).json({ error: "Horse ID is required" });
                 return;
             }
-            const budget = await productRepository.getMonthlyBudget(horseId);
+            const budget = await productRepository.getMonthlyBudget(
+                horseId,
+                req.userId,
+            );
             res.json(budget);
         } catch (error) {
+            if (
+                error instanceof Error &&
+                error.message === PRODUCT_FORBIDDEN_HORSE_ERROR
+            ) {
+                res.status(403).json({ error: "Accès refusé à ce cheval" });
+                return;
+            }
             console.error("Error calculating budget:", error);
             res.status(500).json({ error: "Failed to calculate budget" });
         }

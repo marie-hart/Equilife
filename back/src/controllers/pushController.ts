@@ -14,7 +14,10 @@ class PushController {
 
     async subscribe(req: Request, res: Response) {
         try {
-            await saveSubscription(req.body);
+            if (!req.userId) {
+                return res.status(401).json({ error: "Authentification requise" });
+            }
+            await saveSubscription(req.userId, req.body);
             return res.status(204).send();
         } catch (error) {
             return res

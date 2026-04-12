@@ -4,57 +4,87 @@ import { calculateNextReminderDate } from "../utils/dateUtils";
 import cacheService from "../services/cacheService";
 import { CacheKeys } from "../services/cacheKeys";
 
+const FORBIDDEN_HORSE_ERROR = "FORBIDDEN_HORSE";
+const HORSE_REQUIRED_ERROR = "HORSE_REQUIRED";
+
 export class EventRepository {
-    async findAll(horseId?: string): Promise<Event[]> {
-        // Vérifier le cache
-        const cacheKey = CacheKeys.eventsListKey(horseId);
+    async findAll(horseId?: string, ownerUserId?: string): Promise<Event[]> {
+        const cacheKey = CacheKeys.eventsListKey(horseId, ownerUserId);
         const cached = await cacheService.get<Event[]>(cacheKey);
-        if (cached) {
-            return cached;
-        }
+        if (cached) return cached;
 
-        // Récupérer depuis la base de données
-        const result = horseId
-            ? await pool.query(
-                  "SELECT * FROM events WHERE horse_id = $1 ORDER BY event_date DESC",
-                  [horseId],
-              )
-            : await pool.query("SELECT * FROM events ORDER BY event_date DESC");
+        const result = ownerUserId
+            ? horseId
+                ? await pool.query(
+                      `
+                        SELECT e.*
+                        FROM events e
+                        INNER JOIN horses h ON h.id = e.horse_id
+                        WHERE h.user_id = $1 AND e.horse_id = $2
+                        ORDER BY e.event_date DESC
+                      `,
+                      [ownerUserId, horseId],
+                  )
+                : await pool.query(
+                      `
+                        SELECT e.*
+                        FROM events e
+                        INNER JOIN horses h ON h.id = e.horse_id
+                        WHERE h.user_id = $1
+                        ORDER BY e.event_date DESC
+                      `,
+                      [ownerUserId],
+                  )
+            : horseId
+              ? await pool.query(
+                    "SELECT * FROM events WHERE horse_id = $1 ORDER BY event_date DESC",
+                    [horseId],
+                )
+              : await pool.query("SELECT * FROM events ORDER BY event_date DESC");
+
         const events = result.rows.map(this.mapRowToEvent);
-
-        // Mettre en cache (TTL de 5 minutes)
         await cacheService.set(cacheKey, events, 300);
-
         return events;
     }
 
-    async findById(id: string): Promise<Event | null> {
-        // Vérifier le cache
-        const cacheKey = CacheKeys.eventKey(id);
-        const cached = await cacheService.get<Event>(cacheKey);
-        if (cached) {
-            return cached;
+    async findById(id: string, ownerUserId?: string): Promise<Event | null> {
+        if (!ownerUserId) {
+            const cacheKey = CacheKeys.eventKey(id);
+            const cached = await cacheService.get<Event>(cacheKey);
+            if (cached) return cached;
         }
 
-        // Récupérer depuis la base de données
-        const result = await pool.query("SELECT * FROM events WHERE id = $1", [
-            id,
-        ]);
-        if (result.rows.length === 0) {
-            return null;
-        }
+        const result = ownerUserId
+            ? await pool.query(
+                  `
+                    SELECT e.*
+                    FROM events e
+                    INNER JOIN horses h ON h.id = e.horse_id
+                    WHERE e.id = $1 AND h.user_id = $2
+                  `,
+                  [id, ownerUserId],
+              )
+            : await pool.query("SELECT * FROM events WHERE id = $1", [id]);
+
+        if (result.rows.length === 0) return null;
         const event = this.mapRowToEvent(result.rows[0]);
-
-        // Mettre en cache (TTL de 10 minutes)
-        await cacheService.set(cacheKey, event, 600);
-
+        if (!ownerUserId) {
+            await cacheService.set(CacheKeys.eventKey(id), event, 600);
+        }
         return event;
     }
 
-    async create(data: CreateEventDto): Promise<Event> {
+    async create(data: CreateEventDto, ownerUserId?: string): Promise<Event> {
+        if (ownerUserId && !data.horse_id) {
+            throw new Error(HORSE_REQUIRED_ERROR);
+        }
+        if (ownerUserId && data.horse_id) {
+            const isOwner = await this.horseBelongsToUser(data.horse_id, ownerUserId);
+            if (!isOwner) throw new Error(FORBIDDEN_HORSE_ERROR);
+        }
+
         const eventDate = new Date(data.event_date);
         let nextReminderDate: Date | null = null;
-
         if (
             data.reminder_enabled &&
             (data.reminder_interval_days ||
@@ -71,11 +101,11 @@ export class EventRepository {
 
         const result = await pool.query(
             `INSERT INTO events (
-        name, description, event_date, horse_id, product_id, is_care, reminder_type,
-        activity_type, activity_duration_minutes, activity_intensity, activity_comment,
-        reminder_enabled, reminder_interval_days, reminder_interval_months, reminder_interval_years, next_reminder_date
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-      RETURNING *`,
+                name, description, event_date, horse_id, product_id, is_care, reminder_type,
+                activity_type, activity_duration_minutes, activity_intensity, activity_comment,
+                reminder_enabled, reminder_interval_days, reminder_interval_months, reminder_interval_years, next_reminder_date
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            RETURNING *`,
             [
                 data.name,
                 data.description || null,
@@ -97,20 +127,22 @@ export class EventRepository {
         );
 
         const event = this.mapRowToEvent(result.rows[0]);
-
-        // Invalider le cache
-        await this.invalidateCache(event.id, event.horse_id);
-
+        await this.invalidateCache(event.id, event.horse_id, ownerUserId);
         return event;
     }
 
-    async update(id: string, data: UpdateEventDto): Promise<Event | null> {
-        const existing = await this.findById(id);
-        if (!existing) {
-            return null;
+    async update(
+        id: string,
+        data: UpdateEventDto,
+        ownerUserId?: string,
+    ): Promise<Event | null> {
+        const existing = await this.findById(id, ownerUserId);
+        if (!existing) return null;
+        if (ownerUserId && data.horse_id) {
+            const isOwner = await this.horseBelongsToUser(data.horse_id, ownerUserId);
+            if (!isOwner) throw new Error(FORBIDDEN_HORSE_ERROR);
         }
 
-        // Calculer la nouvelle date de rappel si nécessaire
         let nextReminderDate: Date | null = existing.next_reminder_date ?? null;
         if (
             data.reminder_enabled !== undefined ||
@@ -139,10 +171,7 @@ export class EventRepository {
                     ? data.reminder_interval_years
                     : existing.reminder_interval_years || undefined;
 
-            if (
-                reminderEnabled &&
-                (intervalDays || intervalMonths || intervalYears)
-            ) {
+            if (reminderEnabled && (intervalDays || intervalMonths || intervalYears)) {
                 nextReminderDate = calculateNextReminderDate(
                     eventDate,
                     intervalDays,
@@ -156,24 +185,24 @@ export class EventRepository {
 
         const result = await pool.query(
             `UPDATE events SET
-        name = COALESCE($1, name),
-        description = COALESCE($2, description),
-        event_date = COALESCE($3, event_date),
-        horse_id = COALESCE($4, horse_id),
-        product_id = COALESCE($5, product_id),
-        is_care = COALESCE($6, is_care),
-        reminder_type = COALESCE($7, reminder_type),
-        activity_type = COALESCE($8, activity_type),
-        activity_duration_minutes = COALESCE($9, activity_duration_minutes),
-        activity_intensity = COALESCE($10, activity_intensity),
-        activity_comment = COALESCE($11, activity_comment),
-        reminder_enabled = COALESCE($12, reminder_enabled),
-        reminder_interval_days = COALESCE($13, reminder_interval_days),
-        reminder_interval_months = COALESCE($14, reminder_interval_months),
-        reminder_interval_years = COALESCE($15, reminder_interval_years),
-        next_reminder_date = $16
-      WHERE id = $17
-      RETURNING *`,
+                name = COALESCE($1, name),
+                description = COALESCE($2, description),
+                event_date = COALESCE($3, event_date),
+                horse_id = COALESCE($4, horse_id),
+                product_id = COALESCE($5, product_id),
+                is_care = COALESCE($6, is_care),
+                reminder_type = COALESCE($7, reminder_type),
+                activity_type = COALESCE($8, activity_type),
+                activity_duration_minutes = COALESCE($9, activity_duration_minutes),
+                activity_intensity = COALESCE($10, activity_intensity),
+                activity_comment = COALESCE($11, activity_comment),
+                reminder_enabled = COALESCE($12, reminder_enabled),
+                reminder_interval_days = COALESCE($13, reminder_interval_days),
+                reminder_interval_months = COALESCE($14, reminder_interval_months),
+                reminder_interval_years = COALESCE($15, reminder_interval_years),
+                next_reminder_date = $16
+            WHERE id = $17
+            RETURNING *`,
             [
                 data.name || null,
                 data.description !== undefined ? data.description : null,
@@ -188,9 +217,7 @@ export class EventRepository {
                     : null,
                 data.activity_intensity || null,
                 data.activity_comment || null,
-                data.reminder_enabled !== undefined
-                    ? data.reminder_enabled
-                    : null,
+                data.reminder_enabled !== undefined ? data.reminder_enabled : null,
                 data.reminder_interval_days !== undefined
                     ? data.reminder_interval_days
                     : null,
@@ -205,75 +232,104 @@ export class EventRepository {
             ],
         );
 
-        if (result.rows.length === 0) {
-            return null;
-        }
-
+        if (result.rows.length === 0) return null;
         const event = this.mapRowToEvent(result.rows[0]);
-
-        // Invalider le cache
-        await this.invalidateCache(id, event.horse_id);
-
+        await this.invalidateCache(id, event.horse_id, ownerUserId);
         return event;
     }
 
-    async delete(id: string): Promise<boolean> {
-        const existing = await this.findById(id);
-        const result = await pool.query("DELETE FROM events WHERE id = $1", [
-            id,
-        ]);
-        const deleted = result.rowCount !== null && result.rowCount > 0;
+    async delete(id: string, ownerUserId?: string): Promise<boolean> {
+        const existing = await this.findById(id, ownerUserId);
+        if (!existing) return false;
+        const result = await pool.query("DELETE FROM events WHERE id = $1", [id]);
+        const deleted = (result.rowCount ?? 0) > 0;
         if (deleted) {
-            await this.invalidateCache(id, existing?.horse_id);
+            await this.invalidateCache(id, existing.horse_id, ownerUserId);
         }
         return deleted;
     }
 
-    async getReminders(horseId?: string): Promise<Event[]> {
+    async getReminders(horseId?: string, ownerUserId?: string): Promise<Event[]> {
         const safeHorseId = horseId && horseId.length > 0 ? horseId : undefined;
-        const cacheKey = CacheKeys.eventsRemindersKey(safeHorseId);
+        const cacheKey = CacheKeys.eventsRemindersKey(safeHorseId, ownerUserId);
         const cached = await cacheService.get<Event[]>(cacheKey);
         if (cached) return cached;
-      
-        const result = safeHorseId
-          ? await pool.query(
-              `
-              SELECT * FROM events
-              WHERE reminder_enabled = true
-              AND horse_id = $1
-              ORDER BY event_date ASC
-              `,
-              [safeHorseId],
-            )
-          : await pool.query(
-              `
-              SELECT * FROM events
-              WHERE reminder_enabled = true
-              ORDER BY event_date ASC
-              `,
-            );
-      
+
+        const result = ownerUserId
+            ? safeHorseId
+                ? await pool.query(
+                      `
+                        SELECT e.*
+                        FROM events e
+                        INNER JOIN horses h ON h.id = e.horse_id
+                        WHERE e.reminder_enabled = true
+                          AND h.user_id = $1
+                          AND e.horse_id = $2
+                        ORDER BY e.event_date ASC
+                      `,
+                      [ownerUserId, safeHorseId],
+                  )
+                : await pool.query(
+                      `
+                        SELECT e.*
+                        FROM events e
+                        INNER JOIN horses h ON h.id = e.horse_id
+                        WHERE e.reminder_enabled = true
+                          AND h.user_id = $1
+                        ORDER BY e.event_date ASC
+                      `,
+                      [ownerUserId],
+                  )
+            : safeHorseId
+              ? await pool.query(
+                    `
+                        SELECT * FROM events
+                        WHERE reminder_enabled = true
+                          AND horse_id = $1
+                        ORDER BY event_date ASC
+                    `,
+                    [safeHorseId],
+                )
+              : await pool.query(
+                    `
+                        SELECT * FROM events
+                        WHERE reminder_enabled = true
+                        ORDER BY event_date ASC
+                    `,
+                );
+
         const events = result.rows.map(this.mapRowToEvent);
         await cacheService.set(cacheKey, events, 60);
-      
         return events;
     }
-      
 
-    /**
-     * Invalide le cache pour un événement
-     */
     private async invalidateCache(
         eventId: string,
         horseId?: string,
+        ownerUserId?: string,
     ): Promise<void> {
         await cacheService.delete(CacheKeys.eventKey(eventId));
-        await cacheService.delete(CacheKeys.eventsListKey());
-        await cacheService.delete(CacheKeys.eventsRemindersKey());
+        await cacheService.delete(CacheKeys.eventsListKey(undefined, ownerUserId));
+        await cacheService.delete(
+            CacheKeys.eventsRemindersKey(undefined, ownerUserId),
+        );
         if (horseId) {
-            await cacheService.delete(CacheKeys.eventsListKey(horseId));
-            await cacheService.delete(CacheKeys.eventsRemindersKey(horseId));
+            await cacheService.delete(CacheKeys.eventsListKey(horseId, ownerUserId));
+            await cacheService.delete(
+                CacheKeys.eventsRemindersKey(horseId, ownerUserId),
+            );
         }
+    }
+
+    private async horseBelongsToUser(
+        horseId: string,
+        ownerUserId: string,
+    ): Promise<boolean> {
+        const result = await pool.query(
+            `SELECT 1 FROM horses WHERE id = $1 AND user_id = $2`,
+            [horseId, ownerUserId],
+        );
+        return (result.rowCount ?? 0) > 0;
     }
 
     private mapRowToEvent(row: any): Event {
@@ -287,8 +343,7 @@ export class EventRepository {
             reminder_enabled: row.reminder_enabled,
             reminder_type: row.reminder_type || undefined,
             activity_type: row.activity_type || undefined,
-            activity_duration_minutes:
-                row.activity_duration_minutes || undefined,
+            activity_duration_minutes: row.activity_duration_minutes || undefined,
             activity_intensity: row.activity_intensity || undefined,
             activity_comment: row.activity_comment || undefined,
             reminder_interval_days: row.reminder_interval_days,
@@ -307,4 +362,5 @@ export class EventRepository {
     }
 }
 
+export { FORBIDDEN_HORSE_ERROR, HORSE_REQUIRED_ERROR };
 export default new EventRepository();

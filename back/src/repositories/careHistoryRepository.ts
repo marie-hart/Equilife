@@ -20,15 +20,41 @@ export class CareHistoryRepository {
         return this.mapRow(result.rows[0]);
     }
 
-    async findByHorseId(horseId?: string): Promise<CareHistoryEntry[]> {
-        const result = horseId
-            ? await pool.query(
-                  "SELECT * FROM care_history WHERE horse_id = $1 ORDER BY event_date DESC",
-                  [horseId],
-              )
-            : await pool.query(
-                  "SELECT * FROM care_history ORDER BY event_date DESC",
-              );
+    async findByHorseId(
+        horseId?: string,
+        ownerUserId?: string,
+    ): Promise<CareHistoryEntry[]> {
+        const result = ownerUserId
+            ? horseId
+                ? await pool.query(
+                      `
+                        SELECT ch.*
+                        FROM care_history ch
+                        INNER JOIN horses h ON h.id = ch.horse_id
+                        WHERE h.user_id = $1
+                          AND ch.horse_id = $2
+                        ORDER BY ch.event_date DESC
+                      `,
+                      [ownerUserId, horseId],
+                  )
+                : await pool.query(
+                      `
+                        SELECT ch.*
+                        FROM care_history ch
+                        INNER JOIN horses h ON h.id = ch.horse_id
+                        WHERE h.user_id = $1
+                        ORDER BY ch.event_date DESC
+                      `,
+                      [ownerUserId],
+                  )
+            : horseId
+              ? await pool.query(
+                    "SELECT * FROM care_history WHERE horse_id = $1 ORDER BY event_date DESC",
+                    [horseId],
+                )
+              : await pool.query(
+                    "SELECT * FROM care_history ORDER BY event_date DESC",
+                );
         return result.rows.map(this.mapRow);
     }
 

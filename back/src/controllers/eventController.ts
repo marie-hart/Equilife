@@ -4,12 +4,16 @@ import careHistoryRepository from "../repositories/careHistoryRepository";
 import { CreateEventDto, UpdateEventDto } from "../types";
 import { normalizeHorseId } from "../utils/normalizeHorseId";
 import { calculateNextReminderDate } from "../utils/dateUtils";
+import {
+    FORBIDDEN_HORSE_ERROR,
+    HORSE_REQUIRED_ERROR,
+} from "../repositories/eventRepository";
 
 export class EventController {
     async getAll(req: Request, res: Response): Promise<void> {
         try {
             const horseId = req.query.horseId as string | undefined;
-            const events = await eventRepository.findAll(horseId);
+            const events = await eventRepository.findAll(horseId, req.userId);
             res.json(events);
         } catch (error) {
             console.error("Error fetching events:", error);
@@ -20,7 +24,7 @@ export class EventController {
     async getById(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const event = await eventRepository.findById(id);
+            const event = await eventRepository.findById(id, req.userId);
 
             if (!event) {
                 res.status(404).json({ error: "Event not found" });
@@ -46,9 +50,19 @@ export class EventController {
                 return;
             }
 
-            const event = await eventRepository.create(data);
+            const event = await eventRepository.create(data, req.userId);
             res.status(201).json(event);
         } catch (error) {
+            if (error instanceof Error && error.message === HORSE_REQUIRED_ERROR) {
+                res.status(400).json({
+                    error: "horse_id est requis pour créer un événement en mode utilisateur",
+                });
+                return;
+            }
+            if (error instanceof Error && error.message === FORBIDDEN_HORSE_ERROR) {
+                res.status(403).json({ error: "Accès refusé à ce cheval" });
+                return;
+            }
             console.error("Error creating event:", error);
             res.status(500).json({ error: "Failed to create event" });
         }
@@ -59,7 +73,7 @@ export class EventController {
             const { id } = req.params;
             const data: UpdateEventDto = req.body;
 
-            const event = await eventRepository.update(id, data);
+            const event = await eventRepository.update(id, data, req.userId);
 
             if (!event) {
                 res.status(404).json({ error: "Event not found" });
@@ -68,6 +82,10 @@ export class EventController {
 
             res.json(event);
         } catch (error) {
+            if (error instanceof Error && error.message === FORBIDDEN_HORSE_ERROR) {
+                res.status(403).json({ error: "Accès refusé à ce cheval" });
+                return;
+            }
             console.error("Error updating event:", error);
             res.status(500).json({ error: "Failed to update event" });
         }
@@ -76,7 +94,7 @@ export class EventController {
     async delete(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const deleted = await eventRepository.delete(id);
+            const deleted = await eventRepository.delete(id, req.userId);
 
             if (!deleted) {
                 res.status(404).json({ error: "Event not found" });
@@ -93,7 +111,7 @@ export class EventController {
     async getReminders(req: Request, res: Response) {
         try {
           const horseId = normalizeHorseId(req.query.horseId);
-          const events = await eventRepository.getReminders(horseId);
+          const events = await eventRepository.getReminders(horseId, req.userId);
           res.json(events);
         } catch (error) {
           console.error("Error fetching reminders:", error);
@@ -111,7 +129,7 @@ export class EventController {
                 return;
             }
 
-            const event = await eventRepository.findById(id);
+            const event = await eventRepository.findById(id, req.userId);
             if (!event) {
                 res.status(404).json({ error: "Event not found" });
                 return;
@@ -153,9 +171,9 @@ export class EventController {
                     name: event.name,
                     event_date: formattedNext,
                     reminder_enabled: true,
-                });
+                }, req.userId);
             } else {
-                await eventRepository.delete(id);
+                await eventRepository.delete(id, req.userId);
             }
 
             res.status(201).json(entry);

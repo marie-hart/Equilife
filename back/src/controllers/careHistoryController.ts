@@ -5,7 +5,10 @@ export class CareHistoryController {
     async getAll(req: Request, res: Response): Promise<void> {
         try {
             const horseId = req.query.horseId as string | undefined;
-            const entries = await careHistoryRepository.findByHorseId(horseId);
+            const entries = await careHistoryRepository.findByHorseId(
+                horseId,
+                req.userId,
+            );
             res.json(entries);
         } catch (error) {
             console.error("Error fetching care history:", error);

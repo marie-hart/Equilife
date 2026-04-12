@@ -11,7 +11,6 @@
         variant="text" 
         color="#1F3D2B" 
         v-bind="menuProps" 
-        @click="handleBellClick"
       >
         <v-badge
           :model-value="notificationStore.hasUnread"
@@ -44,6 +43,34 @@
     </v-card>
 
     <v-card v-else width="320" class="rounded-xl pa-2">
+      <div class="px-3 pt-2 pb-1">
+        <div class="d-flex align-center justify-space-between">
+          <span class="text-caption font-weight-bold" style="color: #554338;">
+            Notifications
+          </span>
+          <v-switch
+            :model-value="notificationsToggle"
+            :loading="notificationStore.isSubscribing"
+            color="#2E4B36"
+            density="compact"
+            hide-details
+            inset
+            @update:model-value="onToggleNotifications"
+          />
+        </div>
+      </div>
+      <v-divider class="mb-1" />
+
+      <v-alert
+        v-if="notificationStore.permission === 'denied'"
+        type="warning"
+        variant="tonal"
+        density="compact"
+        class="mx-2 mb-2"
+      >
+        Notifications bloquées par le navigateur. Autorisez-les dans les réglages du site puis réactivez le switch.
+      </v-alert>
+
       <v-list v-if="notificationStore.unreadReminders.length > 0" lines="two">
         <v-list-subheader class="text-uppercase font-weight-bold text-caption">
           Rappels non traités
@@ -87,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from "vue-router";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { useNotificationStore } from "@/stores/NotificationStore";
@@ -98,9 +125,14 @@ const horsesStore = useHorsesStore();
 const router = useRouter();
 const menuOpen = ref(false);
 
-const handleBellClick = () => {
-  if (!notificationStore.isEnabled && !notificationStore.needsInstallation) {
-    notificationStore.enableNotifications();
+const notificationsToggle = computed(() => notificationStore.isEnabled);
+
+const onToggleNotifications = async (enabled: boolean | null) => {
+  if (enabled === null) return;
+  if (enabled) {
+    await notificationStore.enableNotifications();
+  } else {
+    notificationStore.disableNotifications();
   }
 };
 

@@ -4,12 +4,18 @@ export class CacheKeys {
         return `event:${id}`;
     }
 
-    static eventsListKey(horseId?: string): string {
-        return horseId ? `event:list:${horseId}` : "event:list:all";
+    static eventsListKey(horseId?: string, userId?: string): string {
+        const owner = userId ? `:user:${userId}` : "";
+        return horseId
+            ? `event:list:${horseId}${owner}`
+            : `event:list:all${owner}`;
     }
 
-    static eventsRemindersKey(horseId?: string): string {
-        return horseId ? `event:reminders:${horseId}` : "event:reminders:all";
+    static eventsRemindersKey(horseId?: string, userId?: string): string {
+        const owner = userId ? `:user:${userId}` : "";
+        return horseId
+            ? `event:reminders:${horseId}${owner}`
+            : `event:reminders:all${owner}`;
     }
 
     // --- Produits ---
@@ -20,15 +26,18 @@ export class CacheKeys {
     static productsListKey(
         includeInactive: boolean = false,
         horseId?: string,
+        userId?: string,
     ): string {
         const status = includeInactive ? "all" : "active";
+        const owner = userId ? `:user:${userId}` : "";
         return horseId
-            ? `product:list:${status}:${horseId}`
-            : `product:list:${status}`;
+            ? `product:list:${status}:${horseId}${owner}`
+            : `product:list:${status}${owner}`;
     }
 
-    static productsDueKey(horseId?: string): string {
-        return horseId ? `product:due:${horseId}` : "product:due:all";
+    static productsDueKey(horseId?: string, userId?: string): string {
+        const owner = userId ? `:user:${userId}` : "";
+        return horseId ? `product:due:${horseId}${owner}` : `product:due:all${owner}`;
     }
 
     // --- Chevaux ---

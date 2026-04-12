@@ -21,8 +21,14 @@ const ensureTables = async () => {
             endpoint TEXT PRIMARY KEY,
             p256dh TEXT NOT NULL,
             auth TEXT NOT NULL,
+            user_id UUID,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+    `);
+
+    await pool.query(`
+        ALTER TABLE push_subscriptions
+        ADD COLUMN IF NOT EXISTS user_id UUID;
     `);
 
     await pool.query(`
@@ -66,27 +72,33 @@ export const initPushService = async () => {
 export const getPublicKey = (): string => VAPID_PUBLIC_KEY;
 
 export const saveSubscription = async (
+    userId: string,
     subscription: PushSubscriptionPayload,
 ) => {
     await pool.query(
         `
-    INSERT INTO push_subscriptions (endpoint, p256dh, auth)
-    VALUES ($1, $2, $3)
+    INSERT INTO push_subscriptions (endpoint, p256dh, auth, user_id)
+    VALUES ($1, $2, $3, $4)
     ON CONFLICT (endpoint) DO UPDATE
     SET p256dh = EXCLUDED.p256dh,
-        auth = EXCLUDED.auth
+        auth = EXCLUDED.auth,
+        user_id = EXCLUDED.user_id
   `,
         [
             subscription.endpoint,
             subscription.keys.p256dh,
             subscription.keys.auth,
+            userId,
         ],
     );
 };
 
-const listSubscriptions = async (): Promise<PushSubscriptionPayload[]> => {
+const listSubscriptions = async (
+    userId: string,
+): Promise<PushSubscriptionPayload[]> => {
     const result = await pool.query(
-        "SELECT endpoint, p256dh, auth FROM push_subscriptions",
+        "SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = $1",
+        [userId],
     );
     return result.rows.map((row) => ({
         endpoint: row.endpoint,
@@ -114,9 +126,11 @@ const fetchDueReminders = async () => {
               e.name,
               e.description,
               e.horse_id,
+              h.user_id,
               e.reminder_type AS event_type,
               COALESCE(e.next_reminder_date, e.event_date) AS reminder_date
             FROM events e
+            INNER JOIN horses h ON h.id = e.horse_id
             LEFT JOIN push_notifications pn
               ON pn.event_id::text = e.id::text
               AND pn.reminder_date = COALESCE(e.next_reminder_date, e.event_date)
@@ -143,11 +157,13 @@ const fetchLowStockProducts = async () => {
       SELECT
         p.id,
         p.name,
+        h.user_id,
         p.last_purchase_date,
         p.quantity_purchased,
         p.daily_usage,
         p.unit
       FROM products p
+      INNER JOIN horses h ON h.id = p.horse_id
       WHERE p.category IN ('Granulés', 'Complément')
         AND p.last_purchase_date IS NOT NULL
         AND p.quantity_purchased IS NOT NULL
@@ -225,7 +241,8 @@ export const startProductStockPushScheduler = () => {
         if (remaining <= 14 && remaining > 0) {
             const notified = await alreadyNotified(product.id, "J14");
             if (!notified) {
-            await sendToAll({
+            if (!product.user_id) continue;
+            await sendToUser(product.user_id, {
                 title: "Stock bas 📦",
                 body: `Il reste environ 14 jours de ${product.name}.`,
                 tag: `stock-low-${product.id}`,
@@ -239,7 +256,8 @@ export const startProductStockPushScheduler = () => {
         if (remaining <= 0) {
             const notified = await alreadyNotified(product.id, "J0");
             if (!notified) {
-            await sendToAll({
+            if (!product.user_id) continue;
+            await sendToUser(product.user_id, {
                 title: "Rupture de stock ! ⚠️",
                 body: `${product.name} est épuisé.`,
                 tag: `stock-empty-${product.id}`,
@@ -255,9 +273,12 @@ export const startProductStockPushScheduler = () => {
   setInterval(() => void runStockCheck(), 6 * 60 * 60 * 1000);
 };
 
-const sendToAll = async (payload: Record<string, unknown>) => {
+const sendToUser = async (
+    userId: string,
+    payload: Record<string, unknown>,
+) => {
     if (!isPushConfigured()) return;
-    const subscriptions = await listSubscriptions();
+    const subscriptions = await listSubscriptions(userId);
     await Promise.all(
         subscriptions.map(async (subscription) => {
             try {
@@ -298,7 +319,8 @@ export const startReminderPushScheduler = () => {
             },
         };
 
-        await sendToAll(payload);
+        if (!reminder.user_id) continue;
+        await sendToUser(reminder.user_id, payload);
         await markNotified(reminder.id, reminder.reminder_date);
                 } catch (err) {
                     console.error(

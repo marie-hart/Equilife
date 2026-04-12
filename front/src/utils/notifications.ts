@@ -68,6 +68,8 @@ const showReminderNotification = (reminder: Event, reminderDate: Date) => {
 };
 
 let pollerStarted = false;
+let pollIntervalHandle: ReturnType<typeof setInterval> | null = null;
+let swMessageListenerAttached = false;
 
 export const supportsPush = (): boolean =>
     isBrowser() &&
@@ -138,29 +140,42 @@ const pollReminders = async () => {
 };
 
 export function startReminderNotifications() {
-  // 1. Lancer le poller immédiatement pour les rappels d'événements
-  pollReminders(); // Premier check
-  setInterval(pollReminders, POLL_INTERVAL_MS); // Check toutes les minutes
+    if (pollerStarted) return;
+    pollerStarted = true;
 
-  // 2. Écouter les messages venant du Service Worker (Push Notifications)
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener("message", (event) => {
-      const store = useNotificationStore();
-      const data = event.data;
+    // 1. Lancer le poller immédiatement pour les rappels d'événements
+    void pollReminders();
+    pollIntervalHandle = setInterval(() => {
+        void pollReminders();
+    }, POLL_INTERVAL_MS);
 
-      if (data?.type === "stock") {
-        store.addStockAlert({
-          product_id: data.product_id,
-          title: data.title,
-          body: data.body
+    // 2. Écouter les messages venant du Service Worker (Push Notifications)
+    if ("serviceWorker" in navigator && !swMessageListenerAttached) {
+        navigator.serviceWorker.addEventListener("message", (event) => {
+            const store = useNotificationStore();
+            const data = event.data;
+
+            if (data?.type === "stock") {
+                store.addStockAlert({
+                    product_id: data.product_id,
+                    title: data.title,
+                    body: data.body,
+                });
+            } else if (data?.type === "PUSH_RECEIVED" || data?.type === "reminder") {
+                // Gestion des rappels envoyés par Push
+                if (data.reminder) {
+                    store.addUnreadReminder(data.reminder);
+                }
+            }
         });
-      } 
-      else if (data?.type === "PUSH_RECEIVED" || data?.type === "reminder") {
-        // Gestion des rappels envoyés par Push
-        if (data.reminder) {
-          store.addUnreadReminder(data.reminder);
-        }
-      }
-    });
-  }
+        swMessageListenerAttached = true;
+    }
+}
+
+export function stopReminderNotifications() {
+    pollerStarted = false;
+    if (pollIntervalHandle) {
+        clearInterval(pollIntervalHandle);
+        pollIntervalHandle = null;
+    }
 }
