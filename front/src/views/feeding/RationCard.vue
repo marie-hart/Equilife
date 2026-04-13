@@ -1,5 +1,11 @@
 <template>
-  <v-card variant="flat" rounded="xl" color="white" class="pa-4 mb-4 shadow-subtle border-light">
+  <v-card
+    variant="flat"
+    rounded="xl"
+    color="white"
+    class="pa-4 mb-4 shadow-subtle border-light ration-card"
+    @click="emit('details', ration)"
+  >
     <div class="d-flex align-start justify-space-between mb-2">
       <div>
         <div class="d-flex align-center ga-2 flex-wrap">
@@ -21,17 +27,19 @@
         </div>
       </div>
 
-      <ActionButtons
-        mode="auto"
-        button-size="small"
-        menu-button-size="small"
-        variant="text"
-        color="#A89F94"
-        :actions="getRationActions(ration)"
-      />
+      <div @click.stop>
+        <ActionButtons
+          mode="auto"
+          button-size="small"
+          menu-button-size="small"
+          variant="text"
+          color="#A89F94"
+          :actions="getRationActions(ration)"
+        />
+      </div>
     </div>
 
-    <v-expansion-panels variant="accordion" flat class="mt-4">
+    <v-expansion-panels variant="accordion" flat class="mt-4" @click.stop>
       <v-expansion-panel
         v-for="meal in meals"
         :key="meal.key"
@@ -96,7 +104,7 @@ const props = defineProps<{
     itemTypeLabel: (value?: string) => string;
 }>();
 
-const emit = defineEmits(["delete"]); // On n'émet plus que delete car les autres actions utilisent 'to' ou d'autres callbacks
+const emit = defineEmits(["details", "delete"]);
 
 const confirmDelete = ref(false);
 
@@ -142,3 +150,9 @@ function formatQuantity(raw: string): string {
     return value;
 }
 </script>
+
+<style scoped>
+.ration-card {
+  cursor: pointer;
+}
+</style>

@@ -344,7 +344,9 @@ const availableCategoryOptions = computed(() => {
 });
 
 const filterDefinitions = computed(() => [
-    { ...filters[0], options: availableHorseOptions.value },
+    ...(horsesStore.horses.length > 1
+        ? [{ ...filters[0], options: availableHorseOptions.value }]
+        : []),
     { ...filters[1], options: availableTypeOptions.value },
     { ...filters[2], options: availableCategoryOptions.value },
 ]);

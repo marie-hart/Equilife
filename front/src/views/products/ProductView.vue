@@ -38,22 +38,29 @@
         Ajouter un produit
       </v-btn>
 
-      <v-row class="mb-6" no-gutters align="center">
-        <v-col>
-          <v-text-field
-            v-model="searchQuery"
-            placeholder="Rechercher un produit..."
-            prepend-inner-icon="mdi-magnify"
-            variant="solo"
-            flat
-            density="compact"
-            rounded="xl"
-            clearable
-            hide-details
-            bg-color="#F5EFE6"
-          ></v-text-field>
-        </v-col>
-      </v-row>
+      <v-card
+        variant="flat"
+        rounded="xl"
+        class="px-4 py-1 shadow-subtle border-light bg-white d-flex align-center mb-6"
+        min-height="56"
+      >
+        <v-icon icon="mdi-magnify" size="20" color="#7B5B3E" class="me-3" />
+        <v-text-field
+          v-model="searchQuery"
+          placeholder="Rechercher un produit..."
+          variant="plain"
+          density="compact"
+          clearable
+          hide-details
+          class="filter-search"
+          color="#2E4B36"
+        />
+      </v-card>
+
+      <div class="mb-4 d-flex align-center">
+        <v-icon icon="mdi-filter-variant" size="18" color="#7B5B3E" class="me-2" />
+        <span class="text-overline font-weight-bold" style="color: #7B5B3E">Résultats</span>
+      </div>
 
       <div v-if="criticalProducts.length" class="mb-6">
         <div class="d-flex align-center mb-2 ps-1">
@@ -116,6 +123,15 @@
 .text-h4 {
   font-size: 1.75rem !important;
   line-height: 1.2;
+}
+
+::deep(.filter-search .v-field__input) {
+  color: #2E4B36 !important;
+}
+
+::deep(.filter-search input::placeholder) {
+  color: #7B5B3E !important;
+  opacity: 0.9;
 }
 
 </style>

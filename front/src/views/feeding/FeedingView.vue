@@ -38,20 +38,16 @@
         Ajouter une ration
       </v-btn>
 
-      <div class="mb-8">
-        <div class="text-overline mb-2 ps-1" style="color: #7B5B3E; letter-spacing: 1px;">Rations de :</div>
-        <v-select
-          v-model="horsesStore.horseId"
-          :items="horsesStore.horseFilterOptions"
-          variant="solo"
-          flat
-          bg-color="#F5EFE6"
-          rounded="xl"
-          density="comfortable"
-          hide-details
-          prepend-inner-icon="mdi-horse"
-          class="shadow-subtle"
-        />
+      <FiltersPanel
+        v-if="filterDefinitions.length"
+        :filters="filterDefinitions"
+        v-model="filterValues"
+        class="mb-6"
+      />
+
+      <div v-if="filterDefinitions.length" class="mb-4 d-flex align-center">
+        <v-icon icon="mdi-filter-variant" size="18" color="#7B5B3E" class="me-2" />
+        <span class="text-overline font-weight-bold" style="color: #7B5B3E">Filtres</span>
       </div>
 
       <v-skeleton-loader
@@ -81,16 +77,19 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { rationsApi } from "@/api/rations";
 import { productApi } from "@/api/product";
 import { logger } from "@/services/LoggerService";
 import type { Product, Ration } from "@/types";
+import type { FilterDefinition } from "@/types/filters";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { FeedingList } from "@/views/feeding";
 import { generateRationPDF } from "@/utils/RationPdfService";
 import { usePullToRefresh } from "@/composables/usePullToRefresh";
+import { FiltersPanel } from "@/components";
+import { useFilters } from "@/composables/useFilters";
 
 const router = useRouter();
 const horsesStore = useHorsesStore(); 
@@ -103,6 +102,24 @@ const snackbar = ref({
     message: "",
     color: "success",
 });
+
+const filters: readonly FilterDefinition<string>[] = [
+    {
+        key: "horseId",
+        type: "select",
+        label: "Cheval",
+        defaultValue: "all",
+        options: [],
+    },
+];
+
+const { filterValues } = useFilters(filters);
+const showHorseFilter = computed(() => horsesStore.horses.length > 1);
+const filterDefinitions = computed(() => [
+    ...(showHorseFilter.value
+        ? [{ ...filters[0], options: horsesStore.horseFilterOptions }]
+        : []),
+]);
 
 const itemTypeLabel = (value?: string): string => {
     switch (value) {
@@ -204,6 +221,23 @@ watch(() => horsesStore.horseId, () => {
     loadProducts();
     loadRations();
 });
+watch(
+    () => horsesStore.horseId,
+    (value) => {
+        if (value && filterValues.horseId !== value) {
+            filterValues.horseId = value;
+        }
+    },
+    { immediate: true },
+);
+watch(
+    () => filterValues.horseId,
+    (value) => {
+        if (value && horsesStore.horseId !== value) {
+            horsesStore.sethorseId(value);
+        }
+    },
+);
 
 onMounted(async () => {
     await loadProducts();

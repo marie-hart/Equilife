@@ -11,7 +11,7 @@
         
         <v-btn 
           variant="text" 
-          icon="mdi-arrow-left"
+          icon="mdi-close"
           color="#2E4B36"
           @click="router.back()"
         ></v-btn>

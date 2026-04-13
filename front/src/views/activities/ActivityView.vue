@@ -38,24 +38,16 @@
           Ajouter une activité
         </v-btn>
 
-      <div class="mb-8">
-        <div class="text-overline mb-2 ps-1" style="color: #7B5B3E; letter-spacing: 1px;">Filtrer par compagnon</div>
-        <v-select
-          v-model="horsesStore.horseId"
-          :items="horsesStore.horseFilterOptions"
-          variant="solo"
-          flat
-          bg-color="#F5EFE6"
-          rounded="xl"
-          density="comfortable"
-          hide-details
-          prepend-inner-icon="mdi-horse"
-          class="shadow-subtle"
-        >
-          <template v-slot:selection="{ item }">
-            <span class="font-weight-bold" style="color: #2E4B36">{{ item.title }}</span>
-          </template>
-        </v-select>
+      <FiltersPanel
+        v-if="filterDefinitions.length"
+        :filters="filterDefinitions"
+        v-model="filterValues"
+        class="mb-6"
+      />
+
+      <div v-if="filterDefinitions.length" class="mb-4 d-flex align-center">
+        <v-icon icon="mdi-filter-variant" size="18" color="#7B5B3E" class="me-2" />
+        <span class="text-overline font-weight-bold" style="color: #7B5B3E">Filtres</span>
       </div>
 
       <div v-if="isLoading">
@@ -100,14 +92,16 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
-import { ConfirmDeleteDialog } from "@/components";
+import { ConfirmDeleteDialog, FiltersPanel } from "@/components";
 import { logger } from "@/services/LoggerService";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { useEventsStore } from "@/stores/EventsStore";
 import { formatMonthLabel, sortByDateAsc, toMonthKey } from "@/libs/date";
 import type { ActivityAction, ActivityGroup, Event } from "@/types";
+import type { FilterDefinition } from "@/types/filters";
 import { ActivityList } from "@/views/activities";
 import { usePullToRefresh } from "@/composables/usePullToRefresh";
+import { useFilters } from "@/composables/useFilters";
 
 const { mdAndUp } = useDisplay();
 const router = useRouter();
@@ -125,6 +119,24 @@ const snackbar = ref({
 });
 
 const cardMaxWidth = computed(() => (mdAndUp.value ? "520px" : "100%"));
+
+const filters: readonly FilterDefinition<string>[] = [
+    {
+        key: "horseId",
+        type: "select",
+        label: "Cheval",
+        defaultValue: "all",
+        options: [],
+    },
+];
+
+const { filterValues } = useFilters(filters);
+const showHorseFilter = computed(() => horsesStore.horses.length > 1);
+const filterDefinitions = computed(() => [
+    ...(showHorseFilter.value
+        ? [{ ...filters[0], options: horsesStore.horseFilterOptions }]
+        : []),
+]);
 
 const isActivity = (event: Event): boolean =>
     event.reminder_type === "activité" || Boolean(event.activity_type);
@@ -245,6 +257,23 @@ onMounted(async () => {
 });
 
 watch(() => horsesStore.horseId, () => loadActivities());
+watch(
+    () => horsesStore.horseId,
+    (value) => {
+        if (value && filterValues.horseId !== value) {
+            filterValues.horseId = value;
+        }
+    },
+    { immediate: true },
+);
+watch(
+    () => filterValues.horseId,
+    (value) => {
+        if (value && horsesStore.horseId !== value) {
+            horsesStore.sethorseId(value);
+        }
+    },
+);
 </script>
 
 <style scoped>

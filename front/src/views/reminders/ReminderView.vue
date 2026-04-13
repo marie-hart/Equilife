@@ -38,11 +38,12 @@
       <FiltersPanel
         :filters="filterDefinitions"
         v-model="filterValues"
+        class="mb-6"
       />
 
       <div class="mb-4 d-flex align-center">
         <v-icon icon="mdi-sort-clock-ascending" size="18" color="#7B5B3E" class="me-2" />
-        <span class="text-overline" style="color: #7B5B3E">Chronologie des soins</span>
+        <span class="text-overline font-weight-bold" style="color: #7B5B3E">Chronologie des soins</span>
       </div>
 
       <v-skeleton-loader
@@ -207,7 +208,9 @@ const applyReminderFilters = (items: Event[], overrides: any = {}) => {
 };
 
 const filterDefinitions = computed(() => [
-    { ...filters[0], options: horsesStore.horseFilterOptions },
+    ...(horsesStore.horses.length > 1
+        ? [{ ...filters[0], options: horsesStore.horseFilterOptions }]
+        : []),
     { ...filters[1], options: statusOptions }, 
     { ...filters[2], options: reminderTypeOptions },
 ]);
