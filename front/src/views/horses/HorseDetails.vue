@@ -25,12 +25,15 @@
           <v-row no-gutters>
             <v-col cols="12" md="5" class="relative">
               <v-img
-                :src="horse.photoBase64 || horse.photo_path || '/avatar.jpg'"
+                :src="horse.photoBase64 || horse.photo_path || '/avatar.png'"
                 height="100%"
                 min-height="400"
                 cover
                 class="horse-detail-image"
               >
+                <template #error>
+                  <v-img src="/avatar.png" height="100%" min-height="400" cover />
+                </template>
                 <div class="image-overlay d-flex align-end pa-6">
                   <v-chip v-if="horse.age != null" color="white" variant="flat" class="font-weight-black" size="large">
                     {{ horse.age }} ans

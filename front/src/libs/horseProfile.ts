@@ -1,7 +1,9 @@
 import { logger } from "@/services/LoggerService";
+import { filesBaseUrl } from "@/api/client";
 
 const SELECTED_HORSE_ID_KEY = "selectedHorseId";
 const photoCacheInflight = new Map<string, Promise<string | null>>();
+export const DEFAULT_HORSE_AVATAR = "/avatar.png";
 
 export const getStoredHorseId = () => {
     try {
@@ -29,6 +31,19 @@ export const clearStoredHorseId = () => {
     } catch (error) {
         logger.warn("Unable to clear selected horse from storage:", error);
     }
+};
+
+export const resolveHorsePhotoUrl = (photoPath?: string | null): string | undefined => {
+    if (!photoPath) return undefined;
+    const trimmed = photoPath.trim();
+    if (!trimmed) return undefined;
+    if (trimmed.startsWith("data:") || trimmed.startsWith("blob:")) return trimmed;
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    const normalizedPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+    if (/^https?:\/\//i.test(filesBaseUrl)) {
+        return `${filesBaseUrl.replace(/\/+$/, "")}${normalizedPath}`;
+    }
+    return normalizedPath;
 };
 
 

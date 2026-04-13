@@ -1,12 +1,13 @@
 <template>
   <v-sheet
     color="#EDE4D8"
-    class="pa-0 pb-10"
+    min-height="100vh"
+    class="pa-0"
     @touchstart.passive="onPullStart"
     @touchend.passive="onPullEnd"
     @touchcancel.passive="resetPullState"
   >
-    <v-container class="px-4 py-2">
+    <v-container class="px-4 pb-10">
       <v-progress-linear
         v-if="isPullRefreshing"
         indeterminate

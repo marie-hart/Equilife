@@ -22,9 +22,8 @@
             <div v-for="activity in group.items" :key="activity.id">
               <v-card
                 variant="flat"
-                color="#F5EFE6"
                 rounded="xl"
-                class="shadow-subtle pa-4 w-100 activity-card"
+                class="shadow-subtle border-light bg-white pa-4 w-100 activity-card"
                 @click="onOpenActivityDetails(activity)"
               >
                 <div class="d-flex align-start justify-space-between mb-2">
@@ -145,6 +144,9 @@ const getActivityIcon = (type: string | undefined) => {
 <style scoped>
 .shadow-subtle {
   box-shadow: 0 4px 15px rgba(123, 91, 62, 0.05) !important;
+}
+
+.border-light {
   border: 1px solid rgba(168, 159, 148, 0.15) !important;
 }
 

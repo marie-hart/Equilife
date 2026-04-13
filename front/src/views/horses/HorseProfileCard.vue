@@ -8,9 +8,13 @@
 
      <v-avatar size="80">
         <v-img
-          :src="selectedHorse?.photoBase64 || selectedHorse?.photo_path || '/avatar.jpg'"
+          :src="selectedHorse?.photoBase64 || selectedHorse?.photo_path || '/avatar.png'"
           cover
-        />
+        >
+          <template #error>
+            <v-img src="/avatar.png" cover />
+          </template>
+        </v-img>
       </v-avatar>
 
       <div class="flex-grow-1">
@@ -59,7 +63,11 @@
               >
                 <template #prepend> 
                   <v-avatar size="32" class="me-2"> 
-                    <v-img :src="horse.photoBase64 || horse.photo_path || '/avatar.jpg'" cover /> 
+                    <v-img :src="horse.photoBase64 || horse.photo_path || '/avatar.png'" cover>
+                      <template #error>
+                        <v-img src="/avatar.png" cover />
+                      </template>
+                    </v-img> 
                   </v-avatar> 
                 </template> 
                 <v-list-item-title>

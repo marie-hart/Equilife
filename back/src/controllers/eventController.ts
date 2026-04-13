@@ -170,6 +170,7 @@ export class EventController {
                     nextDate?.toISOString().split("T")[0] ?? doneDateStr;
                 await eventRepository.update(id, {
                     name: event.name,
+                    description: "",
                     event_date: formattedNext,
                     reminder_enabled: true,
                 }, req.userId);

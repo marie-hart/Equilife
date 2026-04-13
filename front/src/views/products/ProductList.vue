@@ -16,10 +16,9 @@
         <v-card
           v-for="product in criticalProducts"
           :key="product.id"
-          color="#F5EFE6"
           variant="flat"
           rounded="xl" 
-          class="mb-4 shadow-subtle"
+          class="mb-4 shadow-subtle border-light bg-white"
         >
           <ProductItem :product="product" is-critical />
         </v-card>
@@ -36,10 +35,9 @@
         <v-card
           v-for="product in normalProducts"
           :key="product.id"
-          color="#F5EFE6"
           variant="flat"
           rounded="xl" 
-          class="mb-4 shadow-subtle"
+          class="mb-4 shadow-subtle border-light bg-white"
         >
           <ProductItem :product="product" />
         </v-card>
@@ -60,7 +58,10 @@
 /* Ajout d'une ombre très légère pour donner du relief sans être froid */
 .shadow-subtle {
   box-shadow: 0 4px 15px rgba(123, 91, 62, 0.05) !important;
-  border: 1px solid rgba(168, 159, 148, 0.2) !important;
+}
+
+.border-light {
+  border: 1px solid rgba(168, 159, 148, 0.15) !important;
 }
 
 /* On force un rendu plus doux des textes */

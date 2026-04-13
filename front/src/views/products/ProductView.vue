@@ -7,7 +7,7 @@
     @touchend.passive="onPullEnd"
     @touchcancel.passive="resetPullState"
   >
-    <v-container>
+    <v-container class="px-4 pb-10">
       <v-progress-linear
         v-if="isPullRefreshing"
         indeterminate
@@ -16,7 +16,7 @@
         class="mb-3"
       />
       
-      <div class="d-flex align-center justify-space-between mb-8 mt-2 px-2">
+      <div class="d-flex align-center justify-space-between mb-6 mt-2">
         <div>
           <h1 class="text-h4 font-weight-black mb-0" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
             Produits
@@ -66,16 +66,15 @@
         <v-card
           v-for="product in criticalProducts"
           :key="product.id"
-          color="#F5EFE6"
           variant="flat"
           rounded="xl" 
-          class="mb-2 shadow-subtle"
+          class="mb-2 shadow-subtle border-light bg-white"
         >
           <ProductItem :product="product" is-critical />
         </v-card>
       </div>
 
-      <div class="w-100 pb-16">
+      <div class="w-100">
         <div class="mb-3 ps-1">
           <h2 class="text-h6 font-weight-black" style="color: #2E4B36; font-family: 'Playfair Display', serif;">
             Le Catalogue
@@ -86,10 +85,9 @@
         <v-card
           v-for="product in normalProducts"
           :key="product.id"
-          color="#F5EFE6"
           variant="flat"
           rounded="xl" 
-          class="mb-2 shadow-subtle"
+          class="mb-2 shadow-subtle border-light bg-white"
         >
           <ProductItem :product="product" />
         </v-card>
@@ -108,8 +106,11 @@
 
 <style scoped>
 .shadow-subtle {
-  box-shadow: 0 2px 8px rgba(123, 91, 62, 0.05) !important;
-  border: 1px solid rgba(168, 159, 148, 0.12) !important;
+  box-shadow: 0 4px 15px rgba(123, 91, 62, 0.05) !important;
+}
+
+.border-light {
+  border: 1px solid rgba(168, 159, 148, 0.15) !important;
 }
 
 .text-h4 {
@@ -117,9 +118,6 @@
   line-height: 1.2;
 }
 
-.pb-16 {
-  padding-bottom: 80px !important;
-}
 </style>
 <script setup lang="ts">
 import { computed, onActivated, onMounted, ref } from "vue";

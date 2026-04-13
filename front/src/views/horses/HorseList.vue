@@ -126,9 +126,13 @@ const goToDashboard = (horseId: string) => {
                 <div class="d-flex align-center mb-6">
                     <v-avatar size="90" class="elevation-4 border-white-large">
                         <v-img
-                            :src="horse.photoBase64 || horse.photo_path || '/avatar.jpg'"
+                            :src="horse.photoBase64 || horse.photo_path || '/avatar.png'"
                             cover
-                        />
+                        >
+                            <template #error>
+                                <v-img src="/avatar.png" cover />
+                            </template>
+                        </v-img>
                     </v-avatar>
 
                     <div class="ms-4">

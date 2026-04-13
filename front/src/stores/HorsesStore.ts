@@ -1,6 +1,7 @@
 import { horsesApi } from "@/api/horses";
 import {
     cacheHorsePhotoFromUrl,
+    resolveHorsePhotoUrl,
     getStoredHorseId,
     getStoredHorsePhoto,
     setStoredHorseId,
@@ -22,8 +23,10 @@ export const useHorsesStore = defineStore('horses', () => {
 
     const enrichHorseWithStoredPhoto = (horse: Horse): HorseWithPhoto => {
         const cachedPhoto = getStoredHorsePhoto(horse.id);
+        const resolvedPhotoPath = resolveHorsePhotoUrl(horse.photo_path);
         return {
             ...horse,
+            photo_path: resolvedPhotoPath,
             photoBase64: horse.photoBase64 ?? cachedPhoto,
         };
     };
