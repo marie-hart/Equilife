@@ -175,7 +175,7 @@ export class ProductRepository {
                 category = COALESCE($2, category),
                 brand = COALESCE($3, brand),
                 note = COALESCE($4, note),
-                last_purchase_date = $5,
+                last_purchase_date = COALESCE($5, last_purchase_date),
                 quantity_purchased = COALESCE($6, quantity_purchased),
                 daily_usage = COALESCE($7, daily_usage),
                 unit = COALESCE($8, unit),

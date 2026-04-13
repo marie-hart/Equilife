@@ -113,7 +113,7 @@
                       class="mb-3"
                     />
                   </v-col>
-                  <v-col cols="4">
+                  <v-col cols="6">
                     <v-text-field
                       v-model="item.quantity"
                       label="Quantité"
@@ -126,24 +126,11 @@
                       hide-details
                     />
                   </v-col>
-                  <v-col cols="4">
+                  <v-col cols="6">
                     <v-select
                       v-model="item.unit"
                       :items="unitOptions"
                       label="Unité"
-                      variant="solo"
-                      flat
-                      bg-color="white"
-                      rounded="lg"
-                      density="comfortable"
-                      hide-details
-                    />
-                  </v-col>
-                  <v-col cols="4">
-                    <v-select
-                      v-model="item.type"
-                      :items="itemTypeOptions"
-                      label="Catégorie"
                       variant="solo"
                       flat
                       bg-color="white"
@@ -300,12 +287,6 @@ const frequencyOptions = [
     { title: "Midi", value: "midi" },
     { title: "Soir", value: "soir" },
 ];
-const itemTypeOptions = [
-    { title: "Granulés", value: "Granulés" },
-    { title: "Complément", value: "Complément" },
-    { title: "Pharmacie", value: "Pharmacie" },
-    { title: "Autre", value: "Autres" },
-];
 const unitOptions = [
     { title: "kg", value: "kg" },
     { title: "L", value: "L" },
@@ -334,7 +315,6 @@ const addItem = () => {
         quantity: "",
         unit: "kg",
         frequency: [],
-        type: "Granulés",
     });
 };
 
@@ -383,7 +363,6 @@ const loadRation = async () => {
                 quantity: parseQuantity(item.quantity).quantity,
                 unit: parseQuantity(item.quantity).unit,
                 frequency: item.frequency || [],
-                type: item.type || "Granulés",
             })),
         };
         if (!form.value.items.length) addItem();
@@ -411,6 +390,16 @@ const saveRation = async () => {
         return;
     }
 
+    const getItemTypeFromProductId = (
+        productId?: string,
+    ): "Granulés" | "Complément" | "Pharmacie" | "Autres" => {
+        const category = products.value.find((p) => p.id === productId)?.category;
+        if (category === "Granulés") return "Granulés";
+        if (category === "Complément") return "Complément";
+        if (category === "Pharmacie") return "Pharmacie";
+        return "Autres";
+    };
+
     try {
         isSubmitting.value = true;
         const payload = {
@@ -425,7 +414,7 @@ const saveRation = async () => {
                 quantity: formatQuantity(item.quantity, item.unit),
                 unit: item.unit,
                 frequency: item.frequency,
-                type: item.type,
+                type: getItemTypeFromProductId(item.productId),
             })),
         };
 

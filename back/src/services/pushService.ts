@@ -14,6 +14,8 @@ const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
 const VAPID_SUBJECT =
     process.env.VAPID_SUBJECT || "mailto:admin@equilife.local";
 const REMINDER_POLL_INTERVAL_MS = 5 * 60 * 1000;
+const STOCK_POLL_INTERVAL_MS = 6 * 60 * 60 * 1000;
+type StockNotificationType = "J10" | "J7" | "J1";
 
 const ensureTables = async () => {
     await pool.query(`
@@ -164,10 +166,11 @@ const fetchLowStockProducts = async () => {
         p.unit
       FROM products p
       INNER JOIN horses h ON h.id = p.horse_id
-      WHERE p.category IN ('Granulés', 'Complément')
-        AND p.last_purchase_date IS NOT NULL
+      WHERE p.last_purchase_date IS NOT NULL
         AND p.quantity_purchased IS NOT NULL
         AND p.daily_usage IS NOT NULL
+        AND p.daily_usage > 0
+        AND p.quantity_purchased > 0
     `);
     return result.rows;
   } catch (error: any) {
@@ -182,11 +185,11 @@ const fetchLowStockProducts = async () => {
 
 const computeRemainingDays = (product: any): number | null => {
   const start = new Date(product.last_purchase_date);
+  if (Number.isNaN(start.getTime())) return null;
   const totalDays =
     product.quantity_purchased / product.daily_usage;
-
-  const end = new Date(start);
-  end.setDate(start.getDate() + totalDays);
+  if (!Number.isFinite(totalDays) || totalDays <= 0) return null;
+  const end = new Date(start.getTime() + totalDays * 24 * 60 * 60 * 1000);
 
   const diff = Math.ceil(
     (end.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
@@ -196,35 +199,49 @@ const computeRemainingDays = (product: any): number | null => {
 };
 
 const alreadyNotified = async (
-  productId: string,
-  type: "J14" | "J0"
+  product: any,
+  type: StockNotificationType
 ): Promise<boolean> => {
   const result = await pool.query(
     `
-    SELECT 1
+    SELECT created_at
     FROM product_stock_notifications
     WHERE product_id = $1
       AND notification_type = $2
     `,
-    [productId, type]
+    [product.id, type]
   );
 
-  return (result.rowCount ?? 0) > 0;
+  if ((result.rowCount ?? 0) === 0) return false;
+  const notifiedAt = new Date(result.rows[0].created_at);
+  const lastPurchaseDate = product.last_purchase_date
+    ? new Date(product.last_purchase_date)
+    : null;
+  if (!lastPurchaseDate || Number.isNaN(lastPurchaseDate.getTime())) return true;
+  return notifiedAt.getTime() >= lastPurchaseDate.getTime();
 };
 
 const markProductNotified = async (
   productId: string,
-  type: "J14" | "J0"
+  type: StockNotificationType
 ) => {
   await pool.query(
     `
     INSERT INTO product_stock_notifications
       (product_id, notification_type)
     VALUES ($1, $2)
-    ON CONFLICT DO NOTHING
+    ON CONFLICT (product_id, notification_type)
+    DO UPDATE SET created_at = NOW()
     `,
     [productId, type]
   );
+};
+
+const getStockNotificationType = (remainingDays: number): StockNotificationType | null => {
+  if (remainingDays <= 1 && remainingDays > 0) return "J1";
+  if (remainingDays <= 7 && remainingDays > 1) return "J7";
+  if (remainingDays <= 10 && remainingDays > 7) return "J10";
+  return null;
 };
 
 export const startProductStockPushScheduler = () => {
@@ -236,41 +253,38 @@ export const startProductStockPushScheduler = () => {
         for (const product of products) {
         const remaining = computeRemainingDays(product);
         if (remaining === null) continue;
+        const notificationType = getStockNotificationType(remaining);
+        if (!notificationType) continue;
+        const notified = await alreadyNotified(product, notificationType);
+        if (notified) continue;
+        if (!product.user_id) continue;
 
-        // 🔔 Alerte Stock Bas (Entre 10 et 14 jours)
-        if (remaining <= 14 && remaining > 0) {
-            const notified = await alreadyNotified(product.id, "J14");
-            if (!notified) {
-            if (!product.user_id) continue;
-            await sendToUser(product.user_id, {
-                title: "Stock bas 📦",
-                body: `Il reste environ 14 jours de ${product.name}.`,
-                tag: `stock-low-${product.id}`,
-                data: { product_id: product.id, type: "STOCK_LOW" },
-            });
-            await markProductNotified(product.id, "J14");
-            }
-        }
-
-        // 🔴 Alerte Rupture (J-0 ou moins)
-        if (remaining <= 0) {
-            const notified = await alreadyNotified(product.id, "J0");
-            if (!notified) {
-            if (!product.user_id) continue;
-            await sendToUser(product.user_id, {
-                title: "Rupture de stock ! ⚠️",
-                body: `${product.name} est épuisé.`,
-                tag: `stock-empty-${product.id}`,
-                data: { product_id: product.id, type: "STOCK_EMPTY" },
-            });
-            await markProductNotified(product.id, "J0");
-            }
-        }
+        const title = "Alerte stock";
+        const body = `Il reste environ ${remaining} jour${remaining > 1 ? "s" : ""} avant rupture pour ${product.name}.`;
+        await sendToUser(product.user_id, {
+          type: "stock",
+          title,
+          body,
+          tag: `stock-${product.id}-${notificationType}`,
+          product_id: product.id,
+          notification_type: notificationType,
+          remaining_days: remaining,
+          product: {
+            id: `${product.id}:${notificationType}:${product.last_purchase_date ?? ""}`,
+            product_id: product.id,
+            name: product.name,
+            title,
+            body,
+            notification_type: notificationType,
+            remaining_days: remaining,
+          },
+        });
+        await markProductNotified(product.id, notificationType);
         }
     };
 
   void runStockCheck();
-  setInterval(() => void runStockCheck(), 6 * 60 * 60 * 1000);
+  setInterval(() => void runStockCheck(), STOCK_POLL_INTERVAL_MS);
 };
 
 const sendToUser = async (

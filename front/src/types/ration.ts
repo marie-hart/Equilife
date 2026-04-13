@@ -71,5 +71,4 @@ export type RationFormItem = {
     quantity: string;
     unit: "kg" | "L" | "g";
     frequency: string[];
-    type: "Granulés" | "Complément" | "Pharmacie" | "Autres";
 };

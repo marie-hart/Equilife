@@ -99,12 +99,3 @@ const notificationStore = useNotificationStore();
 if (notificationStore.isSupported) {
     notificationStore.checkCurrentPermission();
 }
-
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data.type === 'PUSH_RECEIVED') {
-            notificationStore.addUnreadReminder(event.data.reminder);
-            notificationStore.addStockAlert(event.data.product)
-        }
-    });
-}

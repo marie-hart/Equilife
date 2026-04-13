@@ -1,6 +1,6 @@
 import { eventsApi } from "@/api/events";
 import { pushApi } from "@/api/push";
-import type { Event } from "@/types";
+import type { Event, StockNotification } from "@/types";
 import { useNotificationStore } from "@/stores/NotificationStore";
 
 const POLL_INTERVAL_MS = 1 * 60 * 1000;
@@ -65,6 +65,21 @@ const showReminderNotification = (reminder: Event, reminderDate: Date) => {
 
     const notificationStore = useNotificationStore();
     notificationStore.addUnreadReminder(reminder);
+};
+
+const toStockNotification = (payload: any): StockNotification | null => {
+    if (!payload || !payload.product_id) return null;
+    const id =
+        payload.id ||
+        `${payload.product_id}:${payload.notification_type ?? "stock"}`;
+    return {
+        id,
+        product_id: payload.product_id,
+        title: payload.title || "Alerte stock",
+        body: payload.body || "Vérifiez votre stock.",
+        notification_type: payload.notification_type,
+        remaining_days: payload.remaining_days,
+    };
 };
 
 let pollerStarted = false;
@@ -155,17 +170,21 @@ export function startReminderNotifications() {
             const store = useNotificationStore();
             const data = event.data;
 
-            if (data?.type === "stock") {
-                store.addStockAlert({
-                    product_id: data.product_id,
-                    title: data.title,
-                    body: data.body,
-                });
-            } else if (data?.type === "PUSH_RECEIVED" || data?.type === "reminder") {
-                // Gestion des rappels envoyés par Push
+            if (data?.type === "PUSH_RECEIVED") {
                 if (data.reminder) {
                     store.addUnreadReminder(data.reminder);
                 }
+                const stockAlert = toStockNotification(data.product);
+                if (stockAlert) {
+                    store.addStockAlert(stockAlert);
+                }
+            } else if (data?.type === "stock") {
+                const stockAlert = toStockNotification(data);
+                if (stockAlert) {
+                    store.addStockAlert(stockAlert);
+                }
+            } else if (data?.type === "reminder" && data.reminder) {
+                store.addUnreadReminder(data.reminder);
             }
         });
         swMessageListenerAttached = true;

@@ -51,13 +51,12 @@ export async function syncProductDailyUsageFromRations(
         });
     }
 
+    // Important: on ne nullifie plus automatiquement daily_usage pour les produits
+    // absents des rations actives. La valeur peut être saisie manuellement dans
+    // le suivi de stock et doit rester persistée.
     if (productIds.length > 0) {
-        const idsToNullify = productIds.filter((id) => !usageByProduct.has(id));
-        for (const id of idsToNullify) {
-            await pool.query(
-                `UPDATE products SET daily_usage = NULL, updated_at = NOW() WHERE id = $1`,
-                [id]
-            );
+        const idsToKeep = productIds.filter((id) => !usageByProduct.has(id));
+        for (const id of idsToKeep) {
             await cacheService.delete(CacheKeys.productKey(id));
         }
     }

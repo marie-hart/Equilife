@@ -24,7 +24,8 @@
                 variant="flat"
                 color="#F5EFE6"
                 rounded="xl"
-                class="shadow-subtle pa-4 w-100"
+                class="shadow-subtle pa-4 w-100 activity-card"
+                @click="onOpenActivityDetails(activity)"
               >
                 <div class="d-flex align-start justify-space-between mb-2">
                   <div class="d-flex align-center">
@@ -44,14 +45,16 @@
                     </div>
                   </div>
                   
-                  <ActionButtons
-                    mode="auto"
-                    button-size="small"
-                    menu-button-size="small"
-                    variant="text"
-                    color="#A89F94"
-                    :actions="getActivityActions(activity)"
-                  />
+                  <div @click.stop>
+                    <ActionButtons
+                      mode="auto"
+                      button-size="small"
+                      menu-button-size="small"
+                      variant="text"
+                      color="#A89F94"
+                      :actions="getActivityActions(activity)"
+                    />
+                  </div>
                 </div>
 
                 <v-card-text class="pa-0 mt-2">
@@ -115,6 +118,7 @@ defineProps<{
   groupedActivities: ActivityGroup[];
   cardMaxWidth: string;
   getActivityActions: (activity: Event) => ActivityAction[];
+  onOpenActivityDetails: (activity: Event) => void;
   intensityLabel: (value?: string) => string;
   getHorseName?: (horseId: string) => string;
 }>();
@@ -142,6 +146,10 @@ const getActivityIcon = (type: string | undefined) => {
 .shadow-subtle {
   box-shadow: 0 4px 15px rgba(123, 91, 62, 0.05) !important;
   border: 1px solid rgba(168, 159, 148, 0.15) !important;
+}
+
+.activity-card {
+  cursor: pointer;
 }
 
 .italic-note {

@@ -29,6 +29,15 @@
             <div>
               <div class="text-overline mb-1" style="color: rgba(255,255,255,0.7)">Type de soin</div>
               <div class="text-h5 font-weight-bold">{{ care.name }}</div>
+              <v-chip
+                v-if="care.category"
+                size="small"
+                variant="flat"
+                class="mt-2 font-weight-bold text-white"
+                :style="{ backgroundColor: getCategoryColor(care.category) }"
+              >
+                {{ care.category }}
+              </v-chip>
               <div class="text-body-2 mt-2" style="color: rgba(255,255,255,0.9)">
                 {{ formatDateLong(care.event_date) }}
               </div>
@@ -167,6 +176,22 @@ const recurrenceLabel = computed(() => {
 const productNamesLabel = computed(() =>
     productNames.value.length ? productNames.value.join(", ") : "—",
 );
+
+const normalizeCategory = (value?: string): string =>
+    (value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+
+const getCategoryColor = (category?: string): string => {
+    const normalized = normalizeCategory(category);
+    if (normalized === "maladie") return "#B64E4E";
+    if (normalized === "bobo") return "#C8832B";
+    if (normalized === "soins courants" || normalized === "soin courant") return "#4E7A4B";
+    if (normalized === "cures" || normalized === "cure") return "#6E5A9A";
+    return "#2E4B36";
+};
 
 const loadCare = async () => {
     try {

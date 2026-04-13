@@ -71,8 +71,14 @@
         Notifications bloquées par le navigateur. Autorisez-les dans les réglages du site puis réactivez le switch.
       </v-alert>
 
-      <v-list v-if="notificationStore.unreadReminders.length > 0" lines="two">
-        <v-list-subheader class="text-uppercase font-weight-bold text-caption">
+      <v-list
+        v-if="notificationStore.unreadReminders.length > 0 || notificationStore.unreadStockAlerts.length > 0"
+        lines="two"
+      >
+        <v-list-subheader
+          v-if="notificationStore.unreadReminders.length > 0"
+          class="text-uppercase font-weight-bold text-caption"
+        >
           Rappels non traités
         </v-list-subheader>
         
@@ -88,6 +94,29 @@
           <template #prepend>
             <v-avatar color="#efe5d9" size="40">
               <v-icon color="#554338" size="20">mdi-bell-ring</v-icon>
+            </v-avatar>
+          </template>
+        </v-list-item>
+
+        <v-list-subheader
+          v-if="notificationStore.unreadStockAlerts.length > 0"
+          class="text-uppercase font-weight-bold text-caption"
+        >
+          Alertes stock
+        </v-list-subheader>
+
+        <v-list-item
+          v-for="alert in notificationStore.unreadStockAlerts"
+          :key="alert.id"
+          :title="alert.title"
+          :subtitle="alert.body"
+          link
+          class="rounded-lg mb-1"
+          @click="handleStockAction(alert)"
+        >
+          <template #prepend>
+            <v-avatar color="#efe5d9" size="40">
+              <v-icon color="#554338" size="20">mdi-package-variant-closed-alert</v-icon>
             </v-avatar>
           </template>
         </v-list-item>
@@ -118,7 +147,7 @@ import { computed, ref } from 'vue';
 import { useRouter } from "vue-router";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { useNotificationStore } from "@/stores/NotificationStore";
-import type { Event as HorseEvent } from "@/types";
+import type { Event as HorseEvent, StockNotification } from "@/types";
 
 const notificationStore = useNotificationStore();
 const horsesStore = useHorsesStore();
@@ -141,6 +170,12 @@ const handleReminderAction = (reminder: HorseEvent) => {
   menuOpen.value = false;
   if (reminder.horse_id) horsesStore.sethorseId(reminder.horse_id);
   router.push({ name: "Reminders", query: { reminderId: reminder.id } });
+};
+
+const handleStockAction = (alert: StockNotification) => {
+  notificationStore.markStockAsRead(alert.id);
+  menuOpen.value = false;
+  router.push({ name: "ProductDetails", params: { id: alert.product_id } });
 };
 
 const goToAllReminders = () => {

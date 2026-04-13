@@ -11,8 +11,26 @@ import { logger } from "@/services/LoggerService";
 import type { Event, StockNotification } from "@/types"
 
 const NOTIFICATIONS_ENABLED_KEY = "equilife_notifications_enabled";
+const UNREAD_REMINDERS_KEY = "equilife_unread_reminders_v1";
+const UNREAD_STOCK_ALERTS_KEY = "equilife_unread_stock_alerts_v1";
 
 export const useNotificationStore = defineStore("notifications", () => {
+    const loadStoredJson = <T>(key: string, fallback: T): T => {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw ? (JSON.parse(raw) as T) : fallback;
+        } catch {
+            return fallback;
+        }
+    };
+    const persistJson = (key: string, value: unknown) => {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch {
+            // no-op
+        }
+    };
+
     const notificationsEnabled = ref<boolean>(
         (() => {
             try {
@@ -25,8 +43,12 @@ export const useNotificationStore = defineStore("notifications", () => {
     );
     const permission = ref<NotificationPermission>("default");
     const isSubscribing = ref(false);
-    const unreadReminders = ref<Event[]>([]);
-     const unreadStockAlerts = ref<StockNotification[]>([]);
+    const unreadReminders = ref<Event[]>(
+        loadStoredJson<Event[]>(UNREAD_REMINDERS_KEY, []),
+    );
+    const unreadStockAlerts = ref<StockNotification[]>(
+        loadStoredJson<StockNotification[]>(UNREAD_STOCK_ALERTS_KEY, []),
+    );
     
     const isSupported = computed(() => supportsPush());
     const isEnabled = computed(
@@ -60,6 +82,7 @@ export const useNotificationStore = defineStore("notifications", () => {
         notificationsEnabled,
         isSubscribing,
         unreadReminders,
+        unreadStockAlerts,
         isSupported,
         isEnabled,
         isIOS,
@@ -138,13 +161,16 @@ export const useNotificationStore = defineStore("notifications", () => {
     ========================== */
 
     function addUnreadReminder(reminder: Event) {
+        if (!reminder?.id) return;
         if (!unreadReminders.value.find(r => r.id === reminder.id)) {
             unreadReminders.value.push(reminder);
+            persistJson(UNREAD_REMINDERS_KEY, unreadReminders.value);
         }
     }
 
     function markAsRead(reminderId: string) {
         unreadReminders.value = unreadReminders.value.filter(r => r.id !== reminderId);
+        persistJson(UNREAD_REMINDERS_KEY, unreadReminders.value);
     }
 
     /* =========================
@@ -152,20 +178,30 @@ export const useNotificationStore = defineStore("notifications", () => {
     ========================== */
 
     function addStockAlert(alert: StockNotification) {
+        if (!alert?.product_id) return;
+        const alertId =
+            alert.id ||
+            `${alert.product_id}:${alert.notification_type ?? "stock"}`;
+        const normalizedAlert: StockNotification = {
+            ...alert,
+            id: alertId,
+        };
         if (
         !unreadStockAlerts.value.find(
-            a => a.product_id === alert.product_id
+            a => a.id === normalizedAlert.id
         )
         ) {
-        unreadStockAlerts.value.push(alert);
+        unreadStockAlerts.value.push(normalizedAlert);
+        persistJson(UNREAD_STOCK_ALERTS_KEY, unreadStockAlerts.value);
         }
     }
 
-    function markStockAsRead(productId: string) {
+    function markStockAsRead(alertId: string) {
         unreadStockAlerts.value =
         unreadStockAlerts.value.filter(
-            a => a.product_id !== productId
+            a => a.id !== alertId
         );
+        persistJson(UNREAD_STOCK_ALERTS_KEY, unreadStockAlerts.value);
     }
 
 });

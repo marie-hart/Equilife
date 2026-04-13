@@ -10,7 +10,7 @@
         @click="$emit('click:care', care)"
       >
         <div class="d-flex align-center">
-          <div class="status-indicator" :style="{ backgroundColor: '#2E4B36' }"></div>
+          <div class="status-indicator" :style="{ backgroundColor: getCategoryColor(care.category) }"></div>
           
           <div class="flex-grow-1 ms-3">
             <div class="d-flex justify-space-between align-start">
@@ -24,26 +24,37 @@
                 </h3>
               </div>
 
-              <v-chip
-                v-if="showDoneTag"
-                size="x-small"
-                variant="flat"
-                color="#2E4B36"
-                class="font-weight-bold"
-              >
-                <v-icon start size="12">mdi-check</v-icon>
-                Done
-              </v-chip>
-              <v-chip
-                v-else-if="recurrenceLabel(care) !== '-'"
-                size="x-small"
-                variant="tonal"
-                color="#7B5B3E"
-                class="font-weight-bold"
-              >
-                <v-icon start size="12">mdi-refresh</v-icon>
-                {{ recurrenceLabel(care) }}
-              </v-chip>
+              <div class="d-flex align-center ga-2">
+                <v-chip
+                  v-if="care.category"
+                  size="x-small"
+                  variant="flat"
+                  class="font-weight-bold text-white"
+                  :style="{ backgroundColor: getCategoryColor(care.category) }"
+                >
+                  {{ care.category }}
+                </v-chip>
+                <v-chip
+                  v-if="showDoneTag"
+                  size="x-small"
+                  variant="flat"
+                  color="#2E4B36"
+                  class="font-weight-bold"
+                >
+                  <v-icon start size="12">mdi-check</v-icon>
+                  Done
+                </v-chip>
+                <v-chip
+                  v-else-if="recurrenceLabel(care) !== '-'"
+                  size="x-small"
+                  variant="tonal"
+                  color="#7B5B3E"
+                  class="font-weight-bold"
+                >
+                  <v-icon start size="12">mdi-refresh</v-icon>
+                  {{ recurrenceLabel(care) }}
+                </v-chip>
+              </div>
             </div>
 
             <div class="d-flex align-center mt-2">
@@ -129,5 +140,21 @@ const horsesStore = useHorsesStore();
 
 const getHorseName = (horseId: string) => {
     return horsesStore.getHorseNameById(horseId); 
+};
+
+const normalizeCategory = (value?: string): string =>
+    (value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+
+const getCategoryColor = (category?: string): string => {
+    const normalized = normalizeCategory(category);
+    if (normalized === "maladie") return "#B64E4E";
+    if (normalized === "bobo") return "#C8832B";
+    if (normalized === "soins courants" || normalized === "soin courant") return "#4E7A4B";
+    if (normalized === "cures" || normalized === "cure") return "#6E5A9A";
+    return "#2E4B36";
 };
 </script>

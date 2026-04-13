@@ -11,9 +11,12 @@ export type ProductCategory =
 export type ProductUnit = "kg" | "g" | "L";
 
 export type StockNotification = {
+  id: string;
   product_id: string;
   title: string;
   body: string;
+  notification_type?: "J10" | "J7" | "J1" | string;
+  remaining_days?: number;
 };
 
 

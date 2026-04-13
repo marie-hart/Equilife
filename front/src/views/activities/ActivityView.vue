@@ -68,6 +68,7 @@
         :grouped-activities="groupedActivities"
         :card-max-width="cardMaxWidth"
         :get-activity-actions="getActivityActions"
+        :on-open-activity-details="openActivityDetails"
         :intensity-label="intensityLabel"
         :get-horse-name="horsesStore.getHorseNameById"
       />
@@ -96,6 +97,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
 import { ConfirmDeleteDialog } from "@/components";
 import { logger } from "@/services/LoggerService";
@@ -107,6 +109,7 @@ import { ActivityList } from "@/views/activities";
 import { usePullToRefresh } from "@/composables/usePullToRefresh";
 
 const { mdAndUp } = useDisplay();
+const router = useRouter();
 const horsesStore = useHorsesStore();
 const eventsStore = useEventsStore();
     
@@ -185,6 +188,10 @@ const getActivityActions = (activity: Event): ActivityAction[] => [
         onClick: () => openDelete(activity),
     },
 ];
+
+const openActivityDetails = (activity: Event) => {
+    router.push({ name: "ActivityDetails", params: { id: activity.id } });
+};
 
 const deleteMessage = computed(() =>
     selectedActivity.value
