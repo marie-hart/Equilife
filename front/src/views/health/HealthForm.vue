@@ -294,7 +294,11 @@ const handleSubmit = async () => {
                 ? [...form.value.productIds]
                 : undefined,
             category: form.value.category.trim(),
-            description: form.value.note.trim() || undefined,
+            // En édition, on envoie explicitement une chaîne vide pour permettre
+            // la suppression effective d'une note déjà existante.
+            description: isEdit.value
+                ? form.value.note.trim()
+                : form.value.note.trim() || undefined,
             is_care: true,
             
             reminder_enabled: form.value.isRecurring,

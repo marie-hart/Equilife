@@ -9,6 +9,7 @@
           :get-product-name="getProductName"
           :item-type-label="itemTypeLabel"
           :get-ration-actions="getRationActions"
+          @details="$emit('details', $event)"
           @delete="$emit('delete', $event)"
         />
       </v-col>

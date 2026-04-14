@@ -374,7 +374,7 @@ const filteredCares = computed(() => {
     );
     return [...result].sort(
         (a, b) =>
-            parseDateOnly(b.event_date).getTime() - parseDateOnly(a.event_date).getTime(),
+            parseDateOnly(a.event_date).getTime() - parseDateOnly(b.event_date).getTime(),
     );
 });
 
