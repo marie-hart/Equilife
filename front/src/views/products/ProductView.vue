@@ -127,6 +127,10 @@
 
 ::deep(.filter-search .v-field__input) {
   color: #2E4B36 !important;
+  min-height: 40px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  align-items: center !important;
 }
 
 ::deep(.filter-search input::placeholder) {

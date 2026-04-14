@@ -14,19 +14,20 @@
                     </h1>
                     <div style="width: 40px; height: 3px; background-color: #7B5B3E; border-radius: 2px;"></div>
                 </div>
-                
-                <v-btn
-                    variant="flat"
-                    color="#2E4B36"
-                    rounded="xl"
-                    class="text-none font-weight-bold"
-                    elevation="4"
-                    :to="{ name: 'HealthCreate' }"
-                >
-                    <v-icon icon="mdi-plus" class="me-1" />
-                    Ajouter
-                </v-btn>
             </div>
+
+            <v-btn
+                block
+                color="#2E4B36"
+                size="large"
+                rounded="pill"
+                class="mb-6 text-none font-weight-bold"
+                prepend-icon="mdi-plus"
+                elevation="1"
+                :to="{ name: 'HealthCreate' }"
+            >
+                Ajouter un soin
+            </v-btn>
 
             <v-progress-linear
                 v-if="isPullRefreshing"
@@ -233,13 +234,6 @@ const filters: readonly FilterDefinition<string>[] = [
         defaultValue: "all",
         options: careTypeOptions.value,
     },
-    {
-        key: "category",
-        type: "select",
-        label: "Catégorie",
-        defaultValue: "all",
-        options: careCategoryOptions.value,
-    },
 ];
 
 const { filterValues } = useFilters(filters);
@@ -259,21 +253,16 @@ const applyCareFilters = (
     overrides: Partial<{
         horseId: string;
         type: string;
-        category: string;
     }> = {},
 ) => {
     const horseId = overrides.horseId ?? filterValues.horseId;
     const type = overrides.type ?? filterValues.type;
-    const category = overrides.category ?? filterValues.category;
     let result = items;
     if (horseId !== "all") {
         result = result.filter((care) => care.horse_id === horseId);
     }
     if (type !== "all") {
         result = result.filter((care) => getCareType(care) === type);
-    }
-    if (category !== "all") {
-        result = result.filter((care) => getCareCategory(care) === category);
     }
     return result;
 };
@@ -316,39 +305,11 @@ const availableTypeOptions = computed(() => {
     return dynamic.length ? dynamic : careTypeOptions.value;
 });
 
-const availableCategoryOptions = computed(() => {
-    const careSide = applyCareFilters(cares.value, { category: "all" });
-    let historySide = careHistory.value;
-    if (filterValues.horseId !== "all") {
-        historySide = historySide.filter((h) => h.horse_id === filterValues.horseId);
-    }
-    const values = new Set<string>([
-        "Maladie",
-        "Bobo",
-        "Soins courants",
-        "Cures",
-        ...careSide.map(getCareCategory).filter(Boolean),
-        ...historySide.map(getCareCategory).filter(Boolean),
-    ]);
-    const dynamic = [
-        { title: "Toutes", value: "all" },
-        ...Array.from(values)
-            .sort((a, b) => a.localeCompare(b, "fr"))
-            .map((value) => ({ title: value, value })),
-    ];
-    const selected = filterValues.category;
-    if (selected !== "all" && !dynamic.some((option) => option.value === selected)) {
-        dynamic.push({ title: selected, value: selected });
-    }
-    return dynamic.length ? dynamic : careCategoryOptions.value;
-});
-
 const filterDefinitions = computed(() => [
     ...(horsesStore.horses.length > 1
         ? [{ ...filters[0], options: availableHorseOptions.value }]
         : []),
     { ...filters[1], options: availableTypeOptions.value },
-    { ...filters[2], options: availableCategoryOptions.value },
 ]);
 
 const recurrenceLabel = (care: Event | CareHistoryEntry): string => {
@@ -398,9 +359,6 @@ const filteredHistory = computed(() => {
     }
     if (filterValues.type !== "all") {
         result = result.filter((h) => (h.name || "").trim() === filterValues.type);
-    }
-    if (filterValues.category !== "all") {
-        result = result.filter((h) => getCareCategory(h) === filterValues.category);
     }
     return result;
 });
