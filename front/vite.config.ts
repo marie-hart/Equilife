@@ -31,9 +31,8 @@ export default defineConfig(({ mode }) => {
           display: "standalone",
           start_url: "/",
           icons: [
-            { src: "icons/icon-192x192-v2.png", sizes: "192x192", type: "image/png" },
-            { src: "icons/icon-512x512-v2.png", sizes: "512x512", type: "image/png" },
-            { src: "icons/icon-512x512-v2.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+            { src: "apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+            { src: "apple-touch-icon.png", sizes: "180x180", type: "image/png", purpose: "maskable any" },
           ],
         },
         includeAssets: ["apple-touch-icon.png"],

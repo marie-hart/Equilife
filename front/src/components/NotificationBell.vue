@@ -86,7 +86,7 @@
           v-for="reminder in notificationStore.unreadReminders"
           :key="reminder.id"
           :title="reminder.name"
-          :subtitle="formatDate(reminder.event_date)"
+          :subtitle="formatDate(reminder)"
           link
           class="rounded-lg mb-1"
           @click="handleReminderAction(reminder)"
@@ -183,10 +183,12 @@ const goToAllReminders = () => {
   router.push({ name: 'Reminders' });
 };
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('fr-FR', { 
+const formatDate = (reminder: HorseEvent) => {
+  const dateString = reminder.next_reminder_date || reminder.event_date;
+  return new Date(dateString).toLocaleDateString('fr-FR', {
     day: 'numeric', 
-    month: 'short' 
+    month: 'short',
+    year: 'numeric',
   });
 };
 </script>
