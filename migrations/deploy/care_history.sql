@@ -1,6 +1,6 @@
 BEGIN;
 -- Table d'historique des soins validés (au lieu de les supprimer)
-CREATE TABLE care_history (
+CREATE TABLE IF NOT EXISTS care_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     original_event_id UUID REFERENCES events(id) ON DELETE SET NULL,
     horse_id UUID NOT NULL REFERENCES horses(id) ON DELETE CASCADE,
@@ -12,6 +12,6 @@ CREATE TABLE care_history (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_care_history_horse_id ON care_history(horse_id);
-CREATE INDEX idx_care_history_event_date ON care_history(event_date DESC);
+CREATE INDEX IF NOT EXISTS idx_care_history_horse_id ON care_history(horse_id);
+CREATE INDEX IF NOT EXISTS idx_care_history_event_date ON care_history(event_date DESC);
 COMMIT;

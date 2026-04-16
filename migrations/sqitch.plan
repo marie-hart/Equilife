@@ -10,4 +10,5 @@ care_categories [users_horses_notes] 2026-04-12T12:30:00Z mariehdek <mariehdek@y
 products_name_per_user [care_categories] 2026-04-12T13:10:00Z mariehdek <mariehdek@yahoo.fr> # suppression unique global products.name + controle par utilisateur
 quick_notes_by_horse [products_name_per_user] 2026-04-12T14:00:00Z mariehdek <mariehdek@yahoo.fr> # lier quick_notes au cheval sélectionné
 care_types [quick_notes_by_horse] 2026-04-12T16:30:00Z mariehdek <mariehdek@yahoo.fr> # table des types de soin personnalisés par utilisateur
-care_history [care_types] 2026-04-16T18:35:00Z mariehdek <mariehdek@yahoo.fr> # Historique des soins validés
+care_types_is_favorite [care_types] 2026-04-16T22:30:00Z mariehdek <mariehdek@yahoo.fr> # ajoute la colonne is_favorite sur care_types
+care_history [care_types_is_favorite] 2026-04-16T18:35:00Z mariehdek <mariehdek@yahoo.fr> # Historique des soins validés
