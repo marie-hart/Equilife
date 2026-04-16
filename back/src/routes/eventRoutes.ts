@@ -8,6 +8,14 @@ const router = Router();
 router.get("/reminders", eventController.getReminders.bind(eventController));
 router.get("/care-types", eventController.getCareTypes.bind(eventController));
 router.post("/care-types", eventController.createCareType.bind(eventController));
+router.post(
+    "/care-types/favorite",
+    eventController.toggleCareTypeFavorite.bind(eventController),
+);
+router.delete(
+    "/care-types/:name",
+    eventController.deleteCareType.bind(eventController),
+);
 
 // 2. Les routes avec paramètres spécifiques
 router.get("/horses/:id/reminders", eventController.getReminders.bind(eventController));

@@ -11,6 +11,12 @@ type CreateCareTypeResult = {
     created: boolean;
 };
 
+type ToggleFavoriteInput = {
+    name: string;
+    category: string;
+    is_favorite: boolean;
+};
+
 class CareTypeRepository {
     private tableReady = false;
 
@@ -18,7 +24,7 @@ class CareTypeRepository {
         await this.ensureTable();
         const result = await pool.query(
             `
-                SELECT id, user_id, name, category, created_at, updated_at
+                SELECT id, user_id, name, category, is_favorite, created_at, updated_at
                 FROM care_types
                 WHERE user_id = $1
                 ORDER BY category ASC, name ASC
@@ -88,6 +94,62 @@ class CareTypeRepository {
         }
     }
 
+    async setFavoriteForUser(
+        userId: string,
+        input: ToggleFavoriteInput,
+    ): Promise<CareType> {
+        await this.ensureTable();
+        const normalizedName = input.name.trim();
+        const normalizedCategory = input.category.trim();
+
+        const existingResult = await pool.query(
+            `
+                SELECT id
+                FROM care_types
+                WHERE user_id = $1
+                  AND LOWER(name) = LOWER($2)
+                LIMIT 1
+            `,
+            [userId, normalizedName],
+        );
+
+        if (existingResult.rows.length > 0) {
+            const updateResult = await pool.query(
+                `
+                    UPDATE care_types
+                    SET
+                        category = $3,
+                        is_favorite = $4
+                    WHERE user_id = $1
+                      AND LOWER(name) = LOWER($2)
+                    RETURNING id, user_id, name, category, is_favorite, created_at, updated_at
+                `,
+                [userId, normalizedName, normalizedCategory, input.is_favorite],
+            );
+            return this.mapRow(updateResult.rows[0]);
+        }
+
+        const insertResult = await pool.query(
+            `
+                INSERT INTO care_types (user_id, name, category, is_favorite)
+                VALUES ($1, $2, $3, $4)
+                RETURNING id, user_id, name, category, is_favorite, created_at, updated_at
+            `,
+            [userId, normalizedName, normalizedCategory, input.is_favorite],
+        );
+
+        return this.mapRow(insertResult.rows[0]);
+    }
+
+    async deleteByName(userId: string, name: string): Promise<boolean> {
+        await this.ensureTable();
+        const result = await pool.query(
+            `DELETE FROM care_types WHERE user_id = $1 AND LOWER(name) = LOWER($2)`,
+            [userId, name.trim()],
+        );
+        return (result.rowCount ?? 0) > 0;
+    }
+
     private async ensureTable(): Promise<void> {
         if (this.tableReady) return;
 
@@ -97,9 +159,15 @@ class CareTypeRepository {
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 name VARCHAR(160) NOT NULL,
                 category VARCHAR(120) NOT NULL,
+                is_favorite BOOLEAN NOT NULL DEFAULT FALSE,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             );
+        `);
+
+        await pool.query(`
+            ALTER TABLE care_types
+            ADD COLUMN IF NOT EXISTS is_favorite BOOLEAN NOT NULL DEFAULT FALSE;
         `);
 
         await pool.query(`
@@ -137,6 +205,7 @@ class CareTypeRepository {
             user_id: String(row.user_id),
             name: String(row.name),
             category: String(row.category),
+            is_favorite: Boolean(row.is_favorite),
             created_at: new Date(row.created_at),
             updated_at: new Date(row.updated_at),
         };

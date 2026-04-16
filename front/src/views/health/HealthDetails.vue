@@ -91,6 +91,38 @@
           </p>
         </v-card>
 
+        <div v-if="attachmentHref" class="text-overline mb-2 ps-1" style="color: #7B5B3E">
+          Pièce jointe
+        </div>
+        <v-card
+          v-if="attachmentHref"
+          variant="flat"
+          color="white"
+          rounded="xl"
+          class="pa-4 mb-8 shadow-subtle border-light"
+        >
+          <div class="d-flex align-center justify-space-between ga-3 flex-wrap">
+            <div class="d-flex align-center ga-2">
+              <v-icon color="#7B5B3E">mdi-paperclip</v-icon>
+              <span class="text-body-2 font-weight-medium" style="color: #554338">
+                {{ attachmentDisplayName }}
+              </span>
+            </div>
+            <v-btn
+              :href="attachmentHref"
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="tonal"
+              color="#2E4B36"
+              size="small"
+              class="text-none"
+              prepend-icon="mdi-open-in-new"
+            >
+              Ouvrir
+            </v-btn>
+          </div>
+        </v-card>
+
         <div class="d-flex ga-3">
           <v-btn
             variant="flat"
@@ -141,6 +173,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "@/api/events";
+import { filesBaseUrl } from "@/api/client";
 import { useEventsStore } from "@/stores/EventsStore";
 import { productApi } from "@/api/product";
 import { formatDateLong } from "@/libs/date";
@@ -176,6 +209,25 @@ const recurrenceLabel = computed(() => {
 const productNamesLabel = computed(() =>
     productNames.value.length ? productNames.value.join(", ") : "—",
 );
+
+const attachmentHref = computed(() => {
+    const path = care.value?.attachment_path;
+    if (!path) return "";
+    if (/^https?:\/\//i.test(path)) return path;
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    if (/^https?:\/\//i.test(filesBaseUrl)) {
+        return `${filesBaseUrl.replace(/\/+$/, "")}${normalizedPath}`;
+    }
+    return normalizedPath;
+});
+
+const attachmentDisplayName = computed(() => {
+    const explicitName = care.value?.attachment_name?.trim();
+    if (explicitName) return explicitName;
+    const path = care.value?.attachment_path?.trim();
+    if (!path) return "";
+    return path.split("/").pop() || "Pièce jointe";
+});
 
 const normalizeCategory = (value?: string): string =>
     (value || "")

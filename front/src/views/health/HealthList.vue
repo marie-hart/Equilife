@@ -25,6 +25,14 @@
               </div>
 
               <div class="d-flex align-center ga-2 me-1">
+                <v-icon
+                  v-if="hasAttachment(care)"
+                  size="20"
+                  color="#7B5B3E"
+                  title="Pièce jointe"
+                >
+                  mdi-paperclip
+                </v-icon>
                 <v-chip
                   v-if="care.category"
                   size="x-small"
@@ -156,5 +164,10 @@ const getCategoryColor = (category?: string): string => {
     if (normalized === "soins courants" || normalized === "soin courant") return "#4E7A4B";
     if (normalized === "cures" || normalized === "cure") return "#6E5A9A";
     return "#2E4B36";
+};
+
+const hasAttachment = (care: Event | import("@/types").CareHistoryEntry): boolean => {
+    if ("care_status" in care) return false;
+    return Boolean(care.attachment_path || care.attachment_name);
 };
 </script>

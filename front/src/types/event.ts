@@ -43,6 +43,7 @@ export interface CareType {
     user_id: string;
     name: string;
     category: string;
+    is_favorite: boolean;
     created_at: string;
     updated_at: string;
 }

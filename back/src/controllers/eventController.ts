@@ -2,7 +2,12 @@ import { Request, Response } from "express";
 import eventRepository from "../repositories/eventRepository";
 import careHistoryRepository from "../repositories/careHistoryRepository";
 import careTypeRepository from "../repositories/careTypeRepository";
-import { CreateCareTypeDto, CreateEventDto, UpdateEventDto } from "../types";
+import {
+    CreateCareTypeDto,
+    CreateEventDto,
+    ToggleCareTypeFavoriteDto,
+    UpdateEventDto,
+} from "../types";
 import { normalizeHorseId } from "../utils/normalizeHorseId";
 import { calculateNextReminderDate } from "../utils/dateUtils";
 import path from "path";
@@ -17,7 +22,8 @@ export class EventController {
     async getCareTypes(req: Request, res: Response): Promise<void> {
         try {
             if (!req.userId) {
-                res.status(401).json({ error: "Unauthorized" });
+                // In authMode "none", no userId is attached; return no custom types.
+                res.json([]);
                 return;
             }
             const careTypes = await careTypeRepository.findAllByUser(req.userId);
@@ -52,6 +58,58 @@ export class EventController {
         } catch (error) {
             console.error("Error creating care type:", error);
             res.status(500).json({ error: "Failed to create care type" });
+        }
+    }
+
+    async toggleCareTypeFavorite(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.userId) {
+                res.status(401).json({ error: "Unauthorized" });
+                return;
+            }
+
+            const data = req.body as ToggleCareTypeFavoriteDto;
+            const name = data.name?.trim();
+            const category = data.category?.trim();
+            const isFavorite = Boolean(data.is_favorite);
+
+            if (!name || !category) {
+                res.status(400).json({ error: "name and category are required" });
+                return;
+            }
+
+            const careType = await careTypeRepository.setFavoriteForUser(req.userId, {
+                name,
+                category,
+                is_favorite: isFavorite,
+            });
+            res.json(careType);
+        } catch (error) {
+            console.error("Error toggling care type favorite:", error);
+            res.status(500).json({ error: "Failed to update favorite status" });
+        }
+    }
+
+    async deleteCareType(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.userId) {
+                res.status(401).json({ error: "Unauthorized" });
+                return;
+            }
+            const name = (req.params.name || "").trim();
+            if (!name) {
+                res.status(400).json({ error: "name is required" });
+                return;
+            }
+            const deleted = await careTypeRepository.deleteByName(req.userId, decodeURIComponent(name));
+            if (!deleted) {
+                res.status(404).json({ error: "Care type not found" });
+                return;
+            }
+            res.status(204).send();
+        } catch (error) {
+            console.error("Error deleting care type:", error);
+            res.status(500).json({ error: "Failed to delete care type" });
         }
     }
 

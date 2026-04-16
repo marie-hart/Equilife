@@ -43,16 +43,16 @@
                <div class="text-caption font-weight-bold mb-2 mt-2 ms-1" style="color: #7B5B3E">DÉTAILS DU SOIN</div>
             </v-col>
 
-            <v-col cols="12" md="6">
+            <v-col cols="12">
               <div class="text-caption font-weight-bold mb-2 mt-2 ms-1" style="color: #7B5B3E">
                 TYPE DE SOIN *
               </div>
-              <v-card variant="outlined" rounded="lg" class="pa-3 border-light">
+              <div class="pt-1">
                 <v-text-field
-                  v-model="careTypeSearch"
+                  v-model="searchCareTypeQuery"
                   placeholder="Rechercher ou sélectionner..."
                   prepend-inner-icon="mdi-magnify"
-                  density="comfortable"
+                  density="compact"
                   variant="outlined"
                   color="#2E4B36"
                   rounded="lg"
@@ -60,58 +60,93 @@
                   class="mb-3"
                 />
 
-                <div class="text-caption font-weight-bold mb-2" style="color: #7B5B3E">
-                  Types favoris
-                </div>
-                <div class="d-flex flex-wrap ga-2 mb-4">
+                <div
+                  v-if="filteredFavoriteCareTypes.length"
+                  class="d-flex flex-wrap ga-2 mb-3"
+                >
                   <v-chip
-                    v-for="type in favoriteCareTypes"
-                    :key="`favorite-${type}`"
+                    v-for="favoriteType in filteredFavoriteCareTypes"
+                    :key="`favorite-${favoriteType.categoryKey}-${favoriteType.name}`"
+                    rounded="xl"
                     size="small"
-                    rounded="pill"
-                    :variant="form.careDescription === type ? 'flat' : 'tonal'"
-                    :color="form.careDescription === type ? '#2E4B36' : undefined"
-                    :class="form.careDescription === type ? 'text-white' : ''"
-                    @click="selectCareType(type)"
+                    variant="flat"
+                    class="text-body-2 font-weight-medium px-3"
+                    :style="{
+                      backgroundColor: form.careDescription === favoriteType.name ? '#2E4B36' : '#F2EEE7',
+                      color: form.careDescription === favoriteType.name ? '#FFFFFF' : '#3E342A',
+                      border: form.careDescription === favoriteType.name ? 'none' : '1px solid #E2D7C8',
+                    }"
+                    @click="selectCareType(favoriteType.name, favoriteType.categoryKey)"
                   >
-                    {{ type }}
+                    {{ favoriteType.name }}
                   </v-chip>
                 </div>
 
-                <div
-                  v-for="group in filteredCareTypeGroups"
-                  :key="group.key"
-                  class="mb-3"
+                <v-expansion-panels
+                  v-model="openedCareTypeGroups"
+                  multiple
+                  variant="accordion"
+                  class="mt-1 mb-4"
                 >
-                  <div class="text-body-2 font-weight-bold mb-1" style="color: #554338">
-                    {{ group.title }}
-                  </div>
-                  <v-list density="comfortable" class="py-0 bg-transparent">
-                    <v-list-item
-                      v-for="type in group.types"
-                      :key="`${group.key}-${type}`"
-                      rounded="lg"
-                      :active="form.careDescription === type"
-                      active-color="#2E4B36"
-                      @click="selectCareType(type)"
-                    >
-                      <template #title>{{ type }}</template>
-                      <template #append>
-                        <v-icon size="18" color="#7B5B3E">mdi-chevron-right</v-icon>
-                      </template>
-                    </v-list-item>
-                  </v-list>
-                </div>
-
-                <v-alert
-                  v-if="!filteredCareTypeGroups.length"
-                  type="info"
-                  variant="tonal"
-                  density="comfortable"
-                  class="mb-3"
-                >
-                  Aucun type trouvé pour cette recherche.
-                </v-alert>
+                  <v-expansion-panel
+                    v-for="group in filteredCareTypeGroups"
+                    :key="group.key"
+                    :value="group.key"
+                    elevation="0"
+                    class="bg-transparent"
+                    :style="{ borderBottom: '1px solid #E2D7C8' }"
+                  >
+                    <v-expansion-panel-title class="px-2 py-3">
+                      <span class="font-weight-bold" style="color: #554338">
+                        {{ group.title }}
+                      </span>
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text class="pt-1 pb-1 px-0">
+                      <v-list density="comfortable" class="py-0 bg-transparent">
+                        <v-list-item
+                          v-for="type in group.types"
+                          :key="`${group.key}-${type}`"
+                          rounded="lg"
+                          class="ps-2 pe-2"
+                          :active="form.careDescription === type"
+                          color="#2E4B36"
+                          @click="selectCareType(type, group.key)"
+                        >
+                          <template #title>
+                            <div class="d-flex align-center">
+                              <span
+                                class="d-inline-flex align-center justify-start"
+                                style="width: 12px; min-width: 12px;"
+                              >
+                                <v-icon
+                                  v-if="isCustomCareType(type)"
+                                  size="14"
+                                  color="#C4B5A5"
+                                  style="transform: translateX(-2px);"
+                                  @click.stop="deleteCustomCareType(type, group.key)"
+                                >
+                                  mdi-close
+                                </v-icon>
+                              </span>
+                              <span class="ms-2">{{ type }}</span>
+                            </div>
+                          </template>
+                          <template #append>
+                            <div class="d-flex align-center">
+                              <v-icon
+                                size="18"
+                                :color="isCareTypeFavorite(type) ? '#B23A48' : '#C4B5A5'"
+                                @click.stop="setCareTypeFavorite(type, group.key, !isCareTypeFavorite(type))"
+                              >
+                                {{ isCareTypeFavorite(type) ? "mdi-heart" : "mdi-heart-outline" }}
+                              </v-icon>
+                            </div>
+                          </template>
+                        </v-list-item>
+                      </v-list>
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+                </v-expansion-panels>
 
                 <v-btn
                   block
@@ -123,7 +158,7 @@
                 >
                   Créer un nouveau type
                 </v-btn>
-              </v-card>
+              </div>
               <div
                 v-if="form.careDescription"
                 class="text-caption mt-2 ms-1"
@@ -139,27 +174,16 @@
                 {{ fieldErrors.careDescription }}
               </div>
             </v-col>
-
-            <v-col cols="12" md="6">
-              <v-combobox
-                v-model="form.category"
-                :items="careCategoryOptions"
-                label="Catégorie *"
-                placeholder="Ex: Maladie"
-                density="comfortable"
-                variant="outlined"
-                color="#2E4B36"
-                rounded="lg"
-                clearable
-                :error-messages="fieldErrors.category ? [fieldErrors.category] : undefined"
-              />
-            </v-col>
             
-            <v-col cols="12" md="6">
+            <v-col cols="12">
+              <v-divider class="my-2" style="border-color: #E2D7C8" />
+              <div class="text-caption font-weight-bold mb-2 mt-4 ms-1" style="color: #7B5B3E">
+                PRODUITS UTILISÉS
+              </div>
               <v-select
                 v-model="form.productIds"
                 :items="productOptions"
-                label="Produits utilisés (optionnel)"
+                label="Sélectionner un ou plusieurs produits (optionnel)"
                 density="comfortable"
                 variant="outlined"
                 color="#2E4B36"
@@ -339,7 +363,7 @@ import { productApi } from "@/api/product";
 import { filesBaseUrl } from "@/api/client";
 import { logger } from "@/services/LoggerService";
 import type { Product, Event, RecurrenceUnit, CreateEventDto, CareType } from "@/types";
-import { fromDateInputValue, toDateInputValue } from "@/libs/date";
+import { toDateInputValue } from "@/libs/date";
 import { useHorsesStore } from "@/stores/HorsesStore";
 import { useEventsStore } from "@/stores/EventsStore";
 import { validateRequiredFieldsMap } from "@/utils/validation";
@@ -352,7 +376,6 @@ const eventsStore = useEventsStore();
 const isLoading = ref(true);
 const isSubmitting = ref(false);
 const products = ref<Product[]>([]);
-const careCategoryOptions = ref<string[]>([]);
 const event = ref<Event | null>(null);
 const fieldErrors = ref<Record<string, string>>({});
 const snackbar = ref({ show: false, message: "", color: "success" });
@@ -360,11 +383,18 @@ const selectedAttachment = ref<File | null>(null);
 const existingAttachmentPath = ref<string>("");
 const existingAttachmentName = ref<string>("");
 const removeExistingAttachment = ref(false);
-const careTypeSearch = ref("");
+const searchCareTypeQuery = ref("");
+const openedCareTypeGroups = ref<string[]>([]);
+const selectedCareTypeCategoryKey = ref("");
+const favoriteCareTypeNames = ref<Set<string>>(new Set());
 const isCreateCareTypeDialogOpen = ref(false);
 const isCreatingCareType = ref(false);
 const newCareTypeName = ref("");
 const newCareTypeNameError = ref("");
+const customCareTypeNames = ref<Set<string>>(new Set());
+const CARE_TYPE_FAVORITES_STORAGE_KEY = "equilife_care_type_favorites";
+const CARE_TYPE_CUSTOM_STORAGE_KEY = "equilife_custom_care_types";
+const AUTH_TOKEN_STORAGE_KEY = "equilife_token";
 
 const isEdit = computed(() => Boolean(route.name === 'HealthEdit'));
 
@@ -372,7 +402,6 @@ const form = ref({
     horseIds: [] as string[],
     productIds: [] as string[],
     careDescription: "",
-    category: "",
     date: "",
     isRecurring: false,
     recurrenceInterval: 1,
@@ -380,23 +409,22 @@ const form = ref({
     note: "",
 });
 
-const DEFAULT_CARE_CATEGORIES = [
-    "Maladie",
-    "Bobo",
-    "Soins courants",
-    "Cures",
-] as const;
-
 type CareTypeGroup = {
     key: string;
     title: string;
     types: string[];
 };
 
+type FavoriteCareType = {
+    name: string;
+    categoryKey: string;
+    categoryTitle: string;
+};
+
 const defaultCareTypeGroups: CareTypeGroup[] = [
     {
         key: "sante-generale",
-        title: "🩺 Santé générale",
+        title: "Santé générale",
         types: [
             "Consultation vétérinaire",
             "Vaccination",
@@ -408,7 +436,7 @@ const defaultCareTypeGroups: CareTypeGroup[] = [
     },
     {
         key: "pieds-marechalerie",
-        title: "🦶 Pieds & maréchalerie",
+        title: "Pieds & maréchalerie",
         types: [
             "Maréchalerie",
             "Parage",
@@ -418,7 +446,7 @@ const defaultCareTypeGroups: CareTypeGroup[] = [
     },
     {
         key: "locomotion-corps",
-        title: "💪 Locomotion & corps",
+        title: "Locomotion & corps",
         types: [
             "Ostéopathie",
             "Shiatsu",
@@ -429,7 +457,7 @@ const defaultCareTypeGroups: CareTypeGroup[] = [
     },
     {
         key: "peau-soins-externes",
-        title: "🧴 Peau & soins externes",
+        title: "Peau & soins externes",
         types: [
             "Soin de plaie",
             "Dermite",
@@ -439,7 +467,7 @@ const defaultCareTypeGroups: CareTypeGroup[] = [
     },
     {
         key: "urgence-pathologie",
-        title: "🚑 Urgence / pathologie",
+        title: "Urgence / pathologie",
         types: [
             "Colique",
             "Bouchon",
@@ -464,27 +492,84 @@ const buildDefaultCareTypeGroups = (): CareTypeGroup[] =>
         types: [...group.types],
     }));
 
+const normalizeCareTypeName = (name: string) => name.trim().toLowerCase();
+
+const defaultCareTypeNameSet = new Set(
+    ([] as string[]).concat(...defaultCareTypeGroups.map((g) => g.types.map(normalizeCareTypeName))),
+);
+
+const isCustomCareType = (name: string) =>
+    customCareTypeNames.value.has(normalizeCareTypeName(name));
+
+const loadLocalFavoriteCareTypes = (): Set<string> => {
+    try {
+        const raw = localStorage.getItem(CARE_TYPE_FAVORITES_STORAGE_KEY);
+        if (!raw) return new Set();
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return new Set();
+        return new Set(
+            parsed
+                .map((value) => (typeof value === "string" ? normalizeCareTypeName(value) : ""))
+                .filter(Boolean),
+        );
+    } catch {
+        return new Set();
+    }
+};
+
+const persistLocalFavoriteCareTypes = (favorites: Set<string>) => {
+    localStorage.setItem(
+        CARE_TYPE_FAVORITES_STORAGE_KEY,
+        JSON.stringify(Array.from(favorites)),
+    );
+};
+
+type LocalCustomCareType = {
+    name: string;
+    category: string;
+};
+
+const loadLocalCustomCareTypes = (): LocalCustomCareType[] => {
+    try {
+        const raw = localStorage.getItem(CARE_TYPE_CUSTOM_STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed
+            .map((value) => ({
+                name: typeof value?.name === "string" ? value.name.trim() : "",
+                category: typeof value?.category === "string" ? value.category.trim() : "",
+            }))
+            .filter((value) => value.name && value.category);
+    } catch {
+        return [];
+    }
+};
+
+const persistLocalCustomCareTypes = (customTypes: LocalCustomCareType[]) => {
+    localStorage.setItem(CARE_TYPE_CUSTOM_STORAGE_KEY, JSON.stringify(customTypes));
+};
+
+const upsertLocalCustomCareType = (name: string, category: string) => {
+    const normalizedName = normalizeCareTypeName(name);
+    const existing = loadLocalCustomCareTypes().filter(
+        (item) => normalizeCareTypeName(item.name) !== normalizedName,
+    );
+    existing.push({ name: name.trim(), category: category.trim() });
+    persistLocalCustomCareTypes(existing);
+};
+
+const removeLocalCustomCareType = (name: string) => {
+    const normalizedName = normalizeCareTypeName(name);
+    const next = loadLocalCustomCareTypes().filter(
+        (item) => normalizeCareTypeName(item.name) !== normalizedName,
+    );
+    persistLocalCustomCareTypes(next);
+};
+
 const careTypeGroups = ref<CareTypeGroup[]>(
     buildDefaultCareTypeGroups(),
 );
-
-const favoriteCareTypes = [
-    "Maréchalerie",
-    "Vermifuge",
-    "Ostéopathie",
-    "Vaccination",
-];
-
-const filteredCareTypeGroups = computed(() => {
-    const query = careTypeSearch.value.trim().toLowerCase();
-    if (!query) return careTypeGroups.value;
-    return careTypeGroups.value
-        .map((group) => ({
-            ...group,
-            types: group.types.filter((type) => type.toLowerCase().includes(query)),
-        }))
-        .filter((group) => group.types.length > 0);
-});
 
 const careTypeCategoryOptions = computed(() =>
     careTypeGroups.value.map((group) => ({
@@ -506,6 +591,43 @@ const productOptions = computed(() => {
             title: `${p.name} ${p.brand ? `(${p.brand})` : ''}`,
             value: p.id
         }));
+});
+
+const filteredCareTypeGroups = computed(() => {
+    const query = searchCareTypeQuery.value.trim().toLowerCase();
+    if (!query) return careTypeGroups.value;
+
+    return careTypeGroups.value
+        .map((group) => ({
+            ...group,
+            types: group.types.filter((type) => type.toLowerCase().includes(query)),
+        }))
+        .filter((group) => group.types.length > 0);
+});
+
+const filteredFavoriteCareTypes = computed<FavoriteCareType[]>(() => {
+    const favoriteSet = favoriteCareTypeNames.value;
+    if (!favoriteSet.size) return [];
+
+    const query = searchCareTypeQuery.value.trim().toLowerCase();
+    const favorites: FavoriteCareType[] = [];
+
+    careTypeGroups.value.forEach((group) => {
+        group.types.forEach((type) => {
+            const normalizedType = normalizeCareTypeName(type);
+            if (!favoriteSet.has(normalizedType)) return;
+            if (query && !type.toLowerCase().includes(query)) return;
+            favorites.push({
+                name: type,
+                categoryKey: group.key,
+                categoryTitle: group.title,
+            });
+        });
+    });
+
+    return favorites
+        .sort((a, b) => a.name.localeCompare(b.name, "fr"))
+        .slice(0, 5);
 });
 
 const recurrenceUnits = [
@@ -545,18 +667,24 @@ const fillForm = (event: Event) => {
                   ? [event.product_id]
                   : [],
         careDescription: event.name || "",
-        category: event.category || "",
         date: toDateInputValue(event.event_date),
         isRecurring: Boolean(event.reminder_enabled) && (hasMonthly || hasYearly || hasDaily),
         recurrenceInterval,
         recurrenceUnit,
         note: event.description || "",
     };
+    const matchedGroup = careTypeGroups.value.find((group) =>
+        group.types.some((type) => type.toLowerCase() === (event.name || "").toLowerCase()),
+    );
+    selectedCareTypeCategoryKey.value =
+        matchedGroup?.key || event.category || "";
+    if (selectedCareTypeCategoryKey.value) {
+        openedCareTypeGroups.value = [selectedCareTypeCategoryKey.value];
+    }
     existingAttachmentPath.value = event.attachment_path || "";
     existingAttachmentName.value = event.attachment_name || "";
     selectedAttachment.value = null;
     removeExistingAttachment.value = false;
-    careTypeSearch.value = event.name || "";
 };
 
 const attachmentHref = computed(() => {
@@ -590,12 +718,99 @@ const onAttachmentChange = (value: File | File[] | null) => {
     }
 };
 
-const selectCareType = (type: string) => {
+const selectCareType = (type: string, categoryKey?: string) => {
     form.value.careDescription = type;
+    if (categoryKey) {
+        selectedCareTypeCategoryKey.value = categoryKey;
+    }
     fieldErrors.value = {
         ...fieldErrors.value,
         careDescription: "",
     };
+};
+
+const isCareTypeFavorite = (type: string) =>
+    favoriteCareTypeNames.value.has(normalizeCareTypeName(type));
+
+const setCareTypeFavorite = async (
+    name: string,
+    categoryKey: string,
+    isFavorite: boolean,
+) => {
+    const normalizedName = normalizeCareTypeName(name);
+    const applyFavoriteLocally = () => {
+        const nextSet = new Set(favoriteCareTypeNames.value);
+        if (isFavorite) {
+            nextSet.add(normalizedName);
+        } else {
+            nextSet.delete(normalizedName);
+        }
+        favoriteCareTypeNames.value = nextSet;
+        persistLocalFavoriteCareTypes(nextSet);
+    };
+
+    const hasToken = Boolean(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY));
+    if (!hasToken) {
+        applyFavoriteLocally();
+        return;
+    }
+
+    try {
+        await eventsApi.toggleCareTypeFavorite({
+            name,
+            category: categoryKey,
+            is_favorite: isFavorite,
+        });
+        applyFavoriteLocally();
+    } catch (error) {
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 401) {
+            applyFavoriteLocally();
+            return;
+        }
+        logger.error("Error toggling care type favorite:", error);
+        snackbar.value = {
+            show: true,
+            message: "Impossible de mettre a jour les favoris pour le moment.",
+            color: "error",
+        };
+    }
+};
+
+const deleteCustomCareType = async (name: string, categoryKey: string) => {
+    const normalized = normalizeCareTypeName(name);
+    const hasToken = Boolean(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY));
+    if (hasToken) {
+        try {
+            await eventsApi.deleteCareType(name);
+        } catch (error) {
+            const status = (error as { response?: { status?: number } })?.response?.status;
+            if (status !== 401) {
+                logger.error("Error deleting care type:", error);
+                snackbar.value = {
+                    show: true,
+                    message: "Impossible de supprimer ce type.",
+                    color: "error",
+                };
+                return;
+            }
+        }
+    }
+    const group = careTypeGroups.value.find((g) => g.key === categoryKey);
+    if (group) {
+        group.types = group.types.filter((t) => normalizeCareTypeName(t) !== normalized);
+    }
+    const nextCustom = new Set(customCareTypeNames.value);
+    nextCustom.delete(normalized);
+    customCareTypeNames.value = nextCustom;
+    const nextFav = new Set(favoriteCareTypeNames.value);
+    nextFav.delete(normalized);
+    favoriteCareTypeNames.value = nextFav;
+    persistLocalFavoriteCareTypes(nextFav);
+    if (normalizeCareTypeName(form.value.careDescription) === normalized) {
+        form.value.careDescription = "";
+    }
+    removeLocalCustomCareType(name);
 };
 
 const onCreateCareTypeClick = () => {
@@ -637,9 +852,29 @@ const addCareTypeToGroup = (name: string, categoryKey: string) => {
 
 const applyPersistedCareTypes = (careTypes: CareType[]) => {
     careTypeGroups.value = buildDefaultCareTypeGroups();
+    const localFavorites = loadLocalFavoriteCareTypes();
+    const localCustomCareTypes = loadLocalCustomCareTypes();
+    const favoriteSet = new Set<string>();
+    const customSet = new Set<string>();
     careTypes.forEach((careType) => {
         addCareTypeToGroup(careType.name, careType.category);
+        if (careType.is_favorite) {
+            favoriteSet.add(normalizeCareTypeName(careType.name));
+        }
+        if (!defaultCareTypeNameSet.has(normalizeCareTypeName(careType.name))) {
+            customSet.add(normalizeCareTypeName(careType.name));
+        }
     });
+    localCustomCareTypes.forEach((careType) => {
+        addCareTypeToGroup(careType.name, careType.category);
+        if (!defaultCareTypeNameSet.has(normalizeCareTypeName(careType.name))) {
+            customSet.add(normalizeCareTypeName(careType.name));
+        }
+    });
+    localFavorites.forEach((favorite) => favoriteSet.add(favorite));
+    favoriteCareTypeNames.value = favoriteSet;
+    customCareTypeNames.value = customSet;
+    persistLocalFavoriteCareTypes(favoriteSet);
 };
 
 const loadCareTypes = async () => {
@@ -649,6 +884,16 @@ const loadCareTypes = async () => {
     } catch (error) {
         logger.error("Error loading care types:", error);
         careTypeGroups.value = buildDefaultCareTypeGroups();
+        favoriteCareTypeNames.value = loadLocalFavoriteCareTypes();
+        const localCustoms = loadLocalCustomCareTypes();
+        const customSet = new Set<string>();
+        localCustoms.forEach((careType) => {
+            addCareTypeToGroup(careType.name, careType.category);
+            if (!defaultCareTypeNameSet.has(normalizeCareTypeName(careType.name))) {
+                customSet.add(normalizeCareTypeName(careType.name));
+            }
+        });
+        customCareTypeNames.value = customSet;
     }
 };
 
@@ -664,22 +909,41 @@ const createCustomCareType = async () => {
         return;
     }
 
-    try {
-        isCreatingCareType.value = true;
-        const createdCareType = await eventsApi.createCareType({
-            name: trimmedName,
-            category: newCareTypeCategoryKey.value,
-        });
-        addCareTypeToGroup(createdCareType.name, createdCareType.category);
-        selectCareType(createdCareType.name);
-        careTypeSearch.value = "";
+    const applyCreatedCareTypeLocally = (name: string, category: string) => {
+        addCareTypeToGroup(name, category);
+        customCareTypeNames.value = new Set([
+            ...customCareTypeNames.value,
+            normalizeCareTypeName(name),
+        ]);
+        upsertLocalCustomCareType(name, category);
+        selectCareType(name, category);
+        openedCareTypeGroups.value = [category];
         closeCreateCareTypeDialog();
         snackbar.value = {
             show: true,
             message: "Type de soin enregistré.",
             color: "success",
         };
+    };
+
+    try {
+        isCreatingCareType.value = true;
+        const hasToken = Boolean(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY));
+        if (!hasToken) {
+            applyCreatedCareTypeLocally(trimmedName, newCareTypeCategoryKey.value);
+            return;
+        }
+        const createdCareType = await eventsApi.createCareType({
+            name: trimmedName,
+            category: newCareTypeCategoryKey.value,
+        });
+        applyCreatedCareTypeLocally(createdCareType.name, createdCareType.category);
     } catch (error) {
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 401) {
+            applyCreatedCareTypeLocally(trimmedName, newCareTypeCategoryKey.value);
+            return;
+        }
         logger.error("Error creating care type:", error);
         newCareTypeNameError.value = "Impossible de créer ce type pour le moment.";
     } finally {
@@ -691,7 +955,6 @@ const handleSubmit = async () => {
     const { errors, firstError } = await validateRequiredFieldsMap([
         { key: "horseIds", label: "au moins un cheval", value: form.value.horseIds?.length ? form.value.horseIds[0] : "" },
         { key: "careDescription", label: "le type de soin", value: form.value.careDescription?.trim() },
-        { key: "category", label: "la catégorie", value: form.value.category?.trim() },
         { key: "date", label: "la date du soin", value: form.value.date },
     ]);
     fieldErrors.value = errors;
@@ -714,7 +977,7 @@ const handleSubmit = async () => {
             product_ids: form.value.productIds.length
                 ? [...form.value.productIds]
                 : undefined,
-            category: form.value.category.trim(),
+            category: selectedCareTypeCategoryKey.value || undefined,
             // En édition, on envoie explicitement une chaîne vide pour permettre
             // la suppression effective d'une note déjà existante.
             description: isEdit.value
@@ -807,38 +1070,12 @@ const loadProducts = async () => {
     }
 };
 
-const loadCareCategories = async () => {
-    try {
-        const [events, history] = await Promise.all([
-            eventsStore.fetchEvents(),
-            eventsStore.fetchCareHistory(),
-        ]);
-        const dynamic = [
-            ...events
-                .filter((item) => item.is_care)
-                .map((item) => item.category?.trim())
-                .filter((value): value is string => Boolean(value)),
-            ...history
-                .map((item) => item.category?.trim())
-                .filter((value): value is string => Boolean(value)),
-        ];
-        const merged = new Set<string>([...DEFAULT_CARE_CATEGORIES, ...dynamic]);
-        careCategoryOptions.value = Array.from(merged).sort((a, b) =>
-            a.localeCompare(b, "fr"),
-        );
-    } catch (error) {
-        logger.error("Error loading care categories:", error);
-        careCategoryOptions.value = [...DEFAULT_CARE_CATEGORIES];
-    }
-};
-
 onMounted(async () => {
     isLoading.value = true;
     try {
         await Promise.all([
             horsesStore.loadHorses(),
             loadProducts(),
-            loadCareCategories(),
             loadCareTypes(),
         ]);
 
@@ -851,6 +1088,9 @@ onMounted(async () => {
         } else {
             const preselected = horsesStore.horseId && horsesStore.horseId !== "all" ? horsesStore.horseId : null;
             if (preselected) form.value.horseIds = [preselected];
+            if (careTypeGroups.value[0]?.key) {
+                openedCareTypeGroups.value = [careTypeGroups.value[0].key];
+            }
         }
     } catch (error) {
         logger.error("Erreur au montage:", error);
@@ -859,3 +1099,9 @@ onMounted(async () => {
     }
 });
 </script>
+
+<style scoped>
+:deep(.v-expansion-panel-text__wrapper) {
+  padding: 0 !important;
+}
+</style>

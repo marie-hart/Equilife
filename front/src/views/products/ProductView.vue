@@ -49,7 +49,7 @@
         clearable
         hide-details
         bg-color="#FFFFFF"
-        class="mb-6 shadow-subtle border-light"
+        class="mb-6 shadow-subtle"
       />
 
       <div class="mb-4 d-flex align-center">

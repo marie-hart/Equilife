@@ -53,8 +53,8 @@ export default defineConfig(({ mode }) => {
         cert: fs.readFileSync("./localhost+1.pem"),
       },
       proxy: {
-        "/api": { target: "http://localhost:3001", changeOrigin: true, secure: false },
-        "/uploads": { target: "http://localhost:3001", changeOrigin: true },
+        "/api": { target: proxyTarget, changeOrigin: true, secure: false },
+        "/uploads": { target: proxyTarget, changeOrigin: true, secure: false },
       },
       host: true,
       hmr: mode === "development"

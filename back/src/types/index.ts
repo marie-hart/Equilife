@@ -99,6 +99,7 @@ export interface CareType {
     user_id: string;
     name: string;
     category: string;
+    is_favorite: boolean;
     created_at: Date;
     updated_at: Date;
 }
@@ -106,6 +107,12 @@ export interface CareType {
 export interface CreateCareTypeDto {
     name: string;
     category: string;
+}
+
+export interface ToggleCareTypeFavoriteDto {
+    name: string;
+    category: string;
+    is_favorite: boolean;
 }
 
 export interface Product {

@@ -26,6 +26,20 @@ export const eventsApi = {
         const response = await apiClient.post<CareType>("/events/care-types", data);
         return response.data;
     },
+    toggleCareTypeFavorite: async (data: {
+        name: string;
+        category: string;
+        is_favorite: boolean;
+    }) => {
+        const response = await apiClient.post<CareType>(
+            "/events/care-types/favorite",
+            data,
+        );
+        return response.data;
+    },
+    deleteCareType: async (name: string) => {
+        await apiClient.delete(`/events/care-types/${encodeURIComponent(name)}`);
+    },
     create: async (data: CreateEventDto) => {
         const response = await apiClient.post<Event>("/events", data);
         return response.data;
