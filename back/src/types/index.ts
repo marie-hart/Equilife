@@ -3,6 +3,8 @@ export interface Event {
     id: string;
     name: string;
     description?: string;
+    attachment_path?: string;
+    attachment_name?: string;
     event_date: Date;
     horse_id?: string;
     product_id?: string;
@@ -27,6 +29,8 @@ export interface Event {
 export interface CreateEventDto {
     name: string;
     description?: string;
+    attachment_path?: string;
+    attachment_name?: string;
     event_date: string; // Format: YYYY-MM-DD
     horse_id?: string;
     product_id?: string;
@@ -71,6 +75,8 @@ export interface CreateCareHistoryDto {
 export interface UpdateEventDto {
     name: string;
     description?: string;
+    attachment_path?: string;
+    attachment_name?: string;
     event_date?: string;
     horse_id?: string;
     product_id?: string;
@@ -86,6 +92,20 @@ export interface UpdateEventDto {
     reminder_interval_days?: number;
     reminder_interval_months?: number;
     reminder_interval_years?: number;
+}
+
+export interface CareType {
+    id: string;
+    user_id: string;
+    name: string;
+    category: string;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface CreateCareTypeDto {
+    name: string;
+    category: string;
 }
 
 export interface Product {

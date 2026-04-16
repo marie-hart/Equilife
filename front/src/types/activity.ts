@@ -30,6 +30,8 @@ export type IntensityValue = "legere" | "normale" | "soutenue";
 export interface CreateEventDto {
     name: string;
     description?: string;
+    attachment_path?: string;
+    attachment_name?: string;
     event_date: string;
     horse_id?: string;
     product_id?: string;

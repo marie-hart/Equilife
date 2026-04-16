@@ -2,6 +2,8 @@ export interface Event {
     id: string;
     name: string;
     description?: string;
+    attachment_path?: string;
+    attachment_name?: string;
     event_date: string;
     horse_id?: string;
     product_id?: string;
@@ -34,4 +36,13 @@ export interface CareHistoryEntry {
     event_date: string;
     care_status: "done";
     created_at: string;
+}
+
+export interface CareType {
+    id: string;
+    user_id: string;
+    name: string;
+    category: string;
+    created_at: string;
+    updated_at: string;
 }

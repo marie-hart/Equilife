@@ -91,7 +91,7 @@
                     :format-date-mobile="formatDateMobile"
                     :get-horse-name="horsesStore.getHorseNameById"
                     :recurrence-label="() => '-'"
-                    :get-care-actions="() => []"
+                    :get-care-actions="getHistoryCareActions"
                     :show-done-tag="true"
                     @click:care="() => {}"
                 />
@@ -161,6 +161,7 @@ const careHistory = ref<CareHistoryEntry[]>([]);
 const isLoading = ref(true);
 const isDeleteOpen = ref(false);
 const selectedCare = ref<Event | null>(null);
+const selectedDeleteCare = ref<{ id: string; name: string } | null>(null);
 const isCareDoneOpen = ref(false);
 const careDoneForm = ref({ date: "" });
 const pullStartY = ref<number | null>(null);
@@ -243,8 +244,8 @@ const getCareCategory = (care: Event | CareHistoryEntry): string =>
     (care.category || "").trim();
 
 const deleteMessage = computed(() => 
-    selectedCare.value 
-        ? `Confirmer la suppression du soin "${selectedCare.value.name}" ?`
+    selectedDeleteCare.value
+        ? `Confirmer la suppression du soin "${selectedDeleteCare.value.name}" ?`
         : "Confirmer la suppression ?"
 );
 
@@ -475,8 +476,8 @@ const saveCareDone = async () => {
     }
 };
 
-const openDelete = (care: Event) => {
-    selectedCare.value = care;
+const openDelete = (care: { id: string; name: string }) => {
+    selectedDeleteCare.value = care;
     isDeleteOpen.value = true;
 };
 
@@ -503,17 +504,42 @@ const getCareActions = (care: Event | CareHistoryEntry): CareAction[] => {
         icon: "mdi-trash-can",
         color: "error",
         disabled: false,
-        onClick: () => openDelete(care),
+        onClick: () => openDelete({ id: care.id, name: care.name || "le soin" }),
     },
 ];
 };
 
+const getHistoryCareActions = (care: Event | CareHistoryEntry): CareAction[] => {
+    if (!("care_status" in care)) return getCareActions(care);
+    const sourceId = care.original_event_id;
+    return [
+        {
+            key: "edit",
+            title: "Modifier",
+            icon: "mdi-pencil",
+            disabled: !sourceId,
+            to: sourceId ? { name: "HealthEdit", params: { id: sourceId } } : undefined,
+        },
+        {
+            key: "delete",
+            title: "Supprimer",
+            icon: "mdi-trash-can",
+            color: "error",
+            disabled: !sourceId,
+            onClick: sourceId
+                ? () => openDelete({ id: sourceId, name: care.name || "le soin" })
+                : undefined,
+        },
+    ];
+};
+
 const confirmDelete = async () => {
-    if (!selectedCare.value) return;
+    if (!selectedDeleteCare.value) return;
     try {
-        await eventsStore.deleteEvent(selectedCare.value.id);
+        await eventsStore.deleteEvent(selectedDeleteCare.value.id);
         await loadCares(true);
         isDeleteOpen.value = false;
+        selectedDeleteCare.value = null;
         snackbar.value = {
             show: true,
             message: "Soin supprimé.",

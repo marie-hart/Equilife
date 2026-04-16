@@ -8,9 +8,10 @@ const HORSE_REQUIRED_ERROR = "HORSE_REQUIRED";
 
 export class EventRepository {
     private eventProductsReady = false;
+    private eventAttachmentsReady = false;
 
     async findAll(horseId?: string, ownerUserId?: string): Promise<Event[]> {
-        await this.ensureEventProductsTable();
+        await this.ensureEventSupportTables();
         const cacheKey = CacheKeys.eventsListKey(horseId, ownerUserId);
         const cached = await cacheService.get<Event[]>(cacheKey);
         if (cached) return cached;
@@ -44,13 +45,13 @@ export class EventRepository {
                 )
               : await pool.query("SELECT * FROM events ORDER BY event_date DESC");
 
-        const events = await this.attachProductIds(result.rows.map(this.mapRowToEvent));
+        const events = await this.attachEventMetadata(result.rows.map(this.mapRowToEvent));
         await cacheService.set(cacheKey, events, 300);
         return events;
     }
 
     async findById(id: string, ownerUserId?: string): Promise<Event | null> {
-        await this.ensureEventProductsTable();
+        await this.ensureEventSupportTables();
         if (!ownerUserId) {
             const cacheKey = CacheKeys.eventKey(id);
             const cached = await cacheService.get<Event>(cacheKey);
@@ -70,7 +71,7 @@ export class EventRepository {
             : await pool.query("SELECT * FROM events WHERE id = $1", [id]);
 
         if (result.rows.length === 0) return null;
-        const [event] = await this.attachProductIds([this.mapRowToEvent(result.rows[0])]);
+        const [event] = await this.attachEventMetadata([this.mapRowToEvent(result.rows[0])]);
         if (!ownerUserId) {
             await cacheService.set(CacheKeys.eventKey(id), event, 600);
         }
@@ -78,7 +79,7 @@ export class EventRepository {
     }
 
     async create(data: CreateEventDto, ownerUserId?: string): Promise<Event> {
-        await this.ensureEventProductsTable();
+        await this.ensureEventSupportTables();
         if (ownerUserId && !data.horse_id) {
             throw new Error(HORSE_REQUIRED_ERROR);
         }
@@ -122,7 +123,7 @@ export class EventRepository {
             event.id,
             this.normalizeProductIds(data.product_ids, data.product_id),
         );
-        const [eventWithProducts] = await this.attachProductIds([event]);
+        const [eventWithProducts] = await this.attachEventMetadata([event]);
         await this.invalidateCache(event.id, event.horse_id, ownerUserId);
         return eventWithProducts;
     }
@@ -132,7 +133,7 @@ export class EventRepository {
         data: UpdateEventDto,
         ownerUserId?: string,
     ): Promise<Event | null> {
-        await this.ensureEventProductsTable();
+        await this.ensureEventSupportTables();
         const existing = await this.findById(id, ownerUserId);
         if (!existing) return null;
         if (ownerUserId && data.horse_id) {
@@ -204,13 +205,13 @@ export class EventRepository {
                 this.normalizeProductIds(data.product_ids, data.product_id),
             );
         }
-        const [eventWithProducts] = await this.attachProductIds([event]);
+        const [eventWithProducts] = await this.attachEventMetadata([event]);
         await this.invalidateCache(id, event.horse_id, ownerUserId);
         return eventWithProducts;
     }
 
     async delete(id: string, ownerUserId?: string): Promise<boolean> {
-        await this.ensureEventProductsTable();
+        await this.ensureEventSupportTables();
         const existing = await this.findById(id, ownerUserId);
         if (!existing) return false;
         const result = await pool.query("DELETE FROM events WHERE id = $1", [id]);
@@ -222,7 +223,7 @@ export class EventRepository {
     }
 
     async getReminders(horseId?: string, ownerUserId?: string): Promise<Event[]> {
-        await this.ensureEventProductsTable();
+        await this.ensureEventSupportTables();
         const safeHorseId = horseId && horseId.length > 0 ? horseId : undefined;
         const cacheKey = CacheKeys.eventsRemindersKey(safeHorseId, ownerUserId);
         const cached = await cacheService.get<Event[]>(cacheKey);
@@ -271,9 +272,64 @@ export class EventRepository {
                     `,
                 );
 
-        const events = await this.attachProductIds(result.rows.map(this.mapRowToEvent));
+        const events = await this.attachEventMetadata(result.rows.map(this.mapRowToEvent));
         await cacheService.set(cacheKey, events, 60);
         return events;
+    }
+
+    async setAttachment(
+        eventId: string,
+        filePath: string,
+        fileName: string,
+        ownerUserId?: string,
+    ): Promise<Event | null> {
+        await this.ensureEventSupportTables();
+        const existing = await this.findById(eventId, ownerUserId);
+        if (!existing) return null;
+        await pool.query(
+            `
+                INSERT INTO event_attachments (event_id, file_path, file_name)
+                VALUES ($1::uuid, $2, $3)
+                ON CONFLICT (event_id)
+                DO UPDATE SET
+                    file_path = EXCLUDED.file_path,
+                    file_name = EXCLUDED.file_name,
+                    updated_at = NOW()
+            `,
+            [eventId, filePath, fileName],
+        );
+        await this.invalidateCache(eventId, existing.horse_id, ownerUserId);
+        return this.findById(eventId, ownerUserId);
+    }
+
+    async removeAttachment(eventId: string, ownerUserId?: string): Promise<boolean> {
+        await this.ensureEventSupportTables();
+        const existing = await this.findById(eventId, ownerUserId);
+        if (!existing) return false;
+        const result = await pool.query(
+            `DELETE FROM event_attachments WHERE event_id = $1::uuid`,
+            [eventId],
+        );
+        await this.invalidateCache(eventId, existing.horse_id, ownerUserId);
+        return (result.rowCount ?? 0) > 0;
+    }
+
+    async getEventAttachment(
+        eventId: string,
+        ownerUserId?: string,
+    ): Promise<{ file_path: string; file_name: string } | null> {
+        await this.ensureEventSupportTables();
+        const event = await this.findById(eventId, ownerUserId);
+        if (!event) return null;
+        const result = await pool.query(
+            `SELECT file_path, file_name FROM event_attachments WHERE event_id = $1::uuid`,
+            [eventId],
+        );
+        if (!result.rows.length) return null;
+        return {
+            file_path: String(result.rows[0].file_path),
+            file_name: String(result.rows[0].file_name || ""),
+        };
     }
 
     private async invalidateCache(
@@ -310,6 +366,8 @@ export class EventRepository {
             id: row.id,
             name: row.name,
             description: row.description,
+            attachment_path: row.attachment_path || undefined,
+            attachment_name: row.attachment_name || undefined,
             event_date: new Date(row.event_date),
             horse_id: row.horse_id || undefined,
             product_id: row.product_id || undefined,
@@ -348,6 +406,11 @@ export class EventRepository {
         return Array.from(new Set(ids));
     }
 
+    private async ensureEventSupportTables(): Promise<void> {
+        await this.ensureEventProductsTable();
+        await this.ensureEventAttachmentsTable();
+    }
+
     private async ensureEventProductsTable(): Promise<void> {
         if (this.eventProductsReady) return;
         await pool.query(`
@@ -359,6 +422,20 @@ export class EventRepository {
             );
         `);
         this.eventProductsReady = true;
+    }
+
+    private async ensureEventAttachmentsTable(): Promise<void> {
+        if (this.eventAttachmentsReady) return;
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS event_attachments (
+                event_id UUID PRIMARY KEY REFERENCES events(id) ON DELETE CASCADE,
+                file_path TEXT NOT NULL,
+                file_name TEXT,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+        `);
+        this.eventAttachmentsReady = true;
     }
 
     private async syncEventProducts(
@@ -377,10 +454,10 @@ export class EventRepository {
         );
     }
 
-    private async attachProductIds(events: Event[]): Promise<Event[]> {
+    private async attachEventMetadata(events: Event[]): Promise<Event[]> {
         if (!events.length) return events;
         const ids = events.map((event) => event.id);
-        const result = await pool.query(
+        const productResult = await pool.query(
             `
                 SELECT event_id::text, array_agg(product_id::text) AS product_ids
                 FROM event_products
@@ -389,18 +466,44 @@ export class EventRepository {
             `,
             [ids],
         );
-        const map = new Map<string, string[]>(
-            result.rows.map((row) => [
+        const productMap = new Map<string, string[]>(
+            productResult.rows.map((row) => [
                 String(row.event_id),
                 Array.isArray(row.product_ids) ? row.product_ids.map(String) : [],
             ]),
         );
+        const attachmentResult = await pool.query(
+            `
+                SELECT event_id::text, file_path, file_name
+                FROM event_attachments
+                WHERE event_id = ANY($1::uuid[])
+            `,
+            [ids],
+        );
+        const attachmentMap = new Map<
+            string,
+            { file_path?: string; file_name?: string }
+        >(
+            attachmentResult.rows.map((row) => [
+                String(row.event_id),
+                {
+                    file_path: row.file_path ? String(row.file_path) : undefined,
+                    file_name: row.file_name ? String(row.file_name) : undefined,
+                },
+            ]),
+        );
         return events.map((event) => {
             const merged = this.normalizeProductIds(
-                map.get(event.id) ?? [],
+                productMap.get(event.id) ?? [],
                 event.product_id,
             );
-            return { ...event, product_ids: merged.length ? merged : undefined };
+            const attachment = attachmentMap.get(event.id);
+            return {
+                ...event,
+                product_ids: merged.length ? merged : undefined,
+                attachment_path: attachment?.file_path,
+                attachment_name: attachment?.file_name,
+            };
         });
     }
 }

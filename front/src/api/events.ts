@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { Event, CreateEventDto, CareHistoryEntry } from "../types";
+import type { Event, CreateEventDto, CareHistoryEntry, CareType } from "../types";
 
 export const eventsApi = {
     getAll: async (horseId?: string) => {
@@ -16,6 +16,14 @@ export const eventsApi = {
         const response = await apiClient.get<Event[]>("/events/reminders", {
             params: horseId ? { horseId } : undefined,
         });
+        return response.data;
+    },
+    getCareTypes: async () => {
+        const response = await apiClient.get<CareType[]>("/events/care-types");
+        return response.data;
+    },
+    createCareType: async (data: { name: string; category: string }) => {
+        const response = await apiClient.post<CareType>("/events/care-types", data);
         return response.data;
     },
     create: async (data: CreateEventDto) => {
@@ -35,6 +43,21 @@ export const eventsApi = {
             { event_date: eventDate },
         );
         return response.data;
+    },
+    uploadAttachment: async (id: string, file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await apiClient.post<Event>(
+            `/events/${id}/attachment`,
+            formData,
+            {
+                headers: { "Content-Type": "multipart/form-data" },
+            },
+        );
+        return response.data;
+    },
+    deleteAttachment: async (id: string) => {
+        await apiClient.delete(`/events/${id}/attachment`);
     },
 };
 

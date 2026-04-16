@@ -24,7 +24,7 @@
                 </h3>
               </div>
 
-              <div class="d-flex align-center ga-2">
+              <div class="d-flex align-center ga-2 me-1">
                 <v-chip
                   v-if="care.category"
                   size="x-small"
@@ -39,7 +39,7 @@
                   size="x-small"
                   variant="flat"
                   color="#2E4B36"
-                  class="font-weight-bold"
+                  class="font-weight-bold me-1"
                 >
                   <v-icon start size="12">mdi-check</v-icon>
                   Done
@@ -73,7 +73,7 @@
             </p>
           </div>
 
-          <div v-if="!showDoneTag" class="ms-2" @click.stop>
+          <div v-if="getCareActions(care).length > 0" class="ms-3" @click.stop>
             <ActionButtons
               mode="auto"
               button-size="small"

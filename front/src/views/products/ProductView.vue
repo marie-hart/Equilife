@@ -38,24 +38,19 @@
         Ajouter un produit
       </v-btn>
 
-      <v-card
-        variant="flat"
+      <v-text-field
+        v-model="searchQuery"
+        placeholder="Rechercher un produit..."
+        prepend-inner-icon="mdi-magnify"
+        variant="solo"
+        flat
+        density="comfortable"
         rounded="xl"
-        class="px-4 py-1 shadow-subtle border-light bg-white d-flex align-center mb-6"
-        min-height="56"
-      >
-        <v-icon icon="mdi-magnify" size="20" color="#7B5B3E" class="me-3" />
-        <v-text-field
-          v-model="searchQuery"
-          placeholder="Rechercher un produit..."
-          variant="plain"
-          density="compact"
-          clearable
-          hide-details
-          class="filter-search"
-          color="#2E4B36"
-        />
-      </v-card>
+        clearable
+        hide-details
+        bg-color="#FFFFFF"
+        class="mb-6 shadow-subtle border-light"
+      />
 
       <div class="mb-4 d-flex align-center">
         <v-icon icon="mdi-filter-variant" size="18" color="#7B5B3E" class="me-2" />
@@ -123,19 +118,6 @@
 .text-h4 {
   font-size: 1.75rem !important;
   line-height: 1.2;
-}
-
-::deep(.filter-search .v-field__input) {
-  color: #2E4B36 !important;
-  min-height: 40px !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  align-items: center !important;
-}
-
-::deep(.filter-search input::placeholder) {
-  color: #7B5B3E !important;
-  opacity: 0.9;
 }
 
 </style>

@@ -1,15 +1,60 @@
 import { Request, Response } from "express";
 import eventRepository from "../repositories/eventRepository";
 import careHistoryRepository from "../repositories/careHistoryRepository";
-import { CreateEventDto, UpdateEventDto } from "../types";
+import careTypeRepository from "../repositories/careTypeRepository";
+import { CreateCareTypeDto, CreateEventDto, UpdateEventDto } from "../types";
 import { normalizeHorseId } from "../utils/normalizeHorseId";
 import { calculateNextReminderDate } from "../utils/dateUtils";
+import path from "path";
+import fs from "fs";
+import { documentsUploadDirPath } from "../config/documentUpload";
 import {
     FORBIDDEN_HORSE_ERROR,
     HORSE_REQUIRED_ERROR,
 } from "../repositories/eventRepository";
 
 export class EventController {
+    async getCareTypes(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.userId) {
+                res.status(401).json({ error: "Unauthorized" });
+                return;
+            }
+            const careTypes = await careTypeRepository.findAllByUser(req.userId);
+            res.json(careTypes);
+        } catch (error) {
+            console.error("Error fetching care types:", error);
+            res.status(500).json({ error: "Failed to fetch care types" });
+        }
+    }
+
+    async createCareType(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.userId) {
+                res.status(401).json({ error: "Unauthorized" });
+                return;
+            }
+            const data = req.body as CreateCareTypeDto;
+            const name = data.name?.trim();
+            const category = data.category?.trim();
+
+            if (!name || !category) {
+                res.status(400).json({ error: "name and category are required" });
+                return;
+            }
+
+            const result = await careTypeRepository.createForUser(req.userId, {
+                name,
+                category,
+            });
+
+            res.status(result.created ? 201 : 200).json(result.careType);
+        } catch (error) {
+            console.error("Error creating care type:", error);
+            res.status(500).json({ error: "Failed to create care type" });
+        }
+    }
+
     async getAll(req: Request, res: Response): Promise<void> {
         try {
             const horseId = req.query.horseId as string | undefined;
@@ -174,6 +219,20 @@ export class EventController {
                     event_date: formattedNext,
                     reminder_enabled: true,
                 }, req.userId);
+                const previousAttachment = await eventRepository.getEventAttachment(
+                    id,
+                    req.userId,
+                );
+                if (previousAttachment?.file_path) {
+                    const attachmentPath = path.join(
+                        documentsUploadDirPath,
+                        path.basename(previousAttachment.file_path),
+                    );
+                    if (fs.existsSync(attachmentPath)) {
+                        fs.unlinkSync(attachmentPath);
+                    }
+                }
+                await eventRepository.removeAttachment(id, req.userId);
             } else {
                 await eventRepository.delete(id, req.userId);
             }
@@ -182,6 +241,72 @@ export class EventController {
         } catch (error) {
             console.error("Error marking care done:", error);
             res.status(500).json({ error: "Failed to mark care done" });
+        }
+    }
+
+    async uploadAttachment(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            if (!req.file) {
+                res.status(400).json({ error: "No file uploaded" });
+                return;
+            }
+            const existingAttachment = await eventRepository.getEventAttachment(
+                id,
+                req.userId,
+            );
+            const filePath = `/uploads/documents/${req.file.filename}`;
+            const updated = await eventRepository.setAttachment(
+                id,
+                filePath,
+                req.file.originalname,
+                req.userId,
+            );
+            if (!updated) {
+                res.status(404).json({ error: "Event not found" });
+                return;
+            }
+            if (existingAttachment?.file_path) {
+                const oldFilePath = path.join(
+                    documentsUploadDirPath,
+                    path.basename(existingAttachment.file_path),
+                );
+                if (fs.existsSync(oldFilePath)) {
+                    fs.unlinkSync(oldFilePath);
+                }
+            }
+            res.json(updated);
+        } catch (error) {
+            console.error("Error uploading event attachment:", error);
+            res.status(500).json({ error: "Failed to upload attachment" });
+        }
+    }
+
+    async deleteAttachment(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const existingAttachment = await eventRepository.getEventAttachment(
+                id,
+                req.userId,
+            );
+            const removed = await eventRepository.removeAttachment(id, req.userId);
+            if (!removed) {
+                res.status(404).json({ error: "Attachment not found" });
+                return;
+            }
+            if (existingAttachment?.file_path) {
+                const oldFilePath = path.join(
+                    documentsUploadDirPath,
+                    path.basename(existingAttachment.file_path),
+                );
+                if (fs.existsSync(oldFilePath)) {
+                    fs.unlinkSync(oldFilePath);
+                }
+            }
+            res.status(204).send();
+        } catch (error) {
+            console.error("Error deleting event attachment:", error);
+            res.status(500).json({ error: "Failed to delete attachment" });
         }
     }
 }
