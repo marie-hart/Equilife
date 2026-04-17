@@ -238,7 +238,12 @@ const normalizeCategory = (value?: string): string =>
 
 const getCategoryColor = (category?: string): string => {
     const normalized = normalizeCategory(category);
-    if (normalized === "maladie") return "#B64E4E";
+    if (normalized === "sante-generale" || normalized === "sante generale") return "#2E4B36";
+    if (normalized === "pieds-marechalerie" || normalized === "pieds & marechalerie") return "#7B5B3E";
+    if (normalized === "locomotion-corps" || normalized === "locomotion & corps") return "#3E6A66";
+    if (normalized === "peau-soins-externes" || normalized === "peau & soins externes") return "#8A6E4F";
+    if (normalized === "urgence-pathologie" || normalized === "urgence / pathologie") return "#A24C4C";
+    if (normalized === "maladie") return "#A24C4C";
     if (normalized === "bobo") return "#C8832B";
     if (normalized === "soins courants" || normalized === "soin courant") return "#4E7A4B";
     if (normalized === "cures" || normalized === "cure") return "#6E5A9A";

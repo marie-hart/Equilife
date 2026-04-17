@@ -1,6 +1,6 @@
 {
   "name": "equilife-app-frontend",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Frontend Equilife — gestion quotidienne pour propriétaires de chevaux",
   "type": "module",
   "engines": {

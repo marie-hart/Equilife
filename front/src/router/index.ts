@@ -55,6 +55,24 @@ const router = createRouter({
             meta: { public: true },
         },
         {
+            path: "/legal-notice",
+            name: "LegalNotice",
+            component: () => import("@/views/legal/LegalNoticeView.vue"),
+            meta: { public: true },
+        },
+        {
+            path: "/privacy-policy",
+            name: "PrivacyPolicy",
+            component: () => import("@/views/legal/PrivacyPolicyView.vue"),
+            meta: { public: true },
+        },
+        {
+            path: "/terms-of-use",
+            name: "TermsOfUse",
+            component: () => import("@/views/legal/TermsOfUseView.vue"),
+            meta: { public: true },
+        },
+        {
             path: "/",
             name: "Dashboard",
             redirect: "/dashboard",

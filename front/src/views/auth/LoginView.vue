@@ -59,6 +59,18 @@
             Créer un compte
           </router-link>
         </div>
+
+        <div class="d-flex justify-center flex-wrap ga-3 mt-3">
+          <router-link to="/legal-notice" class="text-caption text-decoration-none" style="color: #7B5B3E;">
+            Mentions légales
+          </router-link>
+          <router-link to="/privacy-policy" class="text-caption text-decoration-none" style="color: #7B5B3E;">
+            Confidentialité
+          </router-link>
+          <router-link to="/terms-of-use" class="text-caption text-decoration-none" style="color: #7B5B3E;">
+            CGU
+          </router-link>
+        </div>
       </v-form>
     </v-card>
   </v-sheet>

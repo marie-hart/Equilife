@@ -150,6 +150,21 @@ class CareTypeRepository {
         return (result.rowCount ?? 0) > 0;
     }
 
+    async countUsageByName(userId: string, name: string): Promise<number> {
+        const result = await pool.query(
+            `
+                SELECT COUNT(*)::int AS usage_count
+                FROM events e
+                INNER JOIN horses h ON h.id = e.horse_id
+                WHERE h.user_id = $1
+                  AND e.is_care = TRUE
+                  AND LOWER(e.name) = LOWER($2)
+            `,
+            [userId, name.trim()],
+        );
+        return Number(result.rows[0]?.usage_count || 0);
+    }
+
     private async ensureTable(): Promise<void> {
         if (this.tableReady) return;
 

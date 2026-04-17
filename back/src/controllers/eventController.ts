@@ -96,12 +96,20 @@ export class EventController {
                 res.status(401).json({ error: "Unauthorized" });
                 return;
             }
-            const name = (req.params.name || "").trim();
-            if (!name) {
+            const encodedName = (req.params.name || "").trim();
+            if (!encodedName) {
                 res.status(400).json({ error: "name is required" });
                 return;
             }
-            const deleted = await careTypeRepository.deleteByName(req.userId, decodeURIComponent(name));
+            const name = decodeURIComponent(encodedName);
+            const usageCount = await careTypeRepository.countUsageByName(req.userId, name);
+            if (usageCount > 0) {
+                res.status(409).json({
+                    error: "Care type is already used by existing care events",
+                });
+                return;
+            }
+            const deleted = await careTypeRepository.deleteByName(req.userId, name);
             if (!deleted) {
                 res.status(404).json({ error: "Care type not found" });
                 return;

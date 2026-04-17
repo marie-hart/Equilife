@@ -87,6 +87,36 @@
 
       <v-divider class="mb-4 opacity-25" />
 
+      <div class="d-flex flex-wrap ga-3 mb-4">
+        <v-btn
+          variant="text"
+          size="small"
+          color="#7b5b3e"
+          class="text-none px-0"
+          :to="{ name: 'LegalNotice' }"
+        >
+          Mentions légales
+        </v-btn>
+        <v-btn
+          variant="text"
+          size="small"
+          color="#7b5b3e"
+          class="text-none px-0"
+          :to="{ name: 'PrivacyPolicy' }"
+        >
+          Confidentialité
+        </v-btn>
+        <v-btn
+          variant="text"
+          size="small"
+          color="#7b5b3e"
+          class="text-none px-0"
+          :to="{ name: 'TermsOfUse' }"
+        >
+          CGU
+        </v-btn>
+      </div>
+
       <v-btn
         block
         variant="outlined"

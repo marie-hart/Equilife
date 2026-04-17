@@ -678,9 +678,7 @@ const fillForm = (event: Event) => {
     );
     selectedCareTypeCategoryKey.value =
         matchedGroup?.key || event.category || "";
-    if (selectedCareTypeCategoryKey.value) {
-        openedCareTypeGroups.value = [selectedCareTypeCategoryKey.value];
-    }
+    openedCareTypeGroups.value = [];
     existingAttachmentPath.value = event.attachment_path || "";
     existingAttachmentName.value = event.attachment_name || "";
     selectedAttachment.value = null;
@@ -785,6 +783,14 @@ const deleteCustomCareType = async (name: string, categoryKey: string) => {
             await eventsApi.deleteCareType(name);
         } catch (error) {
             const status = (error as { response?: { status?: number } })?.response?.status;
+            if (status === 409) {
+                snackbar.value = {
+                    show: true,
+                    message: "Ce type est deja utilise dans un ou plusieurs soins.",
+                    color: "warning",
+                };
+                return;
+            }
             if (status !== 401) {
                 logger.error("Error deleting care type:", error);
                 snackbar.value = {
@@ -917,7 +923,6 @@ const createCustomCareType = async () => {
         ]);
         upsertLocalCustomCareType(name, category);
         selectCareType(name, category);
-        openedCareTypeGroups.value = [category];
         closeCreateCareTypeDialog();
         snackbar.value = {
             show: true,
@@ -1088,9 +1093,6 @@ onMounted(async () => {
         } else {
             const preselected = horsesStore.horseId && horsesStore.horseId !== "all" ? horsesStore.horseId : null;
             if (preselected) form.value.horseIds = [preselected];
-            if (careTypeGroups.value[0]?.key) {
-                openedCareTypeGroups.value = [careTypeGroups.value[0].key];
-            }
         }
     } catch (error) {
         logger.error("Erreur au montage:", error);

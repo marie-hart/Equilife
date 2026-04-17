@@ -92,3 +92,16 @@ L’API est accessible sur https://localhost:3443.
 ### En-têtes de sécurité
 
 Les en-têtes de sécurité sont configurés pour le backend (helmet + proxy) et le frontend. Voir `docs/SECURITY_HEADERS.md`.
+
+## Versionning et releases
+
+Le projet utilise SemVer avec des tags Git de la forme `vX.Y.Z`.
+
+- Changelog: `CHANGELOG.md`
+- Process release: `docs/RELEASING.md`
+- Creation d'un tag de release:
+
+```bash
+npm run release:tag -- vX.Y.Z
+git push origin vX.Y.Z
+```
